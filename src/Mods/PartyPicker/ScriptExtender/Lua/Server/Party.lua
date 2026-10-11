@@ -22,9 +22,13 @@ local HIRELING_IN_CAMP_FLAG = "Hireling_State_InCamp_e33aa0df-fcfc-4a30-8169-516
 
 local busy = false
 
-local function column1(dbName)
+-- First column of a story table; `arity` is the table's column count (1 if omitted).
+local function column1(dbName, arity)
     local out = {}
-    local ok, rows = pcall(function() return Osi[dbName]:Get(nil) end)
+    local ok, rows = pcall(function()
+        if arity == 2 then return Osi[dbName]:Get(nil, nil) end
+        return Osi[dbName]:Get(nil)
+    end)
     if ok and type(rows) == "table" then
         for _, row in ipairs(rows) do
             if row[1] ~= nil then out[#out + 1] = row[1] end
@@ -33,9 +37,9 @@ local function column1(dbName)
     return out
 end
 
-local function uuidSet(dbName)
+local function uuidSet(dbName, arity)
     local set = {}
-    for _, id in ipairs(column1(dbName)) do
+    for _, id in ipairs(column1(dbName, arity)) do
         local u = PP.BareUuid(id)
         if u then set[u] = true end
     end
@@ -79,6 +83,50 @@ local function companionFilter()
         end)
         if okE and why then return false, why end
         return true
+    end
+end
+
+-- Who may appear in the list at all. DB_PartOfTheTeam also holds camp
+-- followers and camp pets (seen in game 2026-10-11: Volo, Elminster, the
+-- Oathbreaker Knight, Scratch, Tara, Shovel, Bernard). The game's own camp
+-- script tells them apart by DB_OriginNPCAlignment: a character in camp
+-- without it is given the camp-follower faction (Shared GLO_Camp.txt
+-- L2785-2806); origins get it (_GLO_Shared_Origins.txt L238) and so do
+-- hirelings (SharedDev Hirelings.txt L745). Companions added by other mods
+-- may lack it, so anyone this mod has seen in the active party also counts.
+local function seenVar()
+    local ok, seen = pcall(function() return Ext.Vars.GetModVariables(ModuleUUID).Seen end)
+    return (ok and type(seen) == "table") and seen or {}
+end
+
+local function rememberActive(isCompanion)
+    local seen, changed = {}, false
+    for u, v in pairs(seenVar()) do seen[u] = v end
+    for _, id in ipairs(column1("DB_Players")) do
+        local u = PP.BareUuid(id)
+        if u and not seen[u] and isCompanion(id) then seen[u] = true; changed = true end
+    end
+    -- Whole-table assignment: writes to sub-fields are not saved (API.md).
+    if changed then pcall(function() Ext.Vars.GetModVariables(ModuleUUID).Seen = seen end) end
+    return seen
+end
+
+local CAMP_ONLY = "camp only (never in your party; not an origin companion or hireling)"
+
+local function rosterFilter()
+    local isCompanion = companionFilter()
+    local seen = rememberActive(isCompanion)
+    local players = uuidSet("DB_Players")
+    local avatars = uuidSet("DB_Avatars")
+    for u in pairs(uuidSet("DB_DismissedAvatar")) do avatars[u] = true end
+    local hired = uuidSet("DB_Hirelings_Hired")
+    local aligned = uuidSet("DB_OriginNPCAlignment", 2)
+    return function(id)
+        local ok, why = isCompanion(id)
+        if not ok then return false, why end
+        local u = PP.BareUuid(id)
+        if players[u] or avatars[u] or hired[u] or aligned[u] or seen[u] then return true end
+        return false, CAMP_ONLY
     end
 end
 
@@ -176,10 +224,10 @@ function Party.Roster()
     local inCamp = uuidSet("DB_InCamp")
     local controlledUuid = PP.BareUuid(controlled)
 
-    local isCompanion = companionFilter()
+    local listable = rosterFilter()
     local out = {}
     for _, e in ipairs(entries) do
-        if isCompanion(e.id) then
+        if listable(e.id) then
             e.avatar = avatars[e.uuid] == true
             e.inCamp = inCamp[e.uuid] == true
             e.dead = isTrue(Osi.IsDead, e.id)
@@ -224,7 +272,7 @@ end
 -- For !pp_roster: everyone the story tables mention and why each is or is
 -- not offered.
 function Party.Excluded()
-    local isCompanion = companionFilter()
+    local isCompanion = rosterFilter()
     local seen, out = {}, {}
     for _, db in ipairs({ "DB_PartOfTheTeam", "DB_Hirelings_Hired", "DB_Players" }) do
         for _, id in ipairs(column1(db)) do
@@ -243,15 +291,20 @@ end
 -- so a wrongly listed character shows where it came from.
 local SOURCE_DBS = {
     { "DB_PartOfTheTeam", "team" }, { "DB_Hirelings_Hired", "hired" }, { "DB_Players", "players" },
-    { "DB_Origins", "origin" }, { "DB_PartyMembers", "partymembers" }, { "DB_InCamp", "incamp" },
+    { "DB_OriginNPCAlignment", "aligned", 2 }, { "DB_Origins", "origin" },
+    { "DB_PartyMembers", "partymembers" }, { "DB_InCamp", "incamp" },
     { "DB_Avatars", "avatar" }, { "DB_PartyFollowers", "followers" }, { "DB_PlayerSummons", "summons" },
 }
 
 -- A lookup that fails is shown with "?" so it is not mistaken for "not in it".
 function Party.Sources(id)
     local found = {}
+    if seenVar()[PP.BareUuid(id) or ""] then found[#found + 1] = "seen" end
     for _, spec in ipairs(SOURCE_DBS) do
-        local ok, rows = pcall(function() return Osi[spec[1]]:Get(id) end)
+        local ok, rows = pcall(function()
+            if spec[3] == 2 then return Osi[spec[1]]:Get(id, nil) end
+            return Osi[spec[1]]:Get(id)
+        end)
         if not ok then
             found[#found + 1] = spec[2] .. "?"
         elseif type(rows) == "table" and next(rows) ~= nil then

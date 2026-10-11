@@ -1,13 +1,14 @@
 # Party Picker (BG3)
 
-A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.3
-(diagnostic build) awaiting an in-game test.** The Party list still shows camp followers and some
-summons (reported on 2026-10-11); see
+A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.4
+awaiting an in-game test.** v0.1.4 stops camp followers and camp pets appearing in the Party list
+(reported on 2026-10-11); see
 [docs/TESTING.md](docs/TESTING.md) for the reports so far.
 
-- **Party tab in Mod Configuration Menu (MCM).** Everyone you have recruited is listed with a
-  checkbox. Tick who you want with you and press **Apply**. There are no hotbar spells and no
-  talking to companions to invite or dismiss them.
+- **Party tab in Mod Configuration Menu (MCM).** Your party members are listed with a checkbox:
+  player characters, origin companions, hirelings, and companions added by other mods. Tick who
+  you want with you and press **Apply**. There are no hotbar spells and no talking to companions to
+  invite or dismiss them.
 - **Larger parties.** A slider sets the party limit from 4 to 16.
 - **The two places the game handles only four:**
   - **Long rest.** The camp has four beds, and the game puts only four party members to bed. If
@@ -87,15 +88,24 @@ BG3 Modder's Multitool can still be used instead. See [RUN_CARD.md](RUN_CARD.md)
   passed; that file also lists which hooks are most at risk.
 - Multiplayer: only the host can change the party. Player characters and anyone another player
   controls are never moved.
-- The list is everyone the story counts as recruited (`DB_PartOfTheTeam`). A companion the story
-  is keeping in camp for a scene can still be ticked, because the add procedure does not repeat the
+- A companion the story is keeping in camp for a scene can still be ticked, because the add procedure does not repeat the
   checks the recruitment dialogues make. Whether that causes trouble is untested.
 - On the raft's lake stop, members 5+ share the four standing spots on the raft. This is untested.
 - Turning the raft setting off does not remove landing spots that were already added. They are
   only used when more than four people ride the raft.
-- Who is listed: everyone the story counts as recruited plus the active party, minus Withers and any
-  summon or follower. A non-joinable character added by another mod could still appear; `!pp_roster`
-  shows why each character is or is not listed.
+- Who is listed. A character is listed when they are one of these:
+  - a player character (`DB_Avatars`, or a dismissed one in `DB_DismissedAvatar`);
+  - an origin companion: Larian's story gives these an NPC alignment (`DB_OriginNPCAlignment`), and
+    its camp script uses exactly that to tell companions from camp followers;
+  - a hireling (`DB_Hirelings_Hired`);
+  - anyone Party Picker has seen in the active party. This is how companions added by other mods
+    are found, and it is saved with the game.
+
+  Withers, summons and followers are never listed. Camp followers and camp pets (Volo, Elminster,
+  the Oathbreaker Knight, Scratch, Tara and others) are left out because they fit none of the above.
+  **Limit:** a companion added by another mod who has not been in your party since Party Picker was
+  installed is not listed until they join once the normal way. `!pp_roster` shows why each
+  character is or is not listed.
 - Dialogue still seats the speaker plus three. That is not changed.
 - Quest items carried by member 5+ are sometimes not registered, per Party Limit Begone's notes.
   That is not addressed.

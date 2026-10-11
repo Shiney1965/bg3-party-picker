@@ -6,7 +6,7 @@ PP = PP or {}
 PP.MOD = "PartyPicker"
 -- Keep in step with Version64 in meta.lsx; printed at load so logs show
 -- which build was running.
-PP.VERSION = "0.1.3"
+PP.VERSION = "0.1.4"
 -- The four-member situations are hard limits in the game's own scripts
 -- (four beds in camp, four raft seats), so this is not a setting.
 PP.RESTRICTED_SIZE = 4
@@ -48,6 +48,13 @@ PP.Net = PP.Net or {
 -- Registered in both contexts as bg3se Docs/API.md recommends.
 pcall(function()
     Ext.Vars.RegisterModVariable(ModuleUUID, "Pending", {
+        Server = true, Client = false, SyncToClient = false,
+    })
+end)
+-- Everyone seen in the active party (uuid -> true), so companions added by
+-- other mods stay listed after going to camp; saved with the game, server-only.
+pcall(function()
+    Ext.Vars.RegisterModVariable(ModuleUUID, "Seen", {
         Server = true, Client = false, SyncToClient = false,
     })
 end)

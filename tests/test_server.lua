@@ -31,6 +31,8 @@ for _, ch in pairs(M.chars) do
 end
 M.db("DB_Avatars")(M.host.id)
 M.db("DB_Hirelings_Hired")(c.Hireling.id)
+-- Origins carry an NPC alignment (_GLO_Shared_Origins.txt L238).
+for _, n in ipairs(names) do M.db("DB_OriginNPCAlignment")(c[n].id, "Origin_" .. n .. "_Alignment") end
 for _, ch in ipairs({ M.host, c.Shadowheart, c.Astarion, c.Gale, wolf }) do M.db("DB_Players")(ch.id) end
 for _, ch in ipairs({ c.Laezel, c.Karlach, c.Wyll, c.Hireling }) do M.db("DB_InCamp")(ch.id) end
 Osi.PROC_Hirelings_SendToCamp(c.Hireling.id) -- the hireling was parked in camp by the game
@@ -251,7 +253,7 @@ M.log = {}
 M.console.pp_roster()
 local out = table.concat(M.log, "\n")
 check(out:find("Party Picker v" .. PP.VERSION, 1, true), "!pp_roster prints the version")
-check(out:find("Lae'?zel[^\n]*%[in: team[^\n]*faction: Origin_Laezel_Faction"), "!pp_roster prints tables and faction")
+check(out:find("Lae'?zel[^\n]*%[in: [^;]*team[^\n]*faction: Origin_Laezel_Faction"), "!pp_roster prints tables and faction")
 check(out:find("Withers[^\n]*not listed[^\n]*%[in: team,incamp;"), "!pp_roster prints tables for excluded characters")
 check(out:find("Familiar[^\n]*not listed[^\n]*entity%.IsSummon"), "!pp_roster prints the entity summon signal")
 -- A failing lookup is marked, not shown as absent.
@@ -264,7 +266,40 @@ reply = apply({ uuids = { ids.Shadowheart, ids.Astarion } })
 check(#M.db("DB_Players"):Get(familiar.id) == 1 and #M.db("DB_Players"):Get(cub.id) == 1
     and #M.db("DB_Players"):Get(undead.id) == 1, "summons and followers stay with the party on Apply")
 
--- 19. Settings off: no hold, no raft change.
+-- 19. Reported in game 2026-10-11: camp followers and camp pets were listed.
+--     They are in DB_PartOfTheTeam (and camp) but have no NPC alignment and
+--     have never been in the party.
+local volo = M.addChar("Volo", U(60))
+local scratch = M.addChar("Scratch", U(61))
+for _, ch in ipairs({ volo, scratch }) do
+    M.db("DB_PartOfTheTeam")(ch.id); M.db("DB_InCamp")(ch.id)
+end
+-- A companion added by another mod: no NPC alignment, but in the party now.
+local modded = M.addChar("Alfira", U(62))
+M.db("DB_PartOfTheTeam")(modded.id)
+M.db("DB_Players")(modded.id)
+names = {}
+for _, e in ipairs(Party.Roster()) do names[e.name] = true end
+check(not names.Volo and not names.Scratch, "camp follower and camp pet not listed")
+check(names.Alfira, "companion from another mod listed while in the party")
+check(names.Laezel and names.Hireling, "origin and hireling still listed")
+excluded = {}
+for _, x in ipairs(Party.Excluded()) do excluded[x.name] = x.why end
+check(excluded.Volo and excluded.Volo:find("camp only"), "!pp_roster explains the camp-only exclusion")
+-- Once seen in the party, the mod companion stays listed from camp, also after a reload.
+Osi.PROC_GLO_PartyMembers_Remove(modded.id, M.host.id, 1)
+local saved = Ext.Vars.GetModVariables(ModuleUUID).Seen
+check(type(saved) == "table" and saved[modded.uuid], "seen party members saved with the game")
+names = {}
+for _, e in ipairs(Party.Roster()) do names[e.name] = (e.inCamp and "camp" or "party") end
+check(names.Alfira == "camp", "mod companion still listed from camp")
+M.log = {}
+M.console.pp_roster()
+out = table.concat(M.log, "\n")
+check(out:find("Alfira[^\n]*%[in: seen,team"), "!pp_roster shows the seen record")
+check(out:find("Laezel[^\n]*aligned") or out:find("Lae'?zel[^\n]*aligned"), "!pp_roster shows the NPC alignment")
+
+-- 20. Settings off: no hold, no raft change.
 settings.prompt_long_rest = false
 M.fire("QRY_Camp_CheckPlayersReadyForNightModeStoryReasons", 0, "before")
 check(#M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason").rows == 0, "setting off: no hold")

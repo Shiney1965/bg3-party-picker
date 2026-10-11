@@ -8,7 +8,7 @@
   procedures as documented in `docs/RESEARCH.md`. The mock checks `TeleportTo`'s argument count,
   refuses two-argument `Remove` calls and avatar removals, and models the hireling camp counter.
 
-The 63 checks cover:
+The 76 checks cover:
 - roster building and summon filtering;
 - a companion the host is controlling;
 - party changes from the MCM tab, including hirelings in camp;
@@ -25,6 +25,10 @@ The 63 checks cover:
 - adding raft landing spots on level start and again just before landing;
 - Withers, summons (including one only its entity component reveals) and followers: never listed,
   never counted, never moved by Apply;
+- camp followers and camp pets in `DB_PartOfTheTeam` not listed; a companion from another mod
+  listed once seen in the party, and still listed from camp (the record is saved);
+- `!pp_roster` printing the version, each character's story tables and faction, and `?` for a
+  failed lookup;
 - the settings switches.
 
 A mock is not the game. These tests catch Lua mistakes and logic errors. They cannot show that the
@@ -76,6 +80,17 @@ Oathbreaker Knight and Elminster. This seems to include camp followers not curre
   Oathbreaker Knight to camp were not available to check.
 - **v0.1.3** prints its version at load. `!pp_roster` now prints, for every character, the story
   tables they are in and their faction, so the next report shows where each wrong entry comes from.
+
+**2026-10-11, `!pp_roster` output** (Alan: "same error in the mod here is the output from
+pp_roster"). The output has no `Party Picker v0.1.3 roster:` line and no `[in: ...]` parts, so the
+pak loaded was v0.1.2 or earlier, not v0.1.3. Listed: Lae'zel (ACTIVE avatar, locked), Alfira,
+Astarion, Gale, Halsin, Karlach, Minthara, Raphael, Shadowheart, Wyll (all ACTIVE); in camp:
+Bernard (twice), Elminster Aumar, Oathbreaker Knight, Scratch, Shovel, Tara, Tara the Tressym,
+Volo. Withers: `not listed: Withers (in DB_PartOfTheTeam)`. `active 10, limit 14 (game reports 14)`.
+That build builds the list from `DB_PartOfTheTeam`, `DB_Hirelings_Hired` and `DB_Players`, so every
+camp entry came from the first two. Alan's requirement for the fix: list only "real party members --
+that is Tavs/Durges and companions", "and hirelings of course and companions added by mods", using
+a rule that works in every game, not just his. v0.1.4 does this (see README, "Who is listed").
 
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).

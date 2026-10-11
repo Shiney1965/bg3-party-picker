@@ -94,6 +94,16 @@ Signatures are from [LaughingLeader's generated Osi.lua](https://github.com/Laug
 - `DB_PartOfTheTeam` is everyone recruited.
 - `DB_Avatars`, `DB_InCamp`, `DB_Hirelings_Hired`.
 - `DB_PartyMembers` also includes summons and followers, so it is not used.
+- `DB_PartOfTheTeam` also holds camp followers and camp pets. In game on 2026-10-11 it listed Volo,
+  Elminster, the Oathbreaker Knight, Scratch, Tara, Shovel and Bernard. It is filled by
+  `PROC_ORI_SetupCamp` for anyone "recruited to the camp" (`_GLO_Shared_Origins.txt` L1943–1950).
+- `DB_OriginNPCAlignment(character, faction)` is what separates companions from camp followers:
+  - origins get one (`_GLO_Shared_Origins.txt` L238);
+  - hirelings get one on hiring (SharedDev `Hirelings.txt` L745);
+  - the camp script gives the camp-follower faction to characters in camp that have
+    `DB_OriginCampFlags` but **no** `DB_OriginNPCAlignment` (`GLO_Camp.txt` L2785–2806).
+  The Act story files, where the origins' rows are asserted, were not in the copy that was read, so
+  the full list of characters with a row is not confirmed.
 
 **Host character**
 - `GetHostCharacter` returns the character the host *controls*. That can be a companion: the game's
