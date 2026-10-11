@@ -99,6 +99,12 @@ BG3 Modder's Multitool can still be used instead. See [RUN_CARD.md](RUN_CARD.md)
 - Quest items carried by member 5+ are sometimes not registered, per Party Limit Begone's notes.
   That is not addressed.
 
+## History
+
+Developed first inside `Shiney1965/BG3-Scroll-Repair` (branch `claude/bg3-party-expansion-mod-w8q7co`,
+folder `PartyPicker/`) and moved here on 2026-10-11 with its full commit history (`git subtree split`).
+From now on this repository is the home of Party Picker.
+
 ## Licence
 
 MIT.
