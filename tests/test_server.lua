@@ -253,6 +253,12 @@ local out = table.concat(M.log, "\n")
 check(out:find("Party Picker v" .. PP.VERSION, 1, true), "!pp_roster prints the version")
 check(out:find("Lae'?zel[^\n]*%[in: team[^\n]*faction: Origin_Laezel_Faction"), "!pp_roster prints tables and faction")
 check(out:find("Withers[^\n]*not listed[^\n]*%[in: team,incamp;"), "!pp_roster prints tables for excluded characters")
+check(out:find("Familiar[^\n]*not listed[^\n]*entity%.IsSummon"), "!pp_roster prints the entity summon signal")
+-- A failing lookup is marked, not shown as absent.
+local realGetFaction = Osi.GetFaction
+Osi.GetFaction = function() error("no such query") end
+check(select(2, Party.Sources(c.Laezel.id)) == "?", "failed faction lookup shown as ?")
+Osi.GetFaction = realGetFaction
 -- Applying a party must never touch them.
 reply = apply({ uuids = { ids.Shadowheart, ids.Astarion } })
 check(#M.db("DB_Players"):Get(familiar.id) == 1 and #M.db("DB_Players"):Get(cub.id) == 1

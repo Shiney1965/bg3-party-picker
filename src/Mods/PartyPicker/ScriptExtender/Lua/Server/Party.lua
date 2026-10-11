@@ -247,14 +247,37 @@ local SOURCE_DBS = {
     { "DB_Avatars", "avatar" }, { "DB_PartyFollowers", "followers" }, { "DB_PlayerSummons", "summons" },
 }
 
+-- A lookup that fails is shown with "?" so it is not mistaken for "not in it".
 function Party.Sources(id)
     local found = {}
     for _, spec in ipairs(SOURCE_DBS) do
         local ok, rows = pcall(function() return Osi[spec[1]]:Get(id) end)
-        if ok and type(rows) == "table" and next(rows) ~= nil then found[#found + 1] = spec[2] end
+        if not ok then
+            found[#found + 1] = spec[2] .. "?"
+        elseif type(rows) == "table" and next(rows) ~= nil then
+            found[#found + 1] = spec[2]
+        end
     end
+    -- The summon/follower signals companionFilter uses besides the tables.
+    local function query(label, fn)
+        local ok, v = pcall(fn, id)
+        if not ok then found[#found + 1] = label .. "?"
+        elseif v == 1 or v == true then found[#found + 1] = label end
+    end
+    query("IsSummon", Osi.IsSummon)
+    query("IsPartyFollower", Osi.IsPartyFollower)
+    local okE, comps = pcall(function()
+        local e = Ext.Entity.Get(PP.BareUuid(id))
+        if not e then return "no-entity" end
+        local out = {}
+        if e.IsSummon then out[#out + 1] = "entity.IsSummon" end
+        if e.PartyFollower then out[#out + 1] = "entity.PartyFollower" end
+        return table.concat(out, ",")
+    end)
+    if not okE then found[#found + 1] = "entity?"
+    elseif comps ~= "" then found[#found + 1] = comps end
     local okF, faction = pcall(Osi.GetFaction, id)
-    return table.concat(found, ","), okF and faction or nil
+    return table.concat(found, ","), okF and tostring(faction) or "?"
 end
 
 function Party.ActiveUuids()
