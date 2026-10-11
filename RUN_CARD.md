@@ -1,7 +1,7 @@
-# Party Picker: test run card (v0.1.2)
+# Party Picker: test run card (v0.1.3)
 
-**Pak:** `PartyPicker.pak` (24,604 bytes)
-SHA256 `31ac9c8cbafa571f84945ab4b10100bbd6d763cee11b5e7202170e810840eda2`
+**Pak:** `PartyPicker.pak` (25,179 bytes)
+SHA256 `6b63f1c3232b1957dd1699d8a356d7925ffdb7a703c79126673bbd0a59ae8f05`
 
 **Built with:** `python3 tools/lspk.py create src PartyPicker.pak`. Rebuilding Scroll Repair's
 `src/` with the same tool gives a pak byte-identical to the Divine-built `ScrollRepair.pak`.
@@ -15,6 +15,9 @@ SHA256 `31ac9c8cbafa571f84945ab4b10100bbd6d763cee11b5e7202170e810840eda2`
      v0.1.1 requires 1.38, the first version with the API calls it uses.)
    v0.1.2 (2026-10-11): the Party list no longer shows Withers, summons or party followers, and
    they are never counted against the limit or sent to camp by Apply (Alan's report on v0.1.1).
+   v0.1.3 (2026-10-11): no change to who is listed yet. The log now shows the version, and
+   `!pp_roster` shows which story tables each character is in, to find out why camp followers
+   (Volo, Elminster, the Oathbreaker Knight) and some summons are still listed.
 3. Quit the game.
 
 ## Install
@@ -24,13 +27,17 @@ SHA256 `31ac9c8cbafa571f84945ab4b10100bbd6d763cee11b5e7202170e810840eda2`
 6. Launch and load the backup.
 
 ## Quick checks
-7. Open the Script Extender log (`...\Script Extender\Scripe Extender Logs\Extender Runtime *.log`;
-   the folder name really is misspelled). Look for:
-   - `[PartyPicker] server loaded.`
-   - `[PartyPicker] client loaded (Party tab added to MCM).`
+7. Open the newest Script Extender log,
+   `%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Script Extender\Scripe Extender Logs\Extender Runtime *.log`
+   (path as printed on the first line of Alan's log of 2026-10-11; the folder name really is
+   misspelled). Look for:
+   - `[PartyPicker] server loaded (v0.1.3).`
+   - `[PartyPicker] client loaded (v0.1.3) (Party tab added to MCM).`
    - `[PartyPicker] party size limit set to 6`
 8. Open the SE console, type `server`, then `!pp_roster`. Your companions should be listed, your
-   character marked `locked(player character)`.
+   character marked `locked(player character)`. Each line ends with `[in: ...; faction: ...; id: ...]`.
+   **Send me the whole output**, ideally with a summon out and Volo, Elminster or the Oathbreaker
+   Knight recruited to camp.
 9. Open MCM. Party Picker should have a **Settings** tab and a **Party** tab.
 
 ## The tests that matter

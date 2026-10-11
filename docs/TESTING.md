@@ -52,6 +52,31 @@ Extender log for that session has not been seen. A desk check of the server's lo
 every Osiris listener's name and argument count matching the story copies cited in
 `docs/RESEARCH.md` (`GLO_Camp.txt`, `Act1_UND_EbonLake.txt`).
 
+**2026-10-11, follow-up with logs** (`Extender Runtime 2026-10-11 16-27-24.log`,
+`Extender Runtime 2026-10-11 16-46-43.log`, `Osiris Runtime 2026-10-11 16-29-44.log`, plus a
+screenshot). Alan: "The save game loaded even after the server shutdown error. The Party Picker
+error continued -- it listed summonses and other non-party camp followers, such as Volo,
+Oathbreaker Knight and Elminster. This seems to include camp followers not currently in camp."
+- **Server shutting down (16-27-24 log).** Both Party Picker scripts loaded
+  (`[PartyPicker] server loaded.`, `[PartyPicker] client loaded (Party tab added to MCM).`). The
+  session was then unloaded straight after `Attempted to send extender message to a host that does
+  not understand extender protocol!`. The line before it was another mod's
+  (`[RandomizedDisguiseSelf][Server][V2Randomizer] Re-broadcast 0 active rolls (client request)`).
+  Party Picker sends nothing over the network while loading. It only replies to the Party tab and
+  sends notices around a long-rest hold or restore, so it is not the likely sender. The log does not name the
+  sender. That session never reached `party size limit set to`.
+- **16-46-43 log (the session that loaded):** `[PartyPicker] party size limit set to 14`, so step 1
+  passed on that load. No `!pp_roster` output was in the log.
+- **Roster still wrong:** the list shows camp followers (Volo, the Oathbreaker Knight, Elminster)
+  and summons. The logs cannot show which pak was installed, because v0.1.2 and earlier did not
+  print their version. If v0.1.2 was installed, its summon filter missed these summons. Camp
+  followers were never filtered by any version. Which story table puts them in the list is
+  unknown: `DB_PartOfTheTeam` is added by `PROC_ORI_SetupCamp` (`_GLO_Shared_Origins.txt`
+  L1943–1950, Interzoneism/qdnd copy), but the Act scripts that bring Volo, Elminster and the
+  Oathbreaker Knight to camp were not available to check.
+- **v0.1.3** prints its version at load. `!pp_roster` now prints, for every character, the story
+  tables they are in and their faction, so the next report shows where each wrong entry comes from.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 

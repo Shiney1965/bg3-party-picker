@@ -99,6 +99,7 @@ function Osi.IsPartyFollower(id) return (char(id) or {}).follower and 1 or 0 end
 function Osi.IsDead(id) return (char(id) or {}).dead and 1 or 0 end
 function Osi.IsInCombat(id) return (char(id) or {}).inCombat and 1 or 0 end
 function Osi.GetDisplayName(id) return "h_" .. uuidOf(id) end
+function Osi.GetFaction(id) return (char(id) or {}).faction end
 function Osi.GetMaxPartySize() return M.maxOverride or 4 end
 function Osi.SetMaxPartySizeOverride(n) M.maxOverride = n end
 function Osi.PROC_CheckPartyFull() M.partyFull = playerCount() >= Osi.GetMaxPartySize() end

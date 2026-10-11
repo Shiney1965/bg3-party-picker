@@ -48,4 +48,4 @@ Ext.RegisterConsoleCommand("pp", function()
     standalone.Open = true
 end)
 
-PP.Log("client loaded" .. (inserted and " (Party tab added to MCM)" or "") .. ". Client console: !pp")
+PP.Log("client loaded (v" .. PP.VERSION .. ")" .. (inserted and " (Party tab added to MCM)" or "") .. ". Client console: !pp")

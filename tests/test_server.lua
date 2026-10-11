@@ -245,6 +245,14 @@ local excluded = {}
 for _, x in ipairs(Party.Excluded()) do excluded[x.name] = x.why end
 check(excluded.Withers == "Withers" and excluded.Familiar == "summon" and excluded.Cub == "follower",
     "!pp_roster explains each exclusion")
+-- !pp_roster names the build and, per character, its story tables and faction.
+c.Laezel.faction = "Origin_Laezel_Faction"
+M.log = {}
+M.console.pp_roster()
+local out = table.concat(M.log, "\n")
+check(out:find("Party Picker v" .. PP.VERSION, 1, true), "!pp_roster prints the version")
+check(out:find("Lae'?zel[^\n]*%[in: team[^\n]*faction: Origin_Laezel_Faction"), "!pp_roster prints tables and faction")
+check(out:find("Withers[^\n]*not listed[^\n]*%[in: team,incamp;"), "!pp_roster prints tables for excluded characters")
 -- Applying a party must never touch them.
 reply = apply({ uuids = { ids.Shadowheart, ids.Astarion } })
 check(#M.db("DB_Players"):Get(familiar.id) == 1 and #M.db("DB_Players"):Get(cub.id) == 1

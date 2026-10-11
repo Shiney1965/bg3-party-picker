@@ -1,7 +1,8 @@
 # Party Picker (BG3)
 
-A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.2
-awaiting its first in-game test.** v0.1.1 had known problems in game; see
+A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.3
+(diagnostic build) awaiting an in-game test.** The Party list still shows camp followers and some
+summons (reported on 2026-10-11); see
 [docs/TESTING.md](docs/TESTING.md) for the reports so far.
 
 - **Party tab in Mod Configuration Menu (MCM).** Everyone you have recruited is listed with a

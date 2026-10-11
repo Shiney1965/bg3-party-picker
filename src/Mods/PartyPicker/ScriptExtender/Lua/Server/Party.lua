@@ -232,11 +232,29 @@ function Party.Excluded()
             if u and not seen[u] then
                 seen[u] = true
                 local ok, why = isCompanion(id)
-                if not ok then out[#out + 1] = { name = Party.DisplayName(id), why = why, db = db } end
+                if not ok then out[#out + 1] = { id = id, name = Party.DisplayName(id), why = why, db = db } end
             end
         end
     end
     return out
+end
+
+-- For !pp_roster: which story tables a character is in, and their faction,
+-- so a wrongly listed character shows where it came from.
+local SOURCE_DBS = {
+    { "DB_PartOfTheTeam", "team" }, { "DB_Hirelings_Hired", "hired" }, { "DB_Players", "players" },
+    { "DB_Origins", "origin" }, { "DB_PartyMembers", "partymembers" }, { "DB_InCamp", "incamp" },
+    { "DB_Avatars", "avatar" }, { "DB_PartyFollowers", "followers" }, { "DB_PlayerSummons", "summons" },
+}
+
+function Party.Sources(id)
+    local found = {}
+    for _, spec in ipairs(SOURCE_DBS) do
+        local ok, rows = pcall(function() return Osi[spec[1]]:Get(id) end)
+        if ok and type(rows) == "table" and next(rows) ~= nil then found[#found + 1] = spec[2] end
+    end
+    local okF, faction = pcall(Osi.GetFaction, id)
+    return table.concat(found, ","), okF and faction or nil
 end
 
 function Party.ActiveUuids()

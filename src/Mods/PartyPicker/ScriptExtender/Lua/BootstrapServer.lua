@@ -105,17 +105,24 @@ end)
 
 -- Console fallback (server context): !pp_roster, !pp_size, !pp_restore,
 -- !pp_set Name1,Name2,...   Names are matched case-insensitively.
+-- Each line ends with the story tables the character is in and their faction.
+local function sourcesText(id)
+    local dbs, faction = Party.Sources(id)
+    return string.format(" [in: %s; faction: %s; id: %s]", dbs, tostring(faction), tostring(id))
+end
+
 Ext.RegisterConsoleCommand("pp_roster", function()
+    PP.Log("Party Picker v" .. PP.VERSION .. " roster:")
     for _, e in ipairs(Party.Roster()) do
         PP.Log(string.format("%-24s %s%s%s%s%s", e.name,
             e.active and "ACTIVE " or "camp   ",
             e.avatar and "avatar " or "",
             e.hireling and "hireling " or "",
             e.dead and "dead " or "",
-            e.locked and ("locked(" .. tostring(e.lockReason) .. ")") or ""))
+            e.locked and ("locked(" .. tostring(e.lockReason) .. ")") or "") .. sourcesText(e.id))
     end
     for _, x in ipairs(Party.Excluded()) do
-        PP.Log(string.format("%-24s not listed: %s (in %s)", x.name, x.why, x.db))
+        PP.Log(string.format("%-24s not listed: %s (in %s)", x.name, x.why, x.db) .. sourcesText(x.id))
     end
     PP.Log(string.format("active %d, limit %d (game reports %s)", Party.ActiveCount(), Party.MaxSize(),
         tostring(select(2, pcall(Osi.GetMaxPartySize)))))
@@ -150,4 +157,4 @@ Ext.RegisterConsoleCommand("pp_set", function(_, ...)
     PP.Log(message)
 end)
 
-PP.Log("server loaded. Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size")
+PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size")
