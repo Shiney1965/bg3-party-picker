@@ -94,6 +94,11 @@ camp entry came from the first two. Alan's requirement for the fix: list only "r
 that is Tavs/Durges and companions", "and hirelings of course and companions added by mods", using
 a rule that works in every game, not just his. v0.1.4 does this (see README, "Who is listed").
 
+**2026-10-11, v0.1.4 installed.** Downloaded from the repository's `main` branch into
+`%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Mods\PartyPicker.pak`; Alan: "the hash is correct
+so it seems to be installed" (SHA-256 `5B068FDF...63CF303B`, 27,419 bytes). In-game result not yet
+reported.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 
