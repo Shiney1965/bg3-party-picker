@@ -46,6 +46,12 @@ DB_PartyFollowers, or the entity's IsSummon / PartyFollower component. `!pp_rost
 each excluded character and the reason. The test for v0.1.2: open the Party tab with a summon out
 (for example a familiar) and check that neither it nor Withers is listed.
 
+**2026-10-11, version not stated (v0.1.2 was the pak under test):** Alan: "On loading the game it
+didn't crasah but I got a message "Error . Server shutting down."" Cause not yet known; the Script
+Extender log for that session has not been seen. A desk check of the server's load-time code found
+every Osiris listener's name and argument count matching the story copies cited in
+`docs/RESEARCH.md` (`GLO_Camp.txt`, `Act1_UND_EbonLake.txt`).
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 
