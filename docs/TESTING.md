@@ -36,6 +36,8 @@ story procedures behave as documented in the current patch. The client UI is not
 work perfectly". v0.1.0 had first shown an MCM "Dependency issue detected" warning (it required MCM
 1.41); fixed in v0.1.1. Which of the steps below were exercised is not yet recorded, so none is
 marked passed individually.
+**Withdrawn the same day** (Alan): "The mod does not yet work perfectly -- that was premature".
+Treat no step as confirmed by this report.
 
 **2026-10-11, v0.1.1, second report:** "it includes Withers in the party roster, which is incorrect"
 and "summonses are listed there". Fixed in v0.1.2: Withers is excluded by his story id, and summons

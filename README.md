@@ -1,8 +1,8 @@
 # Party Picker (BG3)
 
-A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.2 in
-first in-game testing.** Alan, 2026-10-11: "The mod seems to work perfectly" (which steps of
-[docs/TESTING.md](docs/TESTING.md) were covered is not yet recorded).
+A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.2
+awaiting its first in-game test.** v0.1.1 had known problems in game; see
+[docs/TESTING.md](docs/TESTING.md) for the reports so far.
 
 - **Party tab in Mod Configuration Menu (MCM).** Everyone you have recruited is listed with a
   checkbox. Tick who you want with you and press **Apply**. There are no hotbar spells and no
@@ -82,8 +82,8 @@ BG3 Modder's Multitool can still be used instead. See [RUN_CARD.md](RUN_CARD.md)
 
 ## Known limits of this draft
 
-- First in-game report is positive (see the top of this file); the step-by-step results are not yet
-  recorded. See [docs/TESTING.md](docs/TESTING.md) for the steps and which hooks are most at risk.
+- Not yet shown to work in game. No step of [docs/TESTING.md](docs/TESTING.md) is recorded as
+  passed; that file also lists which hooks are most at risk.
 - Multiplayer: only the host can change the party. Player characters and anyone another player
   controls are never moved.
 - The list is everyone the story counts as recruited (`DB_PartOfTheTeam`). A companion the story
