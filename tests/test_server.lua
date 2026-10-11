@@ -31,7 +31,7 @@ for _, ch in pairs(M.chars) do
 end
 M.db("DB_Avatars")(M.host.id)
 M.db("DB_Hirelings_Hired")(c.Hireling.id)
--- Origins carry an NPC alignment (_GLO_Shared_Origins.txt L238).
+-- Origins carry an NPC alignment (needed to dismiss them: _GLO_Shared_Origins.txt L439-450).
 for _, n in ipairs(names) do M.db("DB_OriginNPCAlignment")(c[n].id, "Origin_" .. n .. "_Alignment") end
 for _, ch in ipairs({ M.host, c.Shadowheart, c.Astarion, c.Gale, wolf }) do M.db("DB_Players")(ch.id) end
 for _, ch in ipairs({ c.Laezel, c.Karlach, c.Wyll, c.Hireling }) do M.db("DB_InCamp")(ch.id) end
@@ -218,9 +218,11 @@ check(#M.broadcasts == 0, "no restore notice without a pending trim")
 local other = M.addChar("OtherTav", U(2), { user = 131073 })
 M.db("DB_PartOfTheTeam")(other.id)
 M.db("DB_DismissedAvatar")(other.id)
+local otherListed = false
 for _, e in ipairs(Party.Roster()) do
-    if e.name == "OtherTav" then check(e.locked, "dismissed avatar locked") end
+    if e.name == "OtherTav" then otherListed = true; check(e.locked, "dismissed avatar locked") end
 end
+check(otherListed, "dismissed avatar listed")
 local camp = "UND_EbonLake_State_RaftAtCamp_526b966d-e826-4290-8331-e4747c1df3a5"
 for i = 1, 4 do M.db(RAFT)(camp, i, "S_UND_DarkLake_BoatPassengerPositionAtCamp_3478b34d-0e4f-4a4b-8f9f-b7d9361eec8b") end
 M.fire("PROC_UND_EbonLake_DisembarkCrew", 1, "before", camp)
@@ -298,6 +300,32 @@ M.console.pp_roster()
 out = table.concat(M.log, "\n")
 check(out:find("Alfira[^\n]*%[in: seen,team"), "!pp_roster shows the seen record")
 check(out:find("Laezel[^\n]*aligned") or out:find("Lae'?zel[^\n]*aligned"), "!pp_roster shows the NPC alignment")
+-- Summons and followers that sat in DB_Players were never remembered.
+saved = Ext.Vars.GetModVariables(ModuleUUID).Seen
+check(not (saved[wolf.uuid] or saved[familiar.uuid] or saved[cub.uuid] or saved[undead.uuid]),
+    "summons and followers not remembered as party members")
+-- A mod companion who joins and leaves without the tab being opened is
+-- remembered by the DB_Players listener.
+local raphael = M.addChar("Raphael", U(63))
+M.db("DB_PartOfTheTeam")(raphael.id)
+M.db("DB_Players")(raphael.id)
+M.fire("DB_Players", 1, "after", raphael.id)
+Osi.PROC_GLO_PartyMembers_Remove(raphael.id, M.host.id, 1)
+-- A companion dismissed the normal way carries the dismissal mark, even if
+-- never seen by this mod (_GLO_Shared_PartyMembers.txt L1313).
+local minsc = M.addChar("Minsc", U(64))
+M.db("DB_PartOfTheTeam")(minsc.id); M.db("DB_InCamp")(minsc.id)
+M.db("DB_GLO_PartyMembers_DefaultFaction")(minsc.id, "PlayerFaction")
+names = {}
+for _, e in ipairs(Party.Roster()) do names[e.name] = true end
+check(names.Raphael, "companion who joined and left while the tab was closed still listed")
+check(names.Minsc, "companion dismissed the normal way listed")
+check(not names.Volo, "camp follower still not listed")
+-- !pp_forget removes someone from the remembered list.
+M.log = {}
+M.console.pp_forget(nil, "Raphael")
+saved = Ext.Vars.GetModVariables(ModuleUUID).Seen
+check(not saved[raphael.uuid] and table.concat(M.log):find("forgot 1"), "!pp_forget removes a remembered character")
 
 -- 20. Settings off: no hold, no raft change.
 settings.prompt_long_rest = false

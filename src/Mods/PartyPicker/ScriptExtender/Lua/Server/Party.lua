@@ -88,21 +88,34 @@ end
 
 -- Who may appear in the list at all. DB_PartOfTheTeam also holds camp
 -- followers and camp pets (seen in game 2026-10-11: Volo, Elminster, the
--- Oathbreaker Knight, Scratch, Tara, Shovel, Bernard). The game's own camp
--- script tells them apart by DB_OriginNPCAlignment: a character in camp
--- without it is given the camp-follower faction (Shared GLO_Camp.txt
--- L2785-2806); origins get it (_GLO_Shared_Origins.txt L238) and so do
--- hirelings (SharedDev Hirelings.txt L745). Companions added by other mods
--- may lack it, so anyone this mod has seen in the active party also counts.
+-- Oathbreaker Knight, Scratch, Tara, Shovel, Bernard). Besides player
+-- characters and hirelings, a character is listed when the story marks them
+-- as a companion (Shared story copies, see docs/RESEARCH.md):
+--   DB_OriginNPCAlignment: dismissing a companion to camp requires it
+--     (_GLO_Shared_Origins.txt L439-450); in camp, a character without it is
+--     given the camp-follower faction (GLO_Camp.txt L2785-2806). Hirelings
+--     get it on hiring (SharedDev Hirelings.txt L745).
+--   DB_GLO_PartyMembers_OriginalAlignment: copied from it and from hiring
+--     (_GLO_Shared_Origins.txt L238-240); the game's dismissal procedure
+--     needs it (_GLO_Shared_PartyMembers.txt L1297-1305).
+--   DB_GLO_PartyMembers_DefaultFaction: written when a party member is
+--     dismissed (_GLO_Shared_PartyMembers.txt L1313), removed on rejoining
+--     (L523).
+-- Anyone this mod has seen in the active party also counts, for companions
+-- added by other mods that the story does not mark.
+local COMPANION_DBS = {
+    "DB_OriginNPCAlignment", "DB_GLO_PartyMembers_OriginalAlignment", "DB_GLO_PartyMembers_DefaultFaction",
+}
+
 local function seenVar()
     local ok, seen = pcall(function() return Ext.Vars.GetModVariables(ModuleUUID).Seen end)
     return (ok and type(seen) == "table") and seen or {}
 end
 
-local function rememberActive(isCompanion)
+local function rememberActive(isCompanion, ids)
     local seen, changed = {}, false
     for u, v in pairs(seenVar()) do seen[u] = v end
-    for _, id in ipairs(column1("DB_Players")) do
+    for _, id in ipairs(ids or column1("DB_Players")) do
         local u = PP.BareUuid(id)
         if u and not seen[u] and isCompanion(id) then seen[u] = true; changed = true end
     end
@@ -111,7 +124,7 @@ local function rememberActive(isCompanion)
     return seen
 end
 
-local CAMP_ONLY = "camp only (never in your party; not an origin companion or hireling)"
+local CAMP_ONLY = "camp only (not marked as a companion or hireling, never seen in your party)"
 
 local function rosterFilter()
     local isCompanion = companionFilter()
@@ -120,7 +133,10 @@ local function rosterFilter()
     local avatars = uuidSet("DB_Avatars")
     for u in pairs(uuidSet("DB_DismissedAvatar")) do avatars[u] = true end
     local hired = uuidSet("DB_Hirelings_Hired")
-    local aligned = uuidSet("DB_OriginNPCAlignment", 2)
+    local aligned = {}
+    for _, db in ipairs(COMPANION_DBS) do
+        for u in pairs(uuidSet(db, 2)) do aligned[u] = true end
+    end
     return function(id)
         local ok, why = isCompanion(id)
         if not ok then return false, why end
@@ -128,6 +144,22 @@ local function rosterFilter()
         if players[u] or avatars[u] or hired[u] or aligned[u] or seen[u] then return true end
         return false, CAMP_ONLY
     end
+end
+
+-- Called when someone joins the active party (DB_Players listener), so a
+-- companion is remembered even if the Party tab is never opened meanwhile.
+function Party.Remember(id)
+    rememberActive(companionFilter(), { id })
+end
+
+-- !pp_forget: drop someone from the remembered list. Returns true if they were in it.
+function Party.Forget(uuid)
+    local seen, found = {}, false
+    for u, v in pairs(seenVar()) do
+        if u == uuid then found = true else seen[u] = v end
+    end
+    if found then pcall(function() Ext.Vars.GetModVariables(ModuleUUID).Seen = seen end) end
+    return found
 end
 
 local function userOf(id)
@@ -291,7 +323,8 @@ end
 -- so a wrongly listed character shows where it came from.
 local SOURCE_DBS = {
     { "DB_PartOfTheTeam", "team" }, { "DB_Hirelings_Hired", "hired" }, { "DB_Players", "players" },
-    { "DB_OriginNPCAlignment", "aligned", 2 }, { "DB_Origins", "origin" },
+    { "DB_OriginNPCAlignment", "aligned", 2 }, { "DB_GLO_PartyMembers_OriginalAlignment", "origalign", 2 },
+    { "DB_GLO_PartyMembers_DefaultFaction", "dismissed", 2 }, { "DB_Origins", "origin" },
     { "DB_PartyMembers", "partymembers" }, { "DB_InCamp", "incamp" },
     { "DB_Avatars", "avatar" }, { "DB_PartyFollowers", "followers" }, { "DB_PlayerSummons", "summons" },
 }

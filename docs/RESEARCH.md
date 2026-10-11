@@ -98,12 +98,23 @@ Signatures are from [LaughingLeader's generated Osi.lua](https://github.com/Laug
   Elminster, the Oathbreaker Knight, Scratch, Tara, Shovel and Bernard. It is filled by
   `PROC_ORI_SetupCamp` for anyone "recruited to the camp" (`_GLO_Shared_Origins.txt` L1943–1950).
 - `DB_OriginNPCAlignment(character, faction)` is what separates companions from camp followers:
-  - origins get one (`_GLO_Shared_Origins.txt` L238);
+  - origins get one in the Act story files (not in the copy read; `_GLO_Shared_Origins.txt` L238
+    is a rule that reacts to it);
   - hirelings get one on hiring (SharedDev `Hirelings.txt` L745);
   - the camp script gives the camp-follower faction to characters in camp that have
     `DB_OriginCampFlags` but **no** `DB_OriginNPCAlignment` (`GLO_Camp.txt` L2785–2806).
+  - dismissing a companion to camp requires it (`_GLO_Shared_Origins.txt` L439–450).
   The Act story files, where the origins' rows are asserted, were not in the copy that was read, so
   the full list of characters with a row is not confirmed.
+- Two more marks, used as well:
+  - `DB_GLO_PartyMembers_OriginalAlignment` is copied from `DB_OriginNPCAlignment`
+    (`_GLO_Shared_Origins.txt` L238–240), and the dismissal procedure `PROC_GLO_PartyMembers_MakeNPC`
+    requires it (`_GLO_Shared_PartyMembers.txt` L1297–1305);
+  - `DB_GLO_PartyMembers_DefaultFaction` is written by that procedure when a member is dismissed
+    (L1313) and removed when they rejoin (L523).
+- Script Extender can listen to story-table inserts: "`after` - Trigger event after a call/DB insert
+  is performed" ([API.md](https://github.com/Norbyte/bg3se/blob/main/Docs/API.md)). Party Picker
+  uses this on `DB_Players` to remember everyone who joins the party.
 
 **Host character**
 - `GetHostCharacter` returns the character the host *controls*. That can be a companion: the game's

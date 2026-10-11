@@ -94,6 +94,11 @@ Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", function()
     Restrictions.ExtendRaft()
 end)
 
+-- Remember everyone who joins the active party (see Party.Remember).
+Ext.Osiris.RegisterListener("DB_Players", 1, "after", function(id)
+    pcall(Party.Remember, id)
+end)
+
 -- MCM fires this in both contexts (BG3-MCM Server/MCMServer.lua).
 pcall(function()
     Ext.ModEvents.BG3MCM["MCM_Setting_Saved"]:Subscribe(function(payload)
@@ -128,6 +133,23 @@ Ext.RegisterConsoleCommand("pp_roster", function()
         tostring(select(2, pcall(Osi.GetMaxPartySize)))))
 end)
 
+-- !pp_forget Name: remove a character from the "seen in your party" record,
+-- e.g. if someone who is not a party member got listed that way.
+Ext.RegisterConsoleCommand("pp_forget", function(_, ...)
+    local name = string.lower((table.concat({ ... }, " "):gsub("^%s+", ""):gsub("%s+$", "")))
+    local hits = 0
+    for _, db in ipairs({ "DB_PartOfTheTeam", "DB_Hirelings_Hired", "DB_Players" }) do
+        local ok, rows = pcall(function() return Osi[db]:Get(nil) end)
+        for _, row in ipairs(ok and rows or {}) do
+            if string.lower(Party.DisplayName(row[1])) == name and Party.Forget(PP.BareUuid(row[1])) then
+                hits = hits + 1
+            end
+        end
+    end
+    PP.Log(hits > 0 and ("forgot " .. hits .. " character(s) named " .. name)
+        or ("nobody named " .. name .. " in the seen record (see !pp_roster)"))
+end)
+
 Ext.RegisterConsoleCommand("pp_size", function()
     Party.ApplyMaxSize()
 end)
@@ -157,4 +179,4 @@ Ext.RegisterConsoleCommand("pp_set", function(_, ...)
     PP.Log(message)
 end)
 
-PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size")
+PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name")

@@ -8,7 +8,7 @@
   procedures as documented in `docs/RESEARCH.md`. The mock checks `TeleportTo`'s argument count,
   refuses two-argument `Remove` calls and avatar removals, and models the hireling camp counter.
 
-The 76 checks cover:
+The 82 checks cover:
 - roster building and summon filtering;
 - a companion the host is controlling;
 - party changes from the MCM tab, including hirelings in camp;
@@ -26,7 +26,9 @@ The 76 checks cover:
 - Withers, summons (including one only its entity component reveals) and followers: never listed,
   never counted, never moved by Apply;
 - camp followers and camp pets in `DB_PartOfTheTeam` not listed; a companion from another mod
-  listed once seen in the party, and still listed from camp (the record is saved);
+  listed once seen in the party, and still listed from camp (the record is saved), also when they
+  joined and left with the tab closed; a companion with the game's dismissal mark listed; summons
+  never remembered; `!pp_forget`;
 - `!pp_roster` printing the version, each character's story tables and faction, and `?` for a
   failed lookup;
 - the settings switches.

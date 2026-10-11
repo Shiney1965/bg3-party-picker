@@ -66,7 +66,8 @@ docs/                            research notes and the in-game test plan
 
 ## Console commands (testing)
 
-- **Server context:** `!pp_roster`, `!pp_set Shadowheart,Astarion,Gale`, `!pp_restore`, `!pp_size`
+- **Server context:** `!pp_roster`, `!pp_set Shadowheart,Astarion,Gale`, `!pp_restore`, `!pp_size`,
+  `!pp_forget Name`
 - **Client context:** `!pp` opens the Party list without MCM.
 
 ## Building the .pak
@@ -95,16 +96,20 @@ BG3 Modder's Multitool can still be used instead. See [RUN_CARD.md](RUN_CARD.md)
   only used when more than four people ride the raft.
 - Who is listed. A character is listed when they are one of these:
   - a player character (`DB_Avatars`, or a dismissed one in `DB_DismissedAvatar`);
-  - an origin companion: Larian's story gives these an NPC alignment (`DB_OriginNPCAlignment`), and
-    its camp script uses exactly that to tell companions from camp followers;
+  - a companion the story marks as one: an NPC alignment (`DB_OriginNPCAlignment` or
+    `DB_GLO_PartyMembers_OriginalAlignment`), which the game needs to dismiss a companion and which
+    its camp script uses to tell companions from camp followers, or the record the game writes when
+    a party member is dismissed (`DB_GLO_PartyMembers_DefaultFaction`);
   - a hireling (`DB_Hirelings_Hired`);
-  - anyone Party Picker has seen in the active party. This is how companions added by other mods
-    are found, and it is saved with the game.
+  - anyone Party Picker has seen join the active party. This covers companions added by other mods
+    that the story does not mark, and it is saved with the game. `!pp_forget Name` removes someone
+    from this record.
 
   Withers, summons and followers are never listed. Camp followers and camp pets (Volo, Elminster,
   the Oathbreaker Knight, Scratch, Tara and others) are left out because they fit none of the above.
-  **Limit:** a companion added by another mod who has not been in your party since Party Picker was
-  installed is not listed until they join once the normal way. `!pp_roster` shows why each
+  **Limit:** a companion added by another mod that the story does not mark, who is in camp and has
+  not joined your party since Party Picker was installed, is not listed until they join once the
+  normal way. `!pp_roster` shows why each
   character is or is not listed.
 - Dialogue still seats the speaker plus three. That is not changed.
 - Quest items carried by member 5+ are sometimes not registered, per Party Limit Begone's notes.

@@ -1,7 +1,7 @@
 # Party Picker: test run card (v0.1.4)
 
-**Pak:** `PartyPicker.pak` (26,459 bytes)
-SHA256 `068b4c1ec476b553935c4bc81a2e55c2cc67a15a9d469d99d5f3671251a7108d`
+**Pak:** `PartyPicker.pak` (27,419 bytes)
+SHA256 `5b068fdf1d269ae64d5835dcca0ae314a0394dd0eeea67bc6f19ad8a63cf303b`
 
 **Built with:** `python3 tools/lspk.py create src PartyPicker.pak`. Rebuilding Scroll Repair's
 `src/` with the same tool gives a pak byte-identical to the Divine-built `ScrollRepair.pak`.
