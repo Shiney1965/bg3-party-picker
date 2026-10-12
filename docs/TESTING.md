@@ -99,6 +99,17 @@ a rule that works in every game, not just his. v0.1.4 does this (see README, "Wh
 so it seems to be installed" (SHA-256 `5B068FDF...63CF303B`, 27,419 bytes). In-game result not yet
 reported.
 
+**2026-10-12, hireling report.** Alan: "I ran party picker this morning and there is a bug with
+recruiiting hirelings. One recruited I was unable to dismiss Brianna Brightsong." No log from that
+session has been received yet, so the version that ran is not confirmed. Who Brianna Brightsong is
+(vanilla hireling or a character from another mod) is not known. A web search found no
+character of that name. Desk check: Party Picker sends a hireling to camp with the same two calls
+as the game's own hireling dialogue (`PROC_GLO_PartyMembers_Remove(hireling, avatar, 0)` then
+`PROC_Hirelings_SendToCamp`, SharedDev `Hirelings.txt` L1095–1096). The game's removal ends in
+`PROC_GLO_PartyMembers_MakeNPC`, which only runs for a character in
+`DB_GLO_PartyMembers_OriginalAlignment` and `DB_PartyMembers` (`_GLO_Shared_PartyMembers.txt`
+L1297–1305), so a character without that row would stay in the party.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 
