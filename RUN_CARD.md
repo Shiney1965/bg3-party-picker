@@ -1,7 +1,7 @@
-# Party Picker: test run card (v0.1.4)
+# Party Picker: test run card (v0.1.5)
 
-**Pak:** `PartyPicker.pak` (27,419 bytes)
-SHA256 `5b068fdf1d269ae64d5835dcca0ae314a0394dd0eeea67bc6f19ad8a63cf303b`
+**Pak:** `PartyPicker.pak` (27,867 bytes)
+SHA256 `6bf969c9e024579c0a5e04db5547053e3f5fc5c0f896a48d3cf2f92cb28a9098`
 
 **Built with:** `python3 tools/lspk.py create src PartyPicker.pak`. Rebuilding Scroll Repair's
 `src/` with the same tool gives a pak byte-identical to the Divine-built `ScrollRepair.pak`.
@@ -21,6 +21,8 @@ SHA256 `5b068fdf1d269ae64d5835dcca0ae314a0394dd0eeea67bc6f19ad8a63cf303b`
    v0.1.4 (2026-10-11): only party members are listed: player characters, origin companions,
    hirelings, and anyone who has been in your active party (companions added by other mods). Camp
    followers and camp pets are no longer listed.
+   v0.1.5 (2026-10-12): hirelings are listed only once hired at Withers (or while in the party).
+   v0.1.4 could list, and recruit, hireling templates nobody had hired.
 3. Quit the game.
 
 ## Install
@@ -34,13 +36,13 @@ SHA256 `5b068fdf1d269ae64d5835dcca0ae314a0394dd0eeea67bc6f19ad8a63cf303b`
    `%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Script Extender\Scripe Extender Logs\Extender Runtime *.log`
    (path as printed on the first line of Alan's log of 2026-10-11; the folder name really is
    misspelled). Look for:
-   - `[PartyPicker] server loaded (v0.1.4).`
-   - `[PartyPicker] client loaded (v0.1.4) (Party tab added to MCM).`
+   - `[PartyPicker] server loaded (v0.1.5).`
+   - `[PartyPicker] client loaded (v0.1.5) (Party tab added to MCM).`
    - `[PartyPicker] party size limit set to 6`
 8. Open the SE console, type `server`, then `!pp_roster`. Your companions should be listed, your
    character marked `locked(player character)`. Each line ends with `[in: ...; faction: ...; id: ...]`
    (story tables and summon/follower signals; a `?` means that lookup failed).
-   The first line must read `Party Picker v0.1.4 roster:`. If it does not, the old pak is still
+   The first line must read `Party Picker v0.1.5 roster:`. If it does not, the old pak is still
    loaded. Volo, Elminster, the Oathbreaker Knight, Scratch, Tara, Shovel and Bernard should be
    under `not listed: camp only`. **Send me the whole output.**
 9. Open MCM. Party Picker should have a **Settings** tab and a **Party** tab.

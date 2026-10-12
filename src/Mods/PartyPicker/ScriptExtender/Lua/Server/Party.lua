@@ -126,6 +126,29 @@ end
 
 local CAMP_ONLY = "camp only (not marked as a companion or hireling, never seen in your party)"
 
+-- Hireling templates (the characters Withers can create) get the companion
+-- marks with the Hirelings faction before anyone hires them (SharedDev
+-- Hirelings.txt L280-285, DB_Hirelings_HACK_Classes). A hireling is only a
+-- party member once hired (DB_Hirelings_Hired, L496-513), so those marks
+-- never count on their own.
+local HIRELINGS_FACTION = "b7b47ac8-8e29-4984-b8c5-f35b66d8265a"
+local NOT_HIRED = "hireling not hired (not created at Withers in this game)"
+
+local function rows2(dbName)
+    local ok, rows = pcall(function() return Osi[dbName]:Get(nil, nil) end)
+    return (ok and type(rows) == "table") and rows or {}
+end
+
+local function hirelingTemplates()
+    local set = {}
+    local ok, rows = pcall(function() return Osi.DB_Hirelings_HACK_Classes:Get(nil, nil, nil) end)
+    for _, row in ipairs((ok and type(rows) == "table") and rows or {}) do
+        local u = PP.BareUuid(row[2])
+        if u then set[u] = true end
+    end
+    return set
+end
+
 local function rosterFilter()
     local isCompanion = companionFilter()
     local seen = rememberActive(isCompanion)
@@ -133,15 +156,25 @@ local function rosterFilter()
     local avatars = uuidSet("DB_Avatars")
     for u in pairs(uuidSet("DB_DismissedAvatar")) do avatars[u] = true end
     local hired = uuidSet("DB_Hirelings_Hired")
+    local hirelingType = hirelingTemplates()
     local aligned = {}
     for _, db in ipairs(COMPANION_DBS) do
-        for u in pairs(uuidSet(db, 2)) do aligned[u] = true end
+        for _, row in ipairs(rows2(db)) do
+            local u = PP.BareUuid(row[1])
+            if u then
+                if PP.BareUuid(row[2]) == HIRELINGS_FACTION then hirelingType[u] = true
+                else aligned[u] = true end
+            end
+        end
     end
     return function(id)
         local ok, why = isCompanion(id)
         if not ok then return false, why end
         local u = PP.BareUuid(id)
-        if players[u] or avatars[u] or hired[u] or aligned[u] or seen[u] then return true end
+        -- Anyone in the party now stays listed, so they can be sent away.
+        if players[u] or avatars[u] or hired[u] then return true end
+        if hirelingType[u] then return false, NOT_HIRED end
+        if aligned[u] or seen[u] then return true end
         return false, CAMP_ONLY
     end
 end
@@ -344,6 +377,9 @@ function Party.Sources(id)
             found[#found + 1] = spec[2]
         end
     end
+    local okT, tpl = pcall(function() return Osi.DB_Hirelings_HACK_Classes:Get(nil, id, nil) end)
+    if not okT then found[#found + 1] = "hiretemplate?"
+    elseif type(tpl) == "table" and next(tpl) ~= nil then found[#found + 1] = "hiretemplate" end
     -- The summon/follower signals companionFilter uses besides the tables.
     local function query(label, fn)
         local ok, v = pcall(fn, id)

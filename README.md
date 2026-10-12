@@ -1,8 +1,8 @@
 # Party Picker (BG3)
 
-A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.4
-awaiting an in-game test.** v0.1.4 stops camp followers and camp pets appearing in the Party list
-(reported on 2026-10-11); see
+A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.5
+awaiting an in-game test.** v0.1.4 stopped camp followers and camp pets appearing in the Party list;
+v0.1.5 also stops hirelings nobody has hired (reported 2026-10-11 and 2026-10-12); see
 [docs/TESTING.md](docs/TESTING.md) for the reports so far.
 
 - **Party tab in Mod Configuration Menu (MCM).** Your party members are listed with a checkbox:
@@ -100,7 +100,8 @@ BG3 Modder's Multitool can still be used instead. See [RUN_CARD.md](RUN_CARD.md)
     `DB_GLO_PartyMembers_OriginalAlignment`), which the game needs to dismiss a companion and which
     its camp script uses to tell companions from camp followers, or the record the game writes when
     a party member is dismissed (`DB_GLO_PartyMembers_DefaultFaction`);
-  - a hireling (`DB_Hirelings_Hired`);
+  - a hireling Withers has hired (`DB_Hirelings_Hired`). Hireling templates carry the companion
+    marks before anyone hires them (`Hirelings.txt` L280–285), so for them only hiring counts;
   - anyone Party Picker has seen join the active party. This covers companions added by other mods
     that the story does not mark, and it is saved with the game. `!pp_forget Name` removes someone
     from this record.

@@ -31,6 +31,10 @@ for _, ch in pairs(M.chars) do
 end
 M.db("DB_Avatars")(M.host.id)
 M.db("DB_Hirelings_Hired")(c.Hireling.id)
+-- Hirelings get the companion marks with the Hirelings faction (SharedDev Hirelings.txt L745-747).
+local HIRELINGS = "Hirelings_b7b47ac8-8e29-4984-b8c5-f35b66d8265a"
+M.db("DB_OriginNPCAlignment")(c.Hireling.id, HIRELINGS)
+M.db("DB_GLO_PartyMembers_OriginalAlignment")(c.Hireling.id, HIRELINGS)
 -- Origins carry an NPC alignment (needed to dismiss them: _GLO_Shared_Origins.txt L439-450).
 for _, n in ipairs(names) do M.db("DB_OriginNPCAlignment")(c[n].id, "Origin_" .. n .. "_Alignment") end
 for _, ch in ipairs({ M.host, c.Shadowheart, c.Astarion, c.Gale, wolf }) do M.db("DB_Players")(ch.id) end
@@ -327,7 +331,38 @@ M.console.pp_forget(nil, "Raphael")
 saved = Ext.Vars.GetModVariables(ModuleUUID).Seen
 check(not saved[raphael.uuid] and table.concat(M.log):find("forgot 1"), "!pp_forget removes a remembered character")
 
--- 20. Settings off: no hold, no raft change.
+-- 20. Reported in game 2026-10-12: a hireling never created at Withers was
+--     listed. Hireling templates carry the companion marks with the Hirelings
+--     faction before hiring (Hirelings.txt L280-285). Only hired ones are listed,
+--     even if this mod saw them in the party before (v0.1.4 could recruit them).
+local brianna = M.addChar("Brianna", U(70))
+M.db("DB_Hirelings_HACK_Classes")("Recruit_Flag_X", brianna.id, "Recruited_Flag_X")
+M.db("DB_OriginNPCAlignment")(brianna.id, HIRELINGS)
+M.db("DB_GLO_PartyMembers_OriginalAlignment")(brianna.id, HIRELINGS)
+M.db("DB_PartOfTheTeam")(brianna.id)
+M.db("DB_InCamp")(brianna.id)
+local seenNow = {}
+for u, v in pairs(Ext.Vars.GetModVariables(ModuleUUID).Seen) do seenNow[u] = v end
+seenNow[brianna.uuid] = true
+Ext.Vars.GetModVariables(ModuleUUID).Seen = seenNow
+names = {}
+for _, e in ipairs(Party.Roster()) do names[e.name] = true end
+check(not names.Brianna, "un-hired hireling template not listed, even if seen before")
+check(names.Hireling, "hired hireling still listed")
+excluded = {}
+for _, x in ipairs(Party.Excluded()) do excluded[x.name] = x.why end
+check(excluded.Brianna and excluded.Brianna:find("not hired"), "!pp_roster explains the un-hired hireling")
+-- If such a character is in the party now, they stay listed so they can be sent away.
+M.db("DB_Players")(brianna.id)
+names = {}
+for _, e in ipairs(Party.Roster()) do names[e.name] = true end
+check(names.Brianna, "un-hired hireling in the party is listed so she can be sent away")
+M.db("DB_Players"):Delete(brianna.id)
+M.log = {}
+M.console.pp_roster()
+check(table.concat(M.log, "\n"):find("Brianna[^\n]*hiretemplate"), "!pp_roster tags hireling templates")
+
+-- 21. Settings off: no hold, no raft change.
 settings.prompt_long_rest = false
 M.fire("QRY_Camp_CheckPlayersReadyForNightModeStoryReasons", 0, "before")
 check(#M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason").rows == 0, "setting off: no hold")
