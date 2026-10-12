@@ -2,7 +2,8 @@
 
 Read this first, then README.md, RUN_CARD.md, docs/RESEARCH.md and docs/TESTING.md. They hold the
 design, the source for every game procedure used, and every in-game report so far (quoted exactly).
-Last updated 2026-10-12 by the cloud session https://claude.ai/code/session_01Mtwddt4A8ek5TsMuTXAzd5.
+Last updated 2026-10-12 by a session on Alan's PC, continuing the cloud session
+https://claude.ai/code/session_01Mtwddt4A8ek5TsMuTXAzd5.
 
 ## What this is
 Baldur's Gate 3 mod (Script Extender Lua + Mod Configuration Menu). Party tab in MCM lists party
@@ -16,6 +17,13 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
   Version64 = major<<55 | minor<<47 | revision<<31 | build — compute it with python, never by hand.
 - Build: `pip install lz4 lupa`, then `python3 tests/run_tests.py` (must pass), then
   `python3 tools/lspk.py create src PartyPicker.pak`. Put size and SHA-256 in RUN_CARD.md.
+  On Alan's PC `python` is not on PATH: use
+  `C:\Users\Alan\AppData\Local\Programs\Python\Python313\python.exe`.
+  On Windows the checkout has CRLF line endings (git autocrlf), which changes the pak's bytes.
+  Build from an LF export so the hash matches a build anywhere else: stage the changes, then
+  `git -c core.autocrlf=false checkout-index -a -f --prefix=<empty scratch folder>/` and run
+  lspk.py on that folder's `src`. Checked 2026-10-12: v0.1.5 rebuilt this way is byte-identical
+  to the committed pak.
 - After any change that took more than ~5 minutes, run an adversarial review by a subagent before moving on.
 - Record every in-game report in docs/TESTING.md with Alan's exact words in quotes. Never mark a test
   step passed unless he confirms it. Do not guess; cite story-file lines for any game behaviour.
@@ -32,6 +40,14 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
 - Alan runs many other mods (see the log header), including AlfiraJoinsTheDurgesParty and Raphael
   Joins the Party (companions added by mods), MCM 1.41, Script Extender v32. A separate ClothMorph
   project has its own install steps; keep the two installs apart when testing.
+- DaisyMorph (another of Alan's mods) hires hireling characters by script as stand-ins ("dummy
+  hirelings") and parks them. They are in `DB_Hirelings_Hired` without a visit to Withers.
+- Osiris logging is on: `Osiris Runtime *.log` in the same folder records every story call of a
+  session (tens of MB to several GB; filter it, never read it whole). It settled the 2026-10-12
+  report when the Extender log could not.
+- The game's own story source, extracted from Alan's install (use it for line numbers):
+  `C:\Claude Projects\BG3 Mods\RaphaelJoinsTheParty\_vanilla_story\Mods\Shared\Story\RawFiles\Goals\`
+  and `...\Mods\SharedDev\Story\RawFiles\Goals\` (`Hirelings.txt`).
 
 ## Version history and state (2026-10-12)
 - v0.1.1: worked except Withers and summons listed. v0.1.2: excluded Withers, summons, followers.
@@ -43,47 +59,68 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
 - v0.1.5 (committed 24595c1, pak SHA-256 6bf969c9…cb28a9098, 27,867 bytes): hirelings listed only
   once hired at Withers (or while in the party). Reason: Hirelings.txt L280–285 gives every hireling
   template the companion marks with faction Hirelings_b7b47ac8-… before anyone hires them, so v0.1.4
-  listed un-hired templates. **Not installed. Do not give it to Alan yet** — the adversarial review
-  (below) found it does not fix his save and its premise is probably wrong.
+  listed un-hired templates. Never installed; superseded by v0.1.6. Its premise was wrong for
+  Alan's case: the log shows the Bard was in DB_Hirelings_Hired before Party Picker touched her.
+  The filter itself is kept (it only hides a hireling character that is in DB_PartOfTheTeam but
+  neither hired nor in the party).
+- v0.1.6 (2026-10-12): fixes the Brianna Brightsong report. Size and SHA-256 are in RUN_CARD.md.
+  **Built, not installed, not tested in game.** Do not install it for Alan without his say-so.
+
+## The 2026-10-12 report: cause (full evidence in docs/TESTING.md)
+- v0.1.4 ran. The Bard hireling (`4d3c9cb3`) joined; later the Rogue hireling was sent to camp.
+  No story call ever tried to remove the Bard.
+- The Bard was hired already (DB_Hirelings_Hired, DB_PartOfTheTeam) but **off stage**. The add rule
+  never puts anyone on stage, so she joined as an absent party member; the story then gave her the
+  fast-travel block (`_Waypoints.txt` L188–194: DB_Players AND DB_CantMove), and Party.lua's own
+  BLOCKING_DBS check refused every request that would send her to camp. Refusals were not logged,
+  and PartyTab.lua redrew 1.5 s after every reply, wiping the message.
+- v0.1.6: off-stage characters are locked, refusals are logged and stay on the tab, requests and
+  results name who moved, `PROC_Hirelings_SendToCamp` only runs if the game really removed the
+  hireling, `!pp_roster` shows offstage/cantmove/cantact/travelblock/campflag/hiredflag.
 
 ## Open issues
-1. **Brianna Brightsong (2026-10-12):** listed under v0.1.4 though never created at Withers; Alan
-   recruited her with the Party tab and then could not dismiss her. Which version ran is not confirmed.
-   Need the newest Extender Runtime log (look for `server loaded (v0.1.4)` and `did not leave` /
-   `Party partly updated`) and `!pp_roster` output. Suspicion only: Party Picker's add went through
-   PROC_GLO_PartyMembers_CheckAdd, whose hireling AddHook (Hirelings.txt ~L503–513) marks a raw
-   template as hired without Withers creating her, and the dismiss path may not handle that. Check
-   whether, with v0.1.5, such a template (now in DB_Hirelings_Hired) would be listed again, and find
-   the safest way to remove her from the save (reloading an earlier save is the safe fallback).
+1. **Alan's two saves from the end of the 2026-10-12 session still have the Bard in the party, off
+   stage.** v0.1.6 refuses to send her to camp (and says why). Safe route: a save from before that
+   session. Untested: hard save, server console `Osi.SetOnStage("4d3c9cb3-ca34-46ba-9c81-44081270bfde", 1)`,
+   then untick her. Not known: what `PROC_DismissToCamp` (`_GLO_Shared_Origins.txt` L460–507, a
+   walk to camp) does with an off-stage character, so no code removes one. Also not known: whether
+   she has `DB_GLO_PartyMembers_OriginalAlignment` (`origalign` in `!pp_roster`), which the removal
+   needs (PM:1305).
 2. "Error . Server shutting down." on load (2026-10-11): logs point to another mod's network message,
    not Party Picker; not reproduced since.
 3. Not yet tested in game: long-rest hold (TESTING.md step 7, highest risk), restore after rest,
-   raft, multiplayer.
+   raft, multiplayer, and everything new in v0.1.6.
+4. Not done, by choice: a "hired at Withers only" filter. Hirelings hired by another mod's script
+   are listed like any other. If Alan wants them hidden: DB_Hirelings_Hired_Rehire is set after a
+   real Withers hire (H:290–316) and never removed, but whether DaisyMorph's hires set it is not
+   known.
+5. Not done: telling apart two listed characters with the same name (not seen in game).
+6. A companion from another mod with no `DB_GLO_PartyMembers_OriginalAlignment` row cannot be sent
+   to camp by the game's removal (PM:1305); Party Picker reports "did not leave" (test 22). Whether
+   any real mod companion lacks the row is not known (Alfira has a DefaultFaction row in Alan's
+   log, so she has been through that procedure).
+7. `Osi.IsOnStage` is used as a second off-stage signal inside a pcall. The story uses the query
+   (`GLO_Camp.txt` L1715) but it has not been called from Script Extender in game yet; `!pp_roster`
+   prints `IsOnStage?` if the call fails.
 
-## Adversarial review of v0.1.5 (2026-10-12) — findings to act on
+## Adversarial review of v0.1.5 (2026-10-12): how each finding ended
 (H = SharedDev Hirelings.txt, PM = Shared _GLO_Shared_PartyMembers.txt, P = Server/Party.lua)
-1. High, confirmed: v0.1.5 still lists Brianna. v0.1.4's add went through CheckAdd → Add → AddHook,
-   which puts any hireling template into DB_Hirelings_Hired and sets Hireling_State_Hired (H:502-513);
-   v0.1.5 lets DB_Hirelings_Hired through. Test 20 covers a state the story cannot produce.
-2. High, by story logic: "never created at Withers" is probably false. In the unmodded story an un-hired
-   template cannot be in DB_PartOfTheTeam / DB_Hirelings_Hired / DB_Players, and plain CheckAdd needs
-   a DB_GLO_PartyMembers_DefaultFaction row (PM:512). So she was most likely already hired (or another
-   mod/debug tool put her there). Settle it with her `!pp_roster` line and the log.
-3. Medium, guesses: dismiss fails if MakeNPC does not run — it needs DB_GLO_PartyMembers_OriginalAlignment
-   and DB_PartyMembers (PM:1298-1307). A Withers dismiss deletes her OriginalAlignment row (H:639) and only
-   a fresh hire re-adds it (H:746), so a hireling back in the party by another route cannot be removed;
-   Remove then only detaches her (PM:692) and P reports "did not leave". Also: P's sendToCamp discards
-   the pcall results for hirelings (no log on failure) — fix that. Also check she was not locked
-   (controlled character).
-4. If a stricter "hired at Withers" test is still wanted: DB_Hirelings_Hired_Rehire is set after a real
-   Withers hire (H:290-316) and never removed; the Hireling_State_Hired flag and Hirelings_Hired_Count do
-   not work (H:512, H:673, H:105). Caveat: debug hire path (H:868-877) does not set it.
-5. Safest removal in Alan's save (hard save first): talk to Brianna and choose dismiss (game's
-   PROC_Hirelings_Dismiss, H:888-896), or Withers' dismiss menu with her in the active party (H:1016).
-   Console fallback `Osi.PROC_Hirelings_Dismiss("<uuid>")` (server) may leave Hirelings_Hired_Count one
-   too low (H:626, H:1273-1276).
-Test gaps: mock CheckAdd ignores the DefaultFaction requirement and AddHook; mock Remove ignores
-MakeNPC's requirements; mock Get ignores arity.
+1. "v0.1.5 still lists Brianna": true, but not through v0.1.4's own add. She was in
+   DB_Hirelings_Hired before Party Picker touched her (Osiris log 464061–464065).
+2. "Never created at Withers is probably false": the story had her as hired. The likely source is
+   DaisyMorph's scripted hires, so Alan may well never have hired her himself. Inference only.
+3. "Dismiss fails because MakeNPC does not run": not what happened. No removal reached the story;
+   Party Picker refused first (see the cause above). The discarded pcall results in sendToCamp are
+   fixed, and SendToCamp no longer runs for a hireling the game left in the party. Whether she
+   was the character Alan was controlling is not in the logs; the travel block alone explains the
+   refusal.
+4. Stricter filter: see open issue 4.
+5. Removing her from the save: see open issue 1. Talking to her is not possible while she is off
+   stage.
+Test gaps: closed in tests/mock_game.lua (add needs a DefaultFaction row and runs the hireling
+hook; the three hireling factions; removal only under the game's conditions; off stage → cannot
+move → travel block; column count checked on `:Get`). Still not modelled: the party-full flag is
+recomputed inside the mock's CheckAdd (the game only reads it), DetachFromPartyGroup, items.
 
 ## Story sources
 Third-party copy of Larian's story goals (Shared + SharedDev only; Act files missing):

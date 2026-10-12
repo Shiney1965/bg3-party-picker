@@ -35,11 +35,30 @@ M.db("DB_Hirelings_Hired")(c.Hireling.id)
 local HIRELINGS = "Hirelings_b7b47ac8-8e29-4984-b8c5-f35b66d8265a"
 M.db("DB_OriginNPCAlignment")(c.Hireling.id, HIRELINGS)
 M.db("DB_GLO_PartyMembers_OriginalAlignment")(c.Hireling.id, HIRELINGS)
--- Origins carry an NPC alignment (needed to dismiss them: _GLO_Shared_Origins.txt L439-450).
-for _, n in ipairs(names) do M.db("DB_OriginNPCAlignment")(c[n].id, "Origin_" .. n .. "_Alignment") end
-for _, ch in ipairs({ M.host, c.Shadowheart, c.Astarion, c.Gale, wolf }) do M.db("DB_Players")(ch.id) end
+M.db("DB_Hirelings_HACK_Classes")("Recruit_Flag_H", c.Hireling.id, "Recruited_Flag_H")
+-- Origins carry an NPC alignment (needed to dismiss them: _GLO_Shared_Origins.txt L439-450),
+-- which the story copies to the table the dismissal procedure reads (L238-240).
+for _, n in ipairs(names) do
+    M.db("DB_OriginNPCAlignment")(c[n].id, "Origin_" .. n .. "_Alignment")
+    M.db("DB_GLO_PartyMembers_OriginalAlignment")(c[n].id, "Origin_" .. n .. "_Alignment")
+end
+for _, ch in ipairs({ M.host, c.Shadowheart, c.Astarion, c.Gale, wolf }) do
+    M.db("DB_Players")(ch.id)
+    M.db("DB_PartyMembers")(ch.id)
+end
 for _, ch in ipairs({ c.Laezel, c.Karlach, c.Wyll, c.Hireling }) do M.db("DB_InCamp")(ch.id) end
+-- Companions waiting in camp were dismissed, which leaves the row the add
+-- rule needs (_GLO_Shared_PartyMembers.txt L512, L1313).
+for _, ch in ipairs({ c.Laezel, c.Karlach, c.Wyll }) do
+    M.db("DB_GLO_PartyMembers_DefaultFaction")(ch.id, "PlayerFaction")
+end
 Osi.PROC_Hirelings_SendToCamp(c.Hireling.id) -- the hireling was parked in camp by the game
+
+-- A companion another mod looks after leaves the party that mod's own way.
+local function leavesByOtherMod(ch)
+    M.db("DB_Players"):Delete(ch.id)
+    M.db("DB_InCamp")(ch.id)
+end
 
 -- Raft goal rows as in Act1_UND_EbonLake.txt: four positions per dock.
 local RAFT = "DB_UND_EbonLake_Raft_Locations_PlayerPositions"
@@ -293,7 +312,7 @@ excluded = {}
 for _, x in ipairs(Party.Excluded()) do excluded[x.name] = x.why end
 check(excluded.Volo and excluded.Volo:find("camp only"), "!pp_roster explains the camp-only exclusion")
 -- Once seen in the party, the mod companion stays listed from camp, also after a reload.
-Osi.PROC_GLO_PartyMembers_Remove(modded.id, M.host.id, 1)
+leavesByOtherMod(modded)
 local saved = Ext.Vars.GetModVariables(ModuleUUID).Seen
 check(type(saved) == "table" and saved[modded.uuid], "seen party members saved with the game")
 names = {}
@@ -314,7 +333,7 @@ local raphael = M.addChar("Raphael", U(63))
 M.db("DB_PartOfTheTeam")(raphael.id)
 M.db("DB_Players")(raphael.id)
 M.fire("DB_Players", 1, "after", raphael.id)
-Osi.PROC_GLO_PartyMembers_Remove(raphael.id, M.host.id, 1)
+leavesByOtherMod(raphael)
 -- A companion dismissed the normal way carries the dismissal mark, even if
 -- never seen by this mod (_GLO_Shared_PartyMembers.txt L1313).
 local minsc = M.addChar("Minsc", U(64))
@@ -362,7 +381,135 @@ M.log = {}
 M.console.pp_roster()
 check(table.concat(M.log, "\n"):find("Brianna[^\n]*hiretemplate"), "!pp_roster tags hireling templates")
 
--- 21. Settings off: no hold, no raft change.
+-- 21. Reported in game 2026-10-12 ("One recruited I was unable to dismiss
+--     Brianna Brightsong"). The logs showed a hired hireling who was off
+--     stage. v0.1.4 recruited her; the story then blocked her travel
+--     (_Waypoints.txt L188-194) and the block check refused every request
+--     that sent her to camp, without a log line. Off-stage characters are
+--     now not offered, and refusals are logged and name the reason.
+settings.max_party_size = 16
+Party.ApplyMaxSize() -- as the settings listener does when the slider moves
+local IN_CAMP ="Hireling_State_InCamp_e33aa0df-fcfc-4a30-8169-516d3956f02a"
+local bard = M.addChar("Brinna", U(71))
+M.db("DB_Hirelings_HACK_Classes")("Recruit_Flag_B", bard.id, "Recruited_Flag_B")
+M.db("DB_OriginNPCAlignment")(bard.id, HIRELINGS)
+M.db("DB_GLO_PartyMembers_OriginalAlignment")(bard.id, HIRELINGS)
+M.db("DB_PartOfTheTeam")(bard.id)
+M.db("DB_Hirelings_Hired")(bard.id)
+M.db("DB_GLO_PartyMembers_DefaultFaction")(bard.id, "Hireling1_9459fd54-cdc5-458f-8aa0-fc6ea18c888f")
+M.setOnStage(bard, false)
+local function rosterEntry(name)
+    for _, e in ipairs(Party.Roster()) do
+        if e.name == name then return e end
+    end
+end
+local function logText() return table.concat(M.log, "\n") end
+local entry = rosterEntry("Brinna")
+check(entry and entry.locked and tostring(entry.lockReason):find("off stage"),
+    "off-stage hireling listed but locked, got " .. tostring(entry and entry.lockReason))
+M.log = {}
+M.console.pp_roster()
+check(logText():find("Brinna[^\n]*offstage"), "!pp_roster shows the off-stage mark")
+local without = Party.ActiveUuids()
+local withBard = { bard.uuid }
+for _, u in ipairs(without) do withBard[#withBard + 1] = u end
+local activeBefore = M.activeNames()
+M.log = {}
+reply = apply({ uuids = withBard })
+check(reply and not reply.accepted and tostring(reply.message):find("Brinna")
+    and tostring(reply.message):find("off stage"),
+    "recruiting an off-stage character is refused and says why: " .. tostring(reply and reply.message))
+check(M.activeNames() == activeBefore, "and nothing changed")
+check(logText():find("request refused[^\n]*Brinna"), "the refusal is written to the log")
+
+-- As in Alan's save: she is already in the party, off stage.
+Osi.PROC_Hirelings_AddToParty(bard.id, M.host.id)
+check(#M.db("DB_Players"):Get(bard.id) == 1
+    and #M.db("DB_FastTravelBlock_CantMove_StatusSet"):Get(bard.id) == 1,
+    "mock: an off-stage joiner gets the story's travel block")
+M.log = {}
+reply = apply({ uuids = without })
+check(reply and not reply.accepted and tostring(reply.message):find("Brinna")
+    and tostring(reply.message):find("off stage"),
+    "sending an off-stage member to camp is refused and says why: " .. tostring(reply and reply.message))
+check(logText():find("request refused[^\n]*Brinna"), "that refusal is in the log too")
+
+-- Back on stage the block lifts and she can be sent to camp; the request
+-- and the result name who moved.
+M.setOnStage(bard, true)
+M.log = {}
+reply = apply({ uuids = without })
+check(reply and reply.accepted, "on stage again: request accepted: " .. tostring(reply and reply.message))
+check(#M.db("DB_Players"):Get(bard.id) == 0 and Osi.GetFlag(IN_CAMP, bard.id) == 1, "and she is sent to camp")
+check(logText():find("request:[^\n]*send to camp[^\n]*Brinna"), "accepted request logged with names")
+check(logText():find("Sent to camp: Brinna"), "result names who left")
+M.log = {}
+reply = apply({ uuids = withBard })
+check(#M.db("DB_Players"):Get(bard.id) == 1 and logText():find("Joined: Brinna"), "result names who joined")
+
+-- 22. A hireling the game does not remove (no original-alignment row,
+--     _GLO_Shared_PartyMembers.txt L1305): reported, and her hireling camp
+--     state (flag and counter, Hirelings.txt L670-675) is left alone.
+M.db("DB_GLO_PartyMembers_OriginalAlignment"):Delete(bard.id, nil)
+local campCount = M.counters.Hirelings_InCamp_Count
+M.log = {}
+apply({ uuids = without })
+check(#M.db("DB_Players"):Get(bard.id) == 1, "mock: without the alignment row the game does not remove her")
+check(logText():find("Brinna did not leave"), "reported as not having left")
+check(M.counters.Hirelings_InCamp_Count == campCount and Osi.GetFlag(IN_CAMP, bard.id) == 0,
+    "hireling camp state untouched when the game did not remove her")
+M.db("DB_GLO_PartyMembers_OriginalAlignment")(bard.id, HIRELINGS)
+apply({ uuids = without })
+check(#M.db("DB_Players"):Get(bard.id) == 0, "with the row back she leaves")
+-- The same for a companion from another mod that the story does not mark.
+M.db("DB_Players")(modded.id)
+M.db("DB_PartyMembers")(modded.id)
+M.db("DB_InCamp"):Delete(modded.id)
+M.log = {}
+apply({ uuids = without })
+check(logText():find("Alfira did not leave"), "unmarked mod companion the game does not remove is reported")
+leavesByOtherMod(modded)
+-- A character who was never on stage has no DB_OffStage row; the game's
+-- IsOnStage query is the second signal.
+local ghost = M.addChar("Ghost", U(72))
+M.db("DB_PartOfTheTeam")(ghost.id)
+M.db("DB_GLO_PartyMembers_DefaultFaction")(ghost.id, "PlayerFaction")
+ghost.offStage = true
+entry = rosterEntry("Ghost")
+check(entry and entry.locked and tostring(entry.lockReason):find("off stage"),
+    "never-on-stage character locked through IsOnStage")
+M.db("DB_PartOfTheTeam"):Delete(ghost.id)
+M.db("DB_GLO_PartyMembers_DefaultFaction"):Delete(ghost.id, nil)
+
+-- 23. Restore after a rest while a trimmed member is off stage (the camp
+--     hides benched companions at night, GLO_Camp.txt L1630-1649): the others
+--     come back, the record is kept, and she follows once on stage again.
+apply({ uuids = { ids.Shadowheart, ids.Astarion, ids.Laezel } })
+check(#M.db("DB_Players"):Get(c.Laezel.id) == 1, "Laezel in the party before the rest")
+M.fire("PROC_Camp_TryEnterNightModeFailed", 2, "after", M.host.id, "PartyPicker_PartyLargerThanFour")
+apply({ uuids = { ids.Shadowheart }, reason = "rest" })
+check(#M.db("DB_Players"):Get(c.Astarion.id) == 0 and #M.db("DB_Players"):Get(c.Laezel.id) == 0
+    and Restrictions.GetPending() and Restrictions.GetPending().trimmed, "two members trimmed for the rest")
+M.setOnStage(c.Laezel, false)
+M.log = {}
+Restrictions.Restore(function(result) PP.Log(result.message) end)
+M.runTimers()
+check(#M.db("DB_Players"):Get(c.Astarion.id) == 1, "on-stage member restored")
+check(#M.db("DB_Players"):Get(c.Laezel.id) == 0, "off-stage member not added")
+check(Restrictions.GetPending() ~= nil, "trim record kept while someone is still off stage")
+check(logText():find("Laezel[^\n]*off stage"), "and the result says who is waiting")
+ok, message = Restrictions.Restore()
+check(not ok and tostring(message):find("off stage") and Restrictions.GetPending() ~= nil,
+    "only off-stage members left: not 'everyone is back', record kept: " .. tostring(message))
+M.setOnStage(c.Laezel, true)
+Restrictions.Restore()
+M.runTimers()
+check(#M.db("DB_Players"):Get(c.Laezel.id) == 1 and Restrictions.GetPending() == nil,
+    "back on stage: restored, record cleared")
+settings.max_party_size = 6
+Party.ApplyMaxSize()
+
+-- 23. Settings off: no hold, no raft change.
 settings.prompt_long_rest = false
 M.fire("QRY_Camp_CheckPlayersReadyForNightModeStoryReasons", 0, "before")
 check(#M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason").rows == 0, "setting off: no hold")

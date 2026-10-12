@@ -1,9 +1,11 @@
 # Party Picker (BG3)
 
-A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.5
-awaiting an in-game test.** v0.1.4 stopped camp followers and camp pets appearing in the Party list;
-v0.1.5 also stops hirelings nobody has hired (reported 2026-10-11 and 2026-10-12); see
-[docs/TESTING.md](docs/TESTING.md) for the reports so far.
+A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.6
+built, not yet tested in game.** v0.1.4 stopped camp followers and camp pets appearing in the Party
+list. v0.1.6 fixes the hireling who could be recruited but not sent back (reported 2026-10-12): she
+was off stage, so the game blocked her travel and Party Picker then refused to move her without
+saying why. Off-stage characters can no longer be recruited, and every refusal now stays on the
+Party tab and goes to the log. See [docs/TESTING.md](docs/TESTING.md) for the reports so far.
 
 - **Party tab in Mod Configuration Menu (MCM).** Your party members are listed with a checkbox:
   player characters, origin companions, hirelings, and companions added by other mods. Tick who
@@ -100,18 +102,30 @@ BG3 Modder's Multitool can still be used instead. See [RUN_CARD.md](RUN_CARD.md)
     `DB_GLO_PartyMembers_OriginalAlignment`), which the game needs to dismiss a companion and which
     its camp script uses to tell companions from camp followers, or the record the game writes when
     a party member is dismissed (`DB_GLO_PartyMembers_DefaultFaction`);
-  - a hireling Withers has hired (`DB_Hirelings_Hired`). Hireling templates carry the companion
-    marks before anyone hires them (`Hirelings.txt` L280–285), so for them only hiring counts;
+  - a hireling the story has as hired (`DB_Hirelings_Hired`). Hireling characters carry the
+    companion marks before anyone hires them (`Hirelings.txt` L280–285), so for them only hiring
+    counts. A hireling hired by another mod's script counts too, because the story cannot tell the
+    difference;
   - anyone Party Picker has seen join the active party. This covers companions added by other mods
     that the story does not mark, and it is saved with the game. `!pp_forget Name` removes someone
     from this record.
+
+  A listed character who is off stage (not present in the world, `DB_OffStage`) is shown locked
+  as "not available: off stage" and cannot be recruited: the game's add procedure would not bring
+  them on stage, and the game blocks travel for a party member who cannot move
+  (`_Waypoints.txt` L188–194). **Limit:** someone already in your party who is off stage (for
+  example recruited with v0.1.4) cannot be sent to camp by Party Picker. The Party tab says so;
+  reload a save from before they joined.
 
   Withers, summons and followers are never listed. Camp followers and camp pets (Volo, Elminster,
   the Oathbreaker Knight, Scratch, Tara and others) are left out because they fit none of the above.
   **Limit:** a companion added by another mod that the story does not mark, who is in camp and has
   not joined your party since Party Picker was installed, is not listed until they join once the
   normal way. `!pp_roster` shows why each
-  character is or is not listed.
+  character is or is not listed, and the marks the game uses to stop someone moving (`offstage`,
+  `cantmove`, `cantact`, `travelblock`).
+- Every request from the Party tab is written to the Script Extender log: `request: join [...];
+  send to camp [...]` when accepted, `request refused: ...` with the reason when not.
 - Dialogue still seats the speaker plus three. That is not changed.
 - Quest items carried by member 5+ are sometimes not registered, per Party Limit Begone's notes.
   That is not addressed.

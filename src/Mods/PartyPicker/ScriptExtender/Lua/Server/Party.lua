@@ -51,6 +51,36 @@ local function isTrue(fn, ...)
     return ok and (v == 1 or v == true)
 end
 
+-- Is `id` in a one-column story table?
+local function inDb(dbName, id)
+    local ok, rows = pcall(function() return Osi[dbName]:Get(id) end)
+    return ok and type(rows) == "table" and next(rows) ~= nil
+end
+
+-- Off stage = not present in the world. The story records it in DB_OffStage
+-- (__AAA_FirstGoal.txt L1282-1285) and treats such a character as unable to
+-- move (L2285-2291, L2325-2331). The companion add rule never puts anyone on
+-- stage (_GLO_Shared_PartyMembers.txt L501-528), so an off-stage recruit
+-- joins as an absent party member and at once gets the fast-travel block
+-- (_Waypoints.txt L188-194). Seen in game 2026-10-12 with a hireling another
+-- mod had hired and parked off stage. Such characters are never recruited.
+local OFF_STAGE = "not available: off stage (not present in the world)"
+
+-- DB_OffStage is filled by an engine event, so a character who was never on
+-- stage has no row; the game's IsOnStage query (the story uses it,
+-- GLO_Camp.txt L1715) covers that. Either signal counts.
+local function isOffStage(id)
+    if inDb("DB_OffStage", id) then return true end
+    local ok, v = pcall(Osi.IsOnStage, id)
+    return ok and v == 0
+end
+
+local function names(list)
+    local out = {}
+    for _, e in ipairs(list) do out[#out + 1] = e.name end
+    return table.concat(out, ", ")
+end
+
 -- Characters that are never offered in the party list.
 -- Withers (S_GLO_JergalAvatar, SharedDev story Hirelings.txt:715) lives in
 -- camp with the team but is not a party member.
@@ -299,6 +329,7 @@ function Party.Roster()
             e.name = Party.DisplayName(e.id)
             e.active = e.active == true
             e.hireling = e.hireling == true
+            e.offStage = isOffStage(e.id)
             if e.avatar or dismissedAvatars[e.uuid] then
                 -- Avatars (including dismissed ones, which stay in
                 -- DB_PartOfTheTeam) are never recruited or dismissed here.
@@ -314,6 +345,8 @@ function Party.Roster()
                 if user ~= nil and user ~= hostUser then
                     e.locked, e.lockReason = true, "controlled by another player"
                 end
+            elseif not e.active and e.offStage then
+                e.locked, e.lockReason = true, OFF_STAGE
             end
             out[#out + 1] = e
         end
@@ -360,6 +393,15 @@ local SOURCE_DBS = {
     { "DB_GLO_PartyMembers_DefaultFaction", "dismissed", 2 }, { "DB_Origins", "origin" },
     { "DB_PartyMembers", "partymembers" }, { "DB_InCamp", "incamp" },
     { "DB_Avatars", "avatar" }, { "DB_PartyFollowers", "followers" }, { "DB_PlayerSummons", "summons" },
+    -- Why the game may refuse to move someone (see OFF_STAGE and BLOCKING_DBS).
+    { "DB_OffStage", "offstage" }, { "DB_CantMove", "cantmove" }, { "DB_CantAct", "cantact" },
+    { "DB_FastTravelBlock_CantMove_StatusSet", "travelblock" },
+}
+
+-- Hireling state flags (SharedDev Hirelings.txt L511-512, L673-674).
+local HIRELING_FLAGS = {
+    { "Hireling_State_InCamp_e33aa0df-fcfc-4a30-8169-516d3956f02a", "campflag" },
+    { "Hireling_State_Hired_0052da16-4401-4873-8176-16336d8942da", "hiredflag" },
 }
 
 -- A lookup that fails is shown with "?" so it is not mistaken for "not in it".
@@ -380,6 +422,9 @@ function Party.Sources(id)
     local okT, tpl = pcall(function() return Osi.DB_Hirelings_HACK_Classes:Get(nil, id, nil) end)
     if not okT then found[#found + 1] = "hiretemplate?"
     elseif type(tpl) == "table" and next(tpl) ~= nil then found[#found + 1] = "hiretemplate" end
+    for _, spec in ipairs(HIRELING_FLAGS) do
+        if isTrue(Osi.GetFlag, spec[1], id) then found[#found + 1] = spec[2] end
+    end
     -- The summon/follower signals companionFilter uses besides the tables.
     local function query(label, fn)
         local ok, v = pcall(fn, id)
@@ -388,6 +433,9 @@ function Party.Sources(id)
     end
     query("IsSummon", Osi.IsSummon)
     query("IsPartyFollower", Osi.IsPartyFollower)
+    local okS, onStage = pcall(Osi.IsOnStage, id)
+    if not okS then found[#found + 1] = "IsOnStage?"
+    elseif onStage == 0 then found[#found + 1] = "IsOnStage=0" end
     local okE, comps = pcall(function()
         local e = Ext.Entity.Get(PP.BareUuid(id))
         if not e then return "no-entity" end
@@ -438,8 +486,18 @@ end
 
 local function sendToCamp(e, avatar)
     if e.hireling then
-        pcall(Osi.PROC_GLO_PartyMembers_Remove, e.id, avatar, 0)
-        pcall(Osi.PROC_Hirelings_SendToCamp, e.id)
+        local ok, err = pcall(Osi.PROC_GLO_PartyMembers_Remove, e.id, avatar, 0)
+        if not ok then PP.Log("remove failed for " .. e.name .. ": " .. tostring(err)) end
+        -- PROC_Hirelings_SendToCamp only sets the in-camp flag and counter
+        -- (Hirelings.txt L670-675). It must not run for a hireling the game
+        -- left in the party (the removal has conditions of its own,
+        -- _GLO_Shared_PartyMembers.txt L658-699, L1298-1307).
+        if inDb("DB_Players", e.id) then
+            PP.Log("the game did not remove " .. e.name .. "; hireling camp state left unchanged")
+        else
+            ok, err = pcall(Osi.PROC_Hirelings_SendToCamp, e.id)
+            if not ok then PP.Log("hireling camp state not set for " .. e.name .. ": " .. tostring(err)) end
+        end
     else
         local ok, err = pcall(Osi.PROC_GLO_PartyMembers_Remove, e.id, avatar, 1)
         if not ok then PP.Log("remove failed for " .. e.name .. ": " .. tostring(err)) end
@@ -472,15 +530,27 @@ end
 function Party.Apply(wanted, opts, done)
     opts = opts or {}
     done = done or function() end
-    if busy then return false, "A party change is already in progress." end
+    -- Every refusal goes to the log: on the Party tab it is only a line of
+    -- text (reported in game 2026-10-12, where nothing showed why a member
+    -- could not be sent to camp).
+    local function refuse(message)
+        PP.Log("request refused: " .. tostring(message))
+        return false, message
+    end
+    if busy then return refuse("A party change is already in progress.") end
     local avatar = Party.HostAvatar()
-    if not avatar then return false, "No host character found." end
+    if not avatar then return refuse("No host character found.") end
     local limit = opts.limit or Party.MaxSize()
 
     local roster = Party.Roster()
     local byUuid = {}
     for _, e in ipairs(roster) do byUuid[e.uuid] = e end
 
+    -- addOnly: wanted members who are off stage right now. They are not
+    -- added (see OFF_STAGE) but the request must not count as complete, or a
+    -- restore would forget them (the camp hides benched companions at night,
+    -- GLO_Camp.txt L1630-1649).
+    local waiting = {}
     local keep, count = {}, 0
     for _, e in ipairs(roster) do
         if e.locked and e.active then keep[e.uuid] = true; count = count + 1 end
@@ -492,15 +562,21 @@ function Party.Apply(wanted, opts, done)
             if opts.addOnly and count >= limit then break end
             keep[u] = true; count = count + 1
         elseif not e and not opts.addOnly then
-            return false, "Unknown character " .. tostring(u) .. "."
+            return refuse("Unknown character " .. tostring(u) .. ".")
         elseif e and e.dead and not opts.addOnly then
-            return false, e.name .. " is dead."
+            return refuse(e.name .. " is dead.")
+        elseif e and e.locked and not e.active and not opts.addOnly then
+            -- The tab never sends a locked character; this is a list drawn
+            -- before they became unavailable, or !pp_set.
+            return refuse(e.name .. " cannot join: " .. tostring(e.lockReason) .. ". Press Refresh.")
+        elseif e and e.offStage and not e.active and opts.addOnly then
+            waiting[#waiting + 1] = e
         end
     end
     if count > limit and not opts.addOnly then
-        return false, string.format("%d selected, but the limit is %d.", count, limit)
+        return refuse(string.format("%d selected, but the limit is %d.", count, limit))
     end
-    if count == 0 then return false, "Nobody selected." end
+    if count == 0 then return refuse("Nobody selected.") end
 
     local toRemove, toAdd = {}, {}
     for _, e in ipairs(roster) do
@@ -508,19 +584,26 @@ function Party.Apply(wanted, opts, done)
         if keep[e.uuid] and not e.active then toAdd[#toAdd + 1] = e end
     end
     if #toRemove == 0 and #toAdd == 0 then
+        if #waiting > 0 then
+            return refuse(names(waiting) .. " cannot rejoin yet: off stage (not present in the world).")
+        end
         return false, "The party is already like that.", true
     end
 
     local checkCombat = PP.Setting("block_in_combat", true) ~= false
     local why = Party.BlockedReason(avatar, checkCombat)
-    if why then return false, "Party changes are blocked: your character " .. why .. "." end
+    if why then return refuse("Party changes are blocked: your character " .. why .. ".") end
     for _, list in ipairs({ toRemove, toAdd }) do
         for _, e in ipairs(list) do
             why = Party.BlockedReason(e.id, checkCombat)
-            if why then return false, e.name .. " " .. why .. "." end
+            if why and e.offStage and string.find(why, "cannot travel", 1, true) then
+                why = why .. ": they are off stage (not present in the world)"
+            end
+            if why then return refuse(e.name .. " " .. why .. ".") end
         end
     end
 
+    PP.Log(string.format("request: join [%s]; send to camp [%s]", names(toAdd), names(toRemove)))
     busy = true
     -- Room for the new members before anyone is added: CheckAdd does nothing
     -- while the story's party-full flag is set.
@@ -564,10 +647,16 @@ function Party.Apply(wanted, opts, done)
                     failed[#failed + 1] = e.name .. " did not leave"
                 end
             end
+            for _, e in ipairs(waiting) do
+                failed[#failed + 1] = e.name .. " is off stage and could not rejoin yet"
+            end
             busy = false
             if #failed == 0 then
-                done({ ok = true, changed = true,
-                    message = string.format("Party updated: %d joined, %d sent to camp.", #toAdd, #toRemove) })
+                -- Names, not counts, so it is plain who moved.
+                local parts = { "Party updated." }
+                if #toAdd > 0 then parts[#parts + 1] = "Joined: " .. names(toAdd) .. "." end
+                if #toRemove > 0 then parts[#parts + 1] = "Sent to camp: " .. names(toRemove) .. "." end
+                done({ ok = true, changed = true, message = table.concat(parts, " ") })
             else
                 done({ ok = false, changed = true,
                     message = "Party partly updated. " .. table.concat(failed, "; ") .. "." })

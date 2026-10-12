@@ -1,31 +1,42 @@
-# Party Picker: test run card (v0.1.5)
+# Party Picker: test run card (v0.1.6)
 
-**Do not install v0.1.5 yet** (2026-10-12): review found it does not fix the Brianna Brightsong
-report; keep v0.1.4 until the log and `!pp_roster` output are checked. See CLAUDE.md.
+**v0.1.6 is built but not installed** (2026-10-12). Install it only when Alan says so. It replaces
+v0.1.5, which was never installed.
 
-**Pak:** `PartyPicker.pak` (27,867 bytes)
-SHA256 `6bf969c9e024579c0a5e04db5547053e3f5fc5c0f896a48d3cf2f92cb28a9098`
+**Pak:** `PartyPicker.pak` (30,043 bytes)
+SHA256 `8a73af064d42378231d0f39c13fe08b672ddb713df8b08dc14b3397d847b384d`
 
-**Built with:** `python3 tools/lspk.py create src PartyPicker.pak`. Rebuilding Scroll Repair's
-`src/` with the same tool gives a pak byte-identical to the Divine-built `ScrollRepair.pak`.
+**Built with:** `python3 tools/lspk.py create src PartyPicker.pak`, from the files as git stores
+them (LF line endings). Rebuilding Scroll Repair's `src/` with the same tool gives a pak
+byte-identical to the Divine-built `ScrollRepair.pak`, and rebuilding v0.1.5 this way on Alan's PC
+gave the committed v0.1.5 pak byte for byte.
+
+## What changed since v0.1.4 (the installed build)
+- **The hireling who could be recruited but not sent back (2026-10-12).** She was off stage (not
+  present in the world). The game blocked her travel as soon as she joined, and Party Picker then
+  refused to move her; the reason flashed on the Party tab for a second and a half and was not in
+  the log. Now:
+  - an off-stage character is listed but locked ("not available: off stage") and cannot be recruited;
+  - a refusal stays on the Party tab and is written to the log as `request refused: ...`;
+  - an accepted request is logged as `request: join [...]; send to camp [...]`, and the result
+    names who moved: `Party updated. Joined: X. Sent to camp: Y.`
+- A hireling the game did not remove is no longer marked as "in camp".
+- `!pp_roster` also shows `offstage`, `cantmove`, `cantact`, `travelblock`, `campflag`,
+  `hiredflag` and `IsOnStage=0`.
+- After a long rest, a member who is still off stage is left in camp and the Restore button stays,
+  instead of the trim record being dropped.
+- From v0.1.5: a hireling character nobody has hired is not listed.
+
+**Not fixed:** the Bard already in the party in the two saves made at the end of the 2026-10-12
+session. v0.1.6 will still refuse to send her to camp, and now says why. Use a save from before
+that session. (Untested alternative, after a hard save: in the server console,
+Osi.SetOnStage("4d3c9cb3-ca34-46ba-9c81-44081270bfde", 1) and then untick her on the Party tab.)
 
 ## Before you start
 1. Make a **hard save** in a new slot, e.g. `BACKUP before Party Picker`.
 2. Requirements:
    - BG3 Script Extender, with the console on (`"CreateConsole": true`).
    - **Mod Configuration Menu** 1.38 or newer, installed and active. Party Picker lists it as a dependency.
-     (v0.1.0 wrongly required 1.41 and showed a "Dependency issue detected" warning on MCM 1.40.1;
-     v0.1.1 requires 1.38, the first version with the API calls it uses.)
-   v0.1.2 (2026-10-11): the Party list no longer shows Withers, summons or party followers, and
-   they are never counted against the limit or sent to camp by Apply (Alan's report on v0.1.1).
-   v0.1.3 (2026-10-11): no change to who is listed yet. The log now shows the version, and
-   `!pp_roster` shows which story tables each character is in, to find out why camp followers
-   (Volo, Elminster, the Oathbreaker Knight) and some summons are still listed.
-   v0.1.4 (2026-10-11): only party members are listed: player characters, origin companions,
-   hirelings, and anyone who has been in your active party (companions added by other mods). Camp
-   followers and camp pets are no longer listed.
-   v0.1.5 (2026-10-12): hirelings are listed only once hired at Withers (or while in the party).
-   v0.1.4 could list, and recruit, hireling templates nobody had hired.
 3. Quit the game.
 
 ## Install
@@ -37,20 +48,31 @@ SHA256 `6bf969c9e024579c0a5e04db5547053e3f5fc5c0f896a48d3cf2f92cb28a9098`
 ## Quick checks
 7. Open the newest Script Extender log,
    `%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Script Extender\Scripe Extender Logs\Extender Runtime *.log`
-   (path as printed on the first line of Alan's log of 2026-10-11; the folder name really is
-   misspelled). Look for:
-   - `[PartyPicker] server loaded (v0.1.5).`
-   - `[PartyPicker] client loaded (v0.1.5) (Party tab added to MCM).`
-   - `[PartyPicker] party size limit set to 6`
-8. Open the SE console, type `server`, then `!pp_roster`. Your companions should be listed, your
-   character marked `locked(player character)`. Each line ends with `[in: ...; faction: ...; id: ...]`
-   (story tables and summon/follower signals; a `?` means that lookup failed).
-   The first line must read `Party Picker v0.1.5 roster:`. If it does not, the old pak is still
-   loaded. Volo, Elminster, the Oathbreaker Knight, Scratch, Tara, Shovel and Bernard should be
-   under `not listed: camp only`. **Send me the whole output.**
+   (the folder name really is misspelled). Look for:
+   - `[PartyPicker] server loaded (v0.1.6).`
+   - `[PartyPicker] client loaded (v0.1.6) (Party tab added to MCM).`
+   - `[PartyPicker] party size limit set to 6` (or your own limit)
+8. Open the SE console, type `server`, then `!pp_roster`. The first line must read
+   `Party Picker v0.1.6 roster:`. If it does not, the old pak is still loaded. Your companions
+   should be listed, your character marked `locked(player character)`. Each line ends with
+   `[in: ...; faction: ...; id: ...]`. **Send me the whole output.**
 9. Open MCM. Party Picker should have a **Settings** tab and a **Party** tab.
 
-## The tests that matter
+## The test for the 2026-10-12 report
+10. In a save from **before** the Bard was recruited: open the Party tab. The Bard hireling should
+    be listed with her box greyed out and the words "not available: off stage", and her
+    `!pp_roster` line should contain `offstage` or `IsOnStage=0` (or both). (The Fighter hireling is in the same story tables;
+    whether she is off stage too was not in the log, so note what her line shows.)
+11. Untick the Rogue hireling, press Apply. The tab should say
+    `Party updated. Sent to camp: <her name>.` and the log should have a
+    `request: join []; send to camp [<her name>]` line.
+12. Tick her again, Apply. `Party updated. Joined: <her name>.`
+13. Only if you want to see the refusal: load one of the saves with the Bard in the party, untick
+    her, Apply. Expected: nothing changes, and the tab keeps showing
+    `<her name> cannot travel right now (DB_FastTravelBlock_CantMove_StatusSet): they are off stage ...`
+    until you press Refresh. The same text is in the log after `request refused:`.
+
+## The other tests that matter
 Follow `docs/TESTING.md`, steps 3–12. Most important:
 - **Step 3:** tick 6, Apply, and check that 6 portraits appear.
 - **Step 7:** with 6 in the party, End the Day. The rest should **not** start; the picker window
@@ -61,4 +83,4 @@ Follow `docs/TESTING.md`, steps 3–12. Most important:
 - Do not save over your backup. Reload it.
 - Send me every `[PartyPicker]` line from the log and say which step failed.
 - To remove the mod: deactivate it in BG3MM, then delete the pak. It adds no items or spells, only
-  its own settings and one saved variable.
+  its own settings and two saved variables.

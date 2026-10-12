@@ -16,6 +16,8 @@ local function label(e)
     if e.hireling then tags[#tags + 1] = "hireling" end
     if e.dead then tags[#tags + 1] = "dead" end
     if not e.active and e.inCamp then tags[#tags + 1] = "in camp" end
+    -- An off-stage member already in the party: the game will not move them.
+    if e.active and e.offStage then tags[#tags + 1] = "off stage" end
     if e.locked and e.lockReason and not e.avatar then tags[#tags + 1] = e.lockReason end
     if #tags == 0 then return e.name end
     return e.name .. "  (" .. table.concat(tags, ", ") .. ")"

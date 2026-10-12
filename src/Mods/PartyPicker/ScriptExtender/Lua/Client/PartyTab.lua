@@ -9,9 +9,15 @@ local PartyTab = {}
 -- its own status line.
 local roots = {}
 
+-- The last status text. Redrawing the list makes a new status line, so the
+-- text is kept here and put back; otherwise a message such as a refusal
+-- vanishes with the next redraw (reported in game 2026-10-12).
+local lastStatus = ""
+
 local function setStatus(text)
+    lastStatus = tostring(text or "")
     for _, r in ipairs(roots) do
-        if r.status then pcall(function() r.status.Label = tostring(text or "") end) end
+        if r.status then pcall(function() r.status.Label = lastStatus end) end
     end
 end
 
@@ -53,12 +59,19 @@ local function render(slot, reply)
         PP.Net.Apply:RequestToServer({ uuids = list:Selected() }, function(resp)
             setStatus(resp and resp.message or "No reply.")
             -- The change takes about a second; show the result afterwards.
-            Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+            -- A refused request changed nothing: keep the ticks and the
+            -- reason on screen instead of redrawing over them.
+            if resp and resp.accepted then
+                Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+            end
         end)
     end
     local refresh = root:AddButton("Refresh")
     refresh.SameLine = true
-    refresh.OnClick = PartyTab.Refresh
+    refresh.OnClick = function()
+        setStatus("")
+        PartyTab.Refresh()
+    end
 
     if reply.pending and reply.pending.trimmed then
         root:AddSeparator()
@@ -74,7 +87,7 @@ local function render(slot, reply)
         end
     end
 
-    slot.status = root:AddText("")
+    slot.status = root:AddText(lastStatus)
     onChange(list:Count())
 end
 
@@ -89,6 +102,13 @@ function PartyTab.Refresh()
 end
 
 function PartyTab.SetStatus(text) setStatus(text) end
+
+-- Our MCM page was opened: start with an empty status line, so a message
+-- from an earlier visit is not taken for a fresh one.
+function PartyTab.Activated()
+    setStatus("")
+    PartyTab.Refresh()
+end
 
 -- Draw into any IMGUI container (the MCM tab, or a standalone window).
 function PartyTab.Attach(container)

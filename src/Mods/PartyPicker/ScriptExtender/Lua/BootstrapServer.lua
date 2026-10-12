@@ -9,6 +9,7 @@ local function rosterReply()
         entries[#entries + 1] = {
             uuid = e.uuid, name = e.name, active = e.active, inCamp = e.inCamp,
             avatar = e.avatar, hireling = e.hireling, dead = e.dead,
+            offStage = e.offStage == true,
             locked = e.locked == true, lockReason = e.lockReason,
         }
     end
@@ -56,6 +57,7 @@ end))
 -- data = { uuids = {...}, reason = nil | "rest", keepAll = bool }
 PP.Net.Apply:SetRequestHandler(safeHandler(function(data, user)
     if not isHostUser(user) then
+        PP.Log("request refused: not from the host")
         return { accepted = false, message = "Only the host can change the party." }
     end
     data = data or {}

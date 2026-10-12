@@ -29,7 +29,7 @@ if MCM and MCM.InsertModMenuTab then
     -- Re-read the party whenever our MCM page is opened.
     pcall(function()
         Ext.ModEvents.BG3MCM["MCM_Mod_Tab_Activated"]:Subscribe(function(payload)
-            if payload and payload.modUUID == ModuleUUID then PartyTab.Refresh() end
+            if payload and payload.modUUID == ModuleUUID then PartyTab.Activated() end
         end)
     end)
 end

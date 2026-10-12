@@ -19,7 +19,13 @@ local function uuidOf(id) return string.sub(id, -36) end
 local dbs = {}
 local function newDb(name)
     local db = { name = name, rows = {} }
+    -- A story table has a fixed column count; asking with another count is
+    -- an error in the game, so it is one here (known once a row was added).
     function db:Get(...)
+        local n = select("#", ...)
+        if self.arity and n ~= self.arity then
+            error(name .. " has " .. self.arity .. " column(s), asked with " .. n)
+        end
         local filter = { ... }
         local out = {}
         for _, row in ipairs(self.rows) do
@@ -50,6 +56,7 @@ local function newDb(name)
     setmetatable(db, {
         __call = function(self, ...)
             local row = { ... }
+            self.arity = self.arity or select("#", ...)
             if #self:Get(...) == 0 then self.rows[#self.rows + 1] = row end
         end,
     })
@@ -117,9 +124,13 @@ end
 M.flags = {}
 function Osi.GetFlag(flag, obj) return M.flags[flag .. "|" .. uuidOf(obj)] and 1 or 0 end
 M.counters = { Hirelings_InCamp_Count = 0 }
+local IN_CAMP_FLAG = "Hireling_State_InCamp_e33aa0df-fcfc-4a30-8169-516d3956f02a"
+local HIRED_FLAG = "Hireling_State_Hired_0052da16-4401-4873-8176-16336d8942da"
+local function setFlag(flag, obj, on) M.flags[flag .. "|" .. uuidOf(obj)] = on or nil end
 -- SharedDev Hirelings.txt L447-451, L670-675.
 function Osi.PROC_Hirelings_SendToCamp(h)
-    M.flags["Hireling_State_InCamp_e33aa0df-fcfc-4a30-8169-516d3956f02a|" .. uuidOf(h)] = true
+    setFlag(HIRED_FLAG, h, false)
+    setFlag(IN_CAMP_FLAG, h, true)
     M.counters.Hirelings_InCamp_Count = M.counters.Hirelings_InCamp_Count + 1
 end
 function Osi.PROC_Hirelings_TakeFromCamp(h, avatar)
@@ -129,26 +140,120 @@ end
 function Osi.AttachToPartyGroup() end
 function Osi.SetReadyCheckBlocked(id, v) M.readyCheckBlocked[uuidOf(id)] = v end
 
--- Story procedures, as far as documented (_GLO_Shared_PartyMembers.txt):
--- CheckAdd only adds when the party-full flag is clear; Remove sends a team
--- member to camp.
+-- Story rules that react to table changes. Line numbers are from the game's
+-- own story files (Shared/SharedDev goals), see docs/RESEARCH.md.
+--
+-- Off stage: WentOnStage(obj,0) adds DB_OffStage (__AAA_FirstGoal.txt
+-- L1282-1285), which makes the object DB_CantMove (L2285-2291, L2325-2331).
+-- A DB_Players member who is DB_CantMove gets the fast-travel block
+-- (_Waypoints.txt L188-194); it is lifted when either stops being true
+-- (L196-210).
+function M.storyRules(id)
+    local blocked = #M.db("DB_Players"):Get(id) > 0 and #M.db("DB_CantMove"):Get(id) > 0
+    if blocked then
+        M.db("DB_FastTravelBlock_CantMove_StatusSet")(id)
+    else
+        M.db("DB_FastTravelBlock_CantMove_StatusSet"):Delete(id)
+    end
+end
+
+-- The game's own query (the story uses it: GLO_Camp.txt L1715, L2357).
+function Osi.IsOnStage(id) return (char(id) or {}).offStage and 0 or 1 end
+
+function M.setOnStage(ch, on)
+    ch.offStage = not on or nil
+    if on then
+        M.db("DB_OffStage"):Delete(ch.id)
+        M.db("DB_CantMove"):Delete(ch.id)
+    else
+        M.db("DB_OffStage")(ch.id)
+        M.db("DB_CantMove")(ch.id)
+    end
+    M.storyRules(ch.id)
+end
+
+-- PROC_GLO_PartyMembers_CheckAdd only adds while the party-full flag is
+-- clear (_GLO_Shared_PartyMembers.txt L477-482).
 function Osi.PROC_GLO_PartyMembers_CheckAdd(origin, player)
     Osi.PROC_CheckPartyFull()
     if M.partyFull then return end
-    M.db("DB_Players")(origin)
-    M.db("DB_PartOfTheTeam")(origin)
-    M.db("DB_InCamp"):Delete(origin)
-    Osi.PROC_CheckPartyFull()
+    Osi.PROC_GLO_PartyMembers_Add(origin, player)
 end
+
+-- The companion add rule runs once per DB_GLO_PartyMembers_DefaultFaction
+-- row and does nothing without one (L501-528). It never puts the character
+-- on stage. The hireling hook marks a hireling template as hired
+-- (Hirelings.txt L502-513).
+function Osi.PROC_GLO_PartyMembers_Add(origin, player)
+    if #M.db("DB_DismissedAvatar"):Get(origin) > 0 then return end
+    for _, row in ipairs(M.db("DB_GLO_PartyMembers_DefaultFaction"):Get(origin, nil)) do
+        local ch = char(origin)
+        if ch then ch.faction = row[2] end
+        M.db("DB_Players")(origin)
+        M.db("DB_PartyMembers")(origin)
+        M.db("DB_PartOfTheTeam")(origin)
+        M.db("DB_GLO_PartyMembers_DefaultFaction"):Delete(origin, row[2])
+        M.db("DB_InCamp"):Delete(origin)
+        Osi.PROC_CheckPartyFull()
+        if #M.db("DB_Hirelings_HACK_Classes"):Get(nil, origin, nil) > 0 then
+            M.db("DB_Hirelings_Hired")(origin)
+            setFlag(IN_CAMP_FLAG, origin, false)
+            setFlag(HIRED_FLAG, origin, true)
+        end
+        M.storyRules(origin)
+    end
+end
+
+-- A hireling is given one of three factions no hired hireling is using
+-- right now, as a DefaultFaction row, before the add (Hirelings.txt L453-500).
+local HIRELING_FACTIONS = {
+    "Hireling1_9459fd54-cdc5-458f-8aa0-fc6ea18c888f",
+    "Hireling2_c98e5185-9ef4-4c5d-8789-ff889d22d27c",
+    "Hireling3_3987f3d3-1d27-4c0d-b098-3b3b96a0b3e1",
+}
 function Osi.PROC_Hirelings_AddToParty(h, avatar)
     Osi.PROC_CheckPartyFull()
+    for _, faction in ipairs(HIRELING_FACTIONS) do
+        local inUse = false
+        for _, row in ipairs(M.db("DB_Hirelings_Hired").rows) do
+            if (char(row[1]) or {}).faction == faction then inUse = true end
+        end
+        if not inUse then
+            M.db("DB_GLO_PartyMembers_DefaultFaction")(h, faction)
+            break
+        end
+    end
     Osi.PROC_GLO_PartyMembers_CheckAdd(h, avatar)
 end
+
+-- Turning a member back into an NPC needs their original alignment and
+-- DB_PartyMembers; without them nothing happens and they stay in DB_Players
+-- (_GLO_Shared_PartyMembers.txt L1298-1321). Team members then go to camp
+-- (_GLO_Shared_Origins.txt L439-450, Hirelings.txt L684-691).
+local function makeNPC(member)
+    local alignment = M.db("DB_GLO_PartyMembers_OriginalAlignment"):Get(member, nil)[1]
+    if not alignment or #M.db("DB_PartyMembers"):Get(member) == 0 then return end
+    local ch = char(member) or {}
+    M.db("DB_Players"):Delete(member)
+    M.db("DB_PartyMembers"):Delete(member)
+    M.db("DB_GLO_PartyMembers_DefaultFaction")(member, ch.faction or "PlayerFaction")
+    ch.faction = alignment[2]
+    M.storyRules(member)
+    if #M.db("DB_PartOfTheTeam"):Get(member) > 0 then M.db("DB_InCamp")(member) end
+end
+
+-- Unforced removal only goes ahead when the member's user has another
+-- character in DB_Players; forced removal always does (L658-699).
 function Osi.PROC_GLO_PartyMembers_Remove(member, dismisser, force)
     assert(dismisser ~= nil and force ~= nil, "two-argument Remove")
     assert(#M.db("DB_Avatars"):Get(member) == 0, "avatar removed")
-    M.db("DB_Players"):Delete(member)
-    if #M.db("DB_PartOfTheTeam"):Get(member) > 0 then M.db("DB_InCamp")(member) end
+    local goAhead = force == 1
+    for _, row in ipairs(M.db("DB_Players").rows) do
+        if uuidOf(row[1]) ~= uuidOf(member) and (char(row[1]) or {}).user == (char(member) or {}).user then
+            goAhead = true
+        end
+    end
+    if goAhead then makeNPC(member) end
     Osi.PROC_CheckPartyFull()
 end
 
