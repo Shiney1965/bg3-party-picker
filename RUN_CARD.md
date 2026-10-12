@@ -1,7 +1,7 @@
 # Party Picker: test run card (v0.1.6)
 
-**v0.1.6 is built but not installed** (2026-10-12). Install it only when Alan says so. It replaces
-v0.1.5, which was never installed.
+**v0.1.6 is installed on Alan's PC** (2026-10-12, hash checked after the copy; steps 4–5 below are
+done). Not yet tested in game. It replaces v0.1.4; v0.1.5 was never installed.
 
 **Pak:** `PartyPicker.pak` (30,043 bytes)
 SHA256 `8a73af064d42378231d0f39c13fe08b672ddb713df8b08dc14b3397d847b384d`

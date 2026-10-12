@@ -64,7 +64,7 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
   The filter itself is kept (it only hides a hireling character that is in DB_PartOfTheTeam but
   neither hired nor in the party).
 - v0.1.6 (2026-10-12): fixes the Brianna Brightsong report. Size and SHA-256 are in RUN_CARD.md.
-  **Built, not installed, not tested in game.** Do not install it for Alan without his say-so.
+  **Installed on Alan's PC 2026-10-12 at his request (hash checked). Not yet tested in game.**
 
 ## The 2026-10-12 report: cause (full evidence in docs/TESTING.md)
 - v0.1.4 ran. The Bard hireling (`4d3c9cb3`) joined; later the Rogue hireling was sent to camp.

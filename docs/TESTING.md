@@ -222,6 +222,13 @@ session. She is off stage with the travel block, and v0.1.6 will still refuse to
 route is a save from before that session. Untested alternative: hard save, then in the server
 console put her on stage and untick her on the Party tab.
 
+**2026-10-12, v0.1.6 installed** at Alan's request ("install 0.1.6 please"). Copied from the
+repository's `PartyPicker.pak` (commit `eaf2072`) over v0.1.4 in
+`%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Mods\PartyPicker.pak` with the game and the mod
+manager closed; hash checked after the copy: 30,043 bytes, SHA-256
+`8A73AF064D42378231D0F39C13FE08B672DDB713DF8B08DC14B3397D847B384D`. Party Picker is still in the
+load order (`modsettings.lsx`). In-game result not yet reported.
+
 Still not known:
 - Whether the Bard has the row a removal needs (`DB_GLO_PartyMembers_OriginalAlignment`, PM:1305).
   It is given to every hireling template (H:280–285) and deleted by a permanent dismissal (H:639);
