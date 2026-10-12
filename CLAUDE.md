@@ -43,8 +43,8 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
 - v0.1.5 (committed 24595c1, pak SHA-256 6bf969c9…cb28a9098, 27,867 bytes): hirelings listed only
   once hired at Withers (or while in the party). Reason: Hirelings.txt L280–285 gives every hireling
   template the companion marks with faction Hirelings_b7b47ac8-… before anyone hires them, so v0.1.4
-  listed un-hired templates. **Not yet installed. An adversarial review was running when the cloud
-  session handed over; re-run one before Alan installs.**
+  listed un-hired templates. **Not installed. Do not give it to Alan yet** — the adversarial review
+  (below) found it does not fix his save and its premise is probably wrong.
 
 ## Open issues
 1. **Brianna Brightsong (2026-10-12):** listed under v0.1.4 though never created at Withers; Alan
@@ -59,6 +59,31 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
    not Party Picker; not reproduced since.
 3. Not yet tested in game: long-rest hold (TESTING.md step 7, highest risk), restore after rest,
    raft, multiplayer.
+
+## Adversarial review of v0.1.5 (2026-10-12) — findings to act on
+(H = SharedDev Hirelings.txt, PM = Shared _GLO_Shared_PartyMembers.txt, P = Server/Party.lua)
+1. High, confirmed: v0.1.5 still lists Brianna. v0.1.4's add went through CheckAdd → Add → AddHook,
+   which puts any hireling template into DB_Hirelings_Hired and sets Hireling_State_Hired (H:502-513);
+   v0.1.5 lets DB_Hirelings_Hired through. Test 20 covers a state the story cannot produce.
+2. High, by story logic: "never created at Withers" is probably false. In the unmodded story an un-hired
+   template cannot be in DB_PartOfTheTeam / DB_Hirelings_Hired / DB_Players, and plain CheckAdd needs
+   a DB_GLO_PartyMembers_DefaultFaction row (PM:512). So she was most likely already hired (or another
+   mod/debug tool put her there). Settle it with her `!pp_roster` line and the log.
+3. Medium, guesses: dismiss fails if MakeNPC does not run — it needs DB_GLO_PartyMembers_OriginalAlignment
+   and DB_PartyMembers (PM:1298-1307). A Withers dismiss deletes her OriginalAlignment row (H:639) and only
+   a fresh hire re-adds it (H:746), so a hireling back in the party by another route cannot be removed;
+   Remove then only detaches her (PM:692) and P reports "did not leave". Also: P's sendToCamp discards
+   the pcall results for hirelings (no log on failure) — fix that. Also check she was not locked
+   (controlled character).
+4. If a stricter "hired at Withers" test is still wanted: DB_Hirelings_Hired_Rehire is set after a real
+   Withers hire (H:290-316) and never removed; the Hireling_State_Hired flag and Hirelings_Hired_Count do
+   not work (H:512, H:673, H:105). Caveat: debug hire path (H:868-877) does not set it.
+5. Safest removal in Alan's save (hard save first): talk to Brianna and choose dismiss (game's
+   PROC_Hirelings_Dismiss, H:888-896), or Withers' dismiss menu with her in the active party (H:1016).
+   Console fallback `Osi.PROC_Hirelings_Dismiss("<uuid>")` (server) may leave Hirelings_Hired_Count one
+   too low (H:626, H:1273-1276).
+Test gaps: mock CheckAdd ignores the DefaultFaction requirement and AddHook; mock Remove ignores
+MakeNPC's requirements; mock Get ignores arity.
 
 ## Story sources
 Third-party copy of Larian's story goals (Shared + SharedDev only; Act files missing):

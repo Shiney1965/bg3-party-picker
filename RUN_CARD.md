@@ -1,5 +1,8 @@
 # Party Picker: test run card (v0.1.5)
 
+**Do not install v0.1.5 yet** (2026-10-12): review found it does not fix the Brianna Brightsong
+report; keep v0.1.4 until the log and `!pp_roster` output are checked. See CLAUDE.md.
+
 **Pak:** `PartyPicker.pak` (27,867 bytes)
 SHA256 `6bf969c9e024579c0a5e04db5547053e3f5fc5c0f896a48d3cf2f92cb28a9098`
 
