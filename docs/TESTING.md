@@ -227,7 +227,20 @@ repository's `PartyPicker.pak` (commit `eaf2072`) over v0.1.4 in
 `%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Mods\PartyPicker.pak` with the game and the mod
 manager closed; hash checked after the copy: 30,043 bytes, SHA-256
 `8A73AF064D42378231D0F39C13FE08B672DDB713DF8B08DC14B3397D847B384D`. Party Picker is still in the
-load order (`modsettings.lsx`). In-game result not yet reported.
+load order (`modsettings.lsx`).
+
+**2026-10-13, v0.1.6, first in-game report.** Alan: "The party picker seems to be working properly
+now but I need to run the PP_roster." No step is marked passed on this alone. What the log of that
+session shows (`Extender Runtime 2026-10-13 04-15-47.log`):
+- `client loaded (v0.1.6)` (1030), `server loaded (v0.1.6)` (1602), `party size limit set to 14` (1903).
+- Nine requests, all accepted and all carried out, each with the new named lines, for example
+  `request: join []; send to camp [Wyll]` (2703) then `Party updated. Sent to camp: Wyll.` (2707),
+  and `request: join [Karlach, Wyll]; send to camp []` (2715) then
+  `Party updated. Joined: Karlach, Wyll.` (2732). Sent to camp in turn: Wyll, Karlach, Shadowheart,
+  Wyll, Halsin, Karlach, Gale, Astarion.
+- No `request refused`, no `did not leave`, no `did not join`, no `!pp_roster` output.
+- Only origin companions were moved. No hireling appears in these lines, so the off-stage lock
+  (the fix for the 2026-10-12 report) was not exercised in this session.
 
 Still not known:
 - Whether the Bard has the row a removal needs (`DB_GLO_PartyMembers_OriginalAlignment`, PM:1305).
