@@ -303,6 +303,12 @@ wants them to be recruitable was put to him the same day. His decision: "option 
 best". Off-stage characters stay listed, greyed out, with the reason; Party Picker does not bring
 anyone on stage.
 
+**2026-10-13 (evening), same session, from the log only (Alan did not report this step).** After
+being sent to camp, the Bard was ticked again: `[PartyPicker] request: join [Brinna Brightsong];
+send to camp []` (Extender log 1942), then `[PartyPicker] Party updated. Joined: Brinna Brightsong.`
+(1951, 1952). So bringing a hireling back from camp was accepted and verified by the mod's own
+check. Not marked as passed: Alan has not said what he saw.
+
 Still not known:
 - (Answered 2026-10-13: the Bard has `origalign`, and "Brianna Brightsong" is this Bard, shown by
   the game as Brinna Brightsong.)
