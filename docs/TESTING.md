@@ -309,6 +309,15 @@ send to camp []` (Extender log 1942), then `[PartyPicker] Party updated. Joined:
 (1951, 1952). So bringing a hireling back from camp was accepted and verified by the mod's own
 check. Not marked as passed: Alan has not said what he saw.
 
+**2026-10-13 (evening), v0.1.6.** Alan: "Party picker seems to be working fine. Once I try a long
+rest with a large party we will know if tis ready to ship.  I don't know if we can test the
+grymforge boat but I will try to find a convenient save for that." So the long rest with more than
+four (steps 7–10) is the test he will run before release; the raft (step 11) depends on finding a
+save. Save folders whose names put them near the raft, from his Savegames folder (old saves, made
+before many of the current mods, so they may not load cleanly): `Hellie-41612522216__Ebonlake Grotto - 44h 11m`,
+`Electra-40281240519__Decrepit Village - 17h 25mGD`, `Electra-2911245914__Decrepit Sanctuary - 16h 06m`,
+`Electra-56171242647__Grymforge - 37h 30mevilbefgrym`.
+
 Still not known:
 - (Answered 2026-10-13: the Bard has `origalign`, and "Brianna Brightsong" is this Bard, shown by
   the game as Brinna Brightsong.)
