@@ -79,10 +79,15 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
   hireling, `!pp_roster` shows offstage/cantmove/cantact/travelblock/campflag/hiredflag.
 
 ## Open issues
-1. **Alan's two saves from the end of the 2026-10-12 session still have the Bard in the party, off
-   stage.** v0.1.6 refuses to send her to camp (and says why). Safe route: a save from before that
-   session. Untested: hard save, server console `Osi.SetOnStage("4d3c9cb3-ca34-46ba-9c81-44081270bfde", 1)`,
-   then untick her. Not known: what `PROC_DismissToCamp` (`_GLO_Shared_Origins.txt` L460–507, a
+1. **Calliope's game still has the Bard in the party, off stage.** It is an Honour Mode run
+   (leader Calliope, Dark Urge tiefling warlock, with Shadowheart), so there is one save and no
+   earlier one to go back to: `...\Savegames\Story\886719e0-5e70-1e04-ca24-c73bbab5a1e0__HonourMode`.
+   A copy from 2026-10-12 10:13 is in
+   `C:\Claude Projects\BG3 Mods\PartyPicker_SaveBackups\2026-10-12_Calliope_HonourMode\`.
+   v0.1.6 refuses to send her to camp (and says why). Untested repair: server console
+   `Osi.SetOnStage("4d3c9cb3-ca34-46ba-9c81-44081270bfde", 1)`, then untick her. Alan's other games
+   are identified by the leader name at the start of the save folder (Lae'zel-…, Shadowheart-…,
+   Astarion-…); the leader of an Honour Mode folder is `LeaderName` in the save's `meta.lsf`. Not known: what `PROC_DismissToCamp` (`_GLO_Shared_Origins.txt` L460–507, a
    walk to camp) does with an off-stage character, so no code removes one. Also not known: whether
    she has `DB_GLO_PartyMembers_OriginalAlignment` (`origalign` in `!pp_roster`), which the removal
    needs (PM:1305).

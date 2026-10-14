@@ -218,9 +218,17 @@ later (the status line is now cleared when the Party Picker page is opened).
 Not fixed by v0.1.6: the Bard already in the party in Alan's two saves from the end of that
 session. She is off stage with the travel block, and v0.1.6 will still refuse to send her to camp
 (now saying why), because how the game's camp walk (`PROC_DismissToCamp`,
-`_GLO_Shared_Origins.txt` L460–507) treats an off-stage character has not been tested. The safe
-route is a save from before that session. Untested alternative: hard save, then in the server
-console put her on stage and untick her on the Party tab.
+`_GLO_Shared_Origins.txt` L460–507) treats an off-stage character has not been tested. Untested repair: in the server console put her on stage, then untick her on the Party tab.
+
+**Correction, 2026-10-13:** "use a save from before that session", which this file and the run
+card said until today, is not possible. That game is an Honour Mode run with a single save
+(`...\Savegames\Story\886719e0-5e70-1e04-ca24-c73bbab5a1e0__HonourMode\HonourMode.lsv`, last written
+2026-10-12 10:13:05). Its metadata, read with Divine: leader `Calliope`; `SaveInfo.json` lists a
+level 2 Dark Urge Asmodeus tiefling Hexblade warlock, Shadowheart, and `Hireling_Bard` (level 1
+Bard). The first two stand in the camp region at about (-650, 0, -190); the Bard's position is
+(278.75, 1.41, 223.25), far from them, which fits her being absent. A copy of the save folder as
+it was then is in `C:\Claude Projects\BG3 Mods\PartyPicker_SaveBackups\2026-10-12_Calliope_HonourMode\`
+(outside this repository).
 
 **2026-10-12, v0.1.6 installed** at Alan's request ("install 0.1.6 please"). Copied from the
 repository's `PartyPicker.pak` (commit `eaf2072`) over v0.1.4 in

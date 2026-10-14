@@ -114,8 +114,8 @@ BG3 Modder's Multitool can still be used instead. See [RUN_CARD.md](RUN_CARD.md)
   as "not available: off stage" and cannot be recruited: the game's add procedure would not bring
   them on stage, and the game blocks travel for a party member who cannot move
   (`_Waypoints.txt` L188–194). **Limit:** someone already in your party who is off stage (for
-  example recruited with v0.1.4) cannot be sent to camp by Party Picker. The Party tab says so;
-  reload a save from before they joined.
+  example recruited with v0.1.4) cannot be sent to camp by Party Picker. The Party tab says so.
+  Reload a save from before they joined, if there is one (Honour Mode keeps a single save).
 
   Withers, summons and followers are never listed. Camp followers and camp pets (Volo, Elminster,
   the Oathbreaker Knight, Scratch, Tara and others) are left out because they fit none of the above.

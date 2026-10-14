@@ -27,10 +27,13 @@ gave the committed v0.1.5 pak byte for byte.
   instead of the trim record being dropped.
 - From v0.1.5: a hireling character nobody has hired is not listed.
 
-**Not fixed:** the Bard already in the party in the two saves made at the end of the 2026-10-12
-session. v0.1.6 will still refuse to send her to camp, and now says why. Use a save from before
-that session. (Untested alternative, after a hard save: in the server console,
-Osi.SetOnStage("4d3c9cb3-ca34-46ba-9c81-44081270bfde", 1) and then untick her on the Party tab.)
+**Not fixed:** the Bard hireling already in the party in Calliope's game (Honour Mode, Dark Urge
+tiefling warlock, with Shadowheart; save folder `886719e0-5e70-1e04-ca24-c73bbab5a1e0__HonourMode`).
+v0.1.6 will still refuse to send her to camp, and now says why. Honour Mode keeps one save, so
+there is no earlier save to go back to. A copy of the save as it was on 2026-10-12 10:13 is in
+`C:\Claude Projects\BG3 Mods\PartyPicker_SaveBackups\2026-10-12_Calliope_HonourMode\`.
+Untested repair: in the server console, Osi.SetOnStage("4d3c9cb3-ca34-46ba-9c81-44081270bfde", 1)
+and then untick her on the Party tab.
 
 ## Before you start
 1. Make a **hard save** in a new slot, e.g. `BACKUP before Party Picker`.
@@ -59,16 +62,16 @@ Osi.SetOnStage("4d3c9cb3-ca34-46ba-9c81-44081270bfde", 1) and then untick her on
 9. Open MCM. Party Picker should have a **Settings** tab and a **Party** tab.
 
 ## The test for the 2026-10-12 report
-10. In a save from **before** the Bard was recruited: open the Party tab. The Bard hireling should
-    be listed with her box greyed out and the words "not available: off stage", and her
-    `!pp_roster` line should contain `offstage` or `IsOnStage=0` (or both). (The Fighter hireling is in the same story tables;
-    whether she is off stage too was not in the log, so note what her line shows.)
+10. In Calliope's game (the only save has the Bard already in the party): run `!pp_roster`. The
+    Bard's line should contain `offstage` or `IsOnStage=0` (or both), and `travelblock`. On the
+    Party tab she should be ticked and tagged "off stage". The Fighter hireling is in the same
+    story tables and not in the party: if she is off stage too, her box should be greyed out with
+    "not available: off stage"; whether she is was not in the log, so note what her line shows.
 11. Untick the Rogue hireling, press Apply. The tab should say
     `Party updated. Sent to camp: <her name>.` and the log should have a
     `request: join []; send to camp [<her name>]` line.
 12. Tick her again, Apply. `Party updated. Joined: <her name>.`
-13. Only if you want to see the refusal: load one of the saves with the Bard in the party, untick
-    her, Apply. Expected: nothing changes, and the tab keeps showing
+13. The refusal, in Calliope's game: untick the Bard, Apply. Expected: nothing changes, and the tab keeps showing
     `<her name> cannot travel right now (DB_FastTravelBlock_CantMove_StatusSet): they are off stage ...`
     until you press Refresh. The same text is in the log after `request refused:`.
 
