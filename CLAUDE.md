@@ -79,7 +79,14 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
   hireling, `!pp_roster` shows offstage/cantmove/cantact/travelblock/campflag/hiredflag.
 
 ## Open issues
-1. **Calliope's game still has the Bard in the party, off stage.** It is an Honour Mode run
+1. **Update 2026-10-13 evening:** Alan loaded Calliope's game on v0.1.6 and ran `!pp_roster`. The
+   off-stage lock is confirmed in game on the Rogue (Maddala Deadeye) and Fighter (Varanna
+   Sunblossom): `offstage`, `cantmove`, `cantact`, `IsOnStage=0`. The Bard (Brinna Brightsong) came
+   back on stage during that load and lost the travel block, and has `origalign`, so unticking her
+   should now work; Alan has not tried it yet. DaisyMorph dismisses its stand-in hireling at every
+   load (forced Remove, then off stage): that is where off-stage hired hirelings come from, and it
+   did this to the Rogue Party Picker had sent to camp. What follows is the state before that.
+   **Calliope's game still has the Bard in the party, off stage.** It is an Honour Mode run
    (leader Calliope, Dark Urge tiefling warlock, with Shadowheart), so there is one save and no
    earlier one to go back to: `...\Savegames\Story\886719e0-5e70-1e04-ca24-c73bbab5a1e0__HonourMode`.
    A copy from 2026-10-12 10:13 is in
@@ -104,9 +111,8 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
    to camp by the game's removal (PM:1305); Party Picker reports "did not leave" (test 22). Whether
    any real mod companion lacks the row is not known (Alfira has a DefaultFaction row in Alan's
    log, so she has been through that procedure).
-7. `Osi.IsOnStage` is used as a second off-stage signal inside a pcall. The story uses the query
-   (`GLO_Camp.txt` L1715) but it has not been called from Script Extender in game yet; `!pp_roster`
-   prints `IsOnStage?` if the call fails.
+7. `Osi.IsOnStage` as a second off-stage signal: confirmed working in game 2026-10-13
+   (`IsOnStage=0` printed for two off-stage hirelings, no `IsOnStage?`).
 
 ## Adversarial review of v0.1.5 (2026-10-12): how each finding ended
 (H = SharedDev Hirelings.txt, PM = Shared _GLO_Shared_PartyMembers.txt, P = Server/Party.lua)

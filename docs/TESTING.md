@@ -250,13 +250,41 @@ session shows (`Extender Runtime 2026-10-13 04-15-47.log`):
 - Only origin companions were moved. No hireling appears in these lines, so the off-stage lock
   (the fix for the 2026-10-12 report) was not exercised in this session.
 
+**2026-10-13 (evening), v0.1.6, Calliope's game.** Alan: "I went to the Tiefling save and ran the
+pp_roster". (He also pointed out, correctly: "But there is only one save for that character because
+its honor mode", "so I could not go to an older save".) From
+`Extender Runtime 2026-10-14 01-43-11.log` and `Osiris Runtime 2026-10-14 01-45-39.log`:
+- `Party Picker v0.1.6 roster:` (1912), then, shortened here to the parts that matter:
+  - `Calliope  ACTIVE avatar locked(player character)`
+  - `Brinna Brightsong  ACTIVE hireling  [in: seen,team,hired,players,aligned,origalign,partymembers,incamp,hiretemplate,hiredflag; faction: Hireling2_...]`
+  - `Maddala Deadeye  camp  hireling locked(not available: off stage (not present in the world)) [in: seen,team,hired,aligned,origalign,dismissed,offstage,cantmove,cantact,hiretemplate,campflag,IsOnStage=0; faction: Hirelings_...]`
+  - `Shadowheart  ACTIVE`
+  - `Varanna Sunblossom  camp  hireling locked(not available: off stage (not present in the world)) [in: team,hired,aligned,origalign,dismissed,offstage,cantmove,cantact,hiretemplate,hiredflag,IsOnStage=0; faction: Hirelings_...]`
+  - `active 3, limit 14 (game reports 14)`
+- **Confirmed in game:** the off-stage lock works, by both signals (`offstage` and `IsOnStage=0`;
+  `Osi.IsOnStage` is callable from Script Extender, no `IsOnStage?`). The names are now known:
+  Bard = Brinna Brightsong, Rogue = Maddala Deadeye, Fighter = Varanna Sunblossom.
+- **The Bard is on stage again and no longer blocked.** During this load:
+  `event WentOnStage(4d3c9cb3-..., 1)` (Osiris 65939), `DB_OffStage( 4d3c9cb3-... ) [delete fact]`
+  (65942), `DB_CantMove( 4d3c9cb3-... ) [delete fact]` (65948), `RemoveStatus( ..., "TRAVELBLOCK_CANTMOVE", ... )`
+  (65951), `DB_FastTravelBlock_CantMove_StatusSet( 4d3c9cb3-... ) [delete fact]` (65952). A fact can
+  only be deleted if it was there, so this settles what was inferred on 2026-10-12: she did have
+  the `DB_OffStage` row and the travel block. The log does not show what put her on stage (an
+  engine event with no story call before it). She has `origalign` and `partymembers`, the two
+  things the game's removal needs (PM:1305–1307), so unticking her should now work. Not yet tried.
+- **Where off-stage hirelings come from: confirmed for the Rogue.** At load DaisyMorph wrote
+  `Leftover DummyUuid S_GLO_Hirelings_Rogue_e4818484-... (keeping DummyUuid for reuse)` (1843),
+  `Dismissing dummy hireling ...` (1845), `Dismissed dummy hireling e4818484-...` (1846). In the
+  Osiris log: `PROC_GLO_PartyMembers_Remove( (CHARACTER)e4818484-..., (CHARACTER)NULL_..., 1 )`
+  (52065), `DB_InCamp( ...Rogue... ) [delete fact]` (57118), `event WentOnStage(e4818484-..., 0)`
+  (59335), `DB_OffStage( e4818484-... ) [add fact]` (59338), `DB_CantMove( e4818484-... ) [add fact]`
+  (59344). So the hireling Party Picker sent to camp on 2026-10-12 was taken out of camp and put
+  off stage by DaisyMorph, which treats her as its stand-in. That is DaisyMorph's doing, not Party
+  Picker's; Party Picker now shows her as not available instead of recruiting her.
+
 Still not known:
-- Whether the Bard has the row a removal needs (`DB_GLO_PartyMembers_OriginalAlignment`, PM:1305).
-  It is given to every hireling template (H:280–285) and deleted by a permanent dismissal (H:639);
-  only a hire through Withers' own screen puts it back (H:740–747). `!pp_roster` shows it as
-  `origalign` on her line.
-- Whether "Brianna Brightsong" is this Bard. Alan's notes give the Bard hireling the id `4d3c9cb3`;
-  the name was not checked against the game files in this session.
+- (Answered 2026-10-13: the Bard has `origalign`, and "Brianna Brightsong" is this Bard, shown by
+  the game as Brinna Brightsong.)
 - Whether two listed characters can show the same name (another mod transformed the Rogue in that
   session). Not seen; the named result line would show it.
 
