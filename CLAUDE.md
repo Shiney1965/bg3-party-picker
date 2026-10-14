@@ -111,6 +111,8 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
    real Withers hire (H:290â€“316) and never removed, but whether DaisyMorph's hires set it is not
    known.
 5. Not done: telling apart two listed characters with the same name (not seen in game).
+   **Decided by Alan 2026-10-13:** off-stage characters stay listed but locked ("option 1, leave
+   as is is best"). Do not add code that puts a character on stage, and do not hide them.
 6. A companion from another mod with no `DB_GLO_PartyMembers_OriginalAlignment` row cannot be sent
    to camp by the game's removal (PM:1305); Party Picker reports "did not leave" (test 22). Whether
    any real mod companion lacks the row is not known (Alfira has a DefaultFaction row in Alan's

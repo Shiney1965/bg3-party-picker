@@ -299,7 +299,9 @@ unticked Brianna and pressed apply and she was removed from the party". The same
 **2026-10-13 (evening), same session.** Alan, about the other two hirelings on the Party tab: "The
 other ones say hireling unavailable off stage". That is the intended display for Maddala Deadeye
 and Varanna Sunblossom, whose roster lines above carry `offstage` and `IsOnStage=0`. Whether Alan
-wants them to be recruitable is an open question put to him the same day.
+wants them to be recruitable was put to him the same day. His decision: "option 1, leave as is is
+best". Off-stage characters stay listed, greyed out, with the reason; Party Picker does not bring
+anyone on stage.
 
 Still not known:
 - (Answered 2026-10-13: the Bard has `origalign`, and "Brianna Brightsong" is this Bard, shown by
