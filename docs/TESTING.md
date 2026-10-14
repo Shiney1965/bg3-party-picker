@@ -339,7 +339,7 @@ Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 | 8 | Pick 4, Keep, then End the Day again | Normal rest, four in beds | |
 | 9 | Wake up | The other 2 rejoin a few seconds later (after the camp returns to day) | `LongRestFinished` / end of night mode + add-only restore |
 | 10 | Trim to four, save before pressing End the Day, reload, rest, wake | Restore still happens | Mod variable persistence |
-| 11 | Act 1 Underdark: Ebonlake raft with 6 in party, to Grymforge and back | All 6 arrive at each dock | Raft landing spots 5–16. Log: `raft: added … landing positions` (at a level load or just before landing) |
+| 11 | Act 1 Underdark: Ebonlake raft with 6 in party, to Grymforge and back | All 6 arrive at each dock, visible and able to move. Without Party Picker, boarding hides, protects and freezes every crew member (`Act1_UND_EbonLake.txt` L490–497) and landing only releases those with a position row (L589–609), so members 5+ would stay hidden and frozen. Helper to get there: `C:\Claude Projects\BG3 Mods\PartyPicker_RaftTest\` (`!raft_dock`, `!raft_fix`) | Raft landing spots 5–16. Log: `raft: added … landing positions` (at a level load or just before landing) |
 | 11b | Same, through the lake encounter (Duergar raft) | All 6 stay on the raft and continue | **Risk:** on the lake, members 5+ share the four on-raft spots; if the game pushes someone off the raft they may be left behind |
 | 12 | Multiplayer (host + 1) | Other player's tab is read-only; their characters stay locked | Peer id → user id conversion |
 

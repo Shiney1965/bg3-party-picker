@@ -120,6 +120,16 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
 7. `Osi.IsOnStage` as a second off-stage signal: confirmed working in game 2026-10-13
    (`IsOnStage=0` printed for two off-stage hirelings, no `IsOnStage?`).
 
+## Raft test helper (2026-10-14)
+A separate testing-only mod, not part of this repository: `C:\Claude Projects\BG3 Mods\PartyPicker_RaftTest\`
+(pak `PartyPickerRaftTest.pak` v0.2.0, installed on Alan's PC, must be activated in BG3MM).
+Server console `!raft_dock` sends the party to the dock where the raft is (the story's own
+`PROC_TeleportPartiesTo`, as in the game's debug shortcut, Act1_UND_EbonLake.txt L184–193);
+`!raft_fix` releases anyone the raft left hidden and frozen. Reviewed adversarially; its README
+has the pass/fail criterion. Note from that review: Restrictions.lua's header says members 5+
+"are never teleported"; more exactly, boarding hides and freezes the whole crew (L490–497) and
+landing only releases those with a position row (L589–609). Correct that comment in the next build.
+
 ## Adversarial review of v0.1.5 (2026-10-12): how each finding ended
 (H = SharedDev Hirelings.txt, PM = Shared _GLO_Shared_PartyMembers.txt, P = Server/Party.lua)
 1. "v0.1.5 still lists Brianna": true, but not through v0.1.4's own add. She was in
