@@ -282,6 +282,20 @@ its honor mode", "so I could not go to an older save".) From
   off stage by DaisyMorph, which treats her as its stand-in. That is DaisyMorph's doing, not Party
   Picker's; Party Picker now shows her as not available instead of recruiting her.
 
+**2026-10-13 (evening), v0.1.6, the original report resolved in Calliope's game.** Alan: "I
+unticked Brianna and pressed apply and she was removed from the party". The same session's logs:
+- `[PartyPicker] request: join []; send to camp [Brinna Brightsong]` (Extender log 1938),
+  `AEE [Info] S_GLO_Hirelings_Bard_4d3c9cb3-... left the party, removing spells` (1939),
+  `[PartyPicker] Party updated. Sent to camp: Brinna Brightsong.` (1940, 1941).
+- Osiris log: `PROC_GLO_PartyMembers_Remove( ...Bard..., ...a9724ba4..., 0, 0 )` (897319),
+  `PROC_GLO_PartyMembers_MakeNPC` (897417), `DB_Players( ...Bard... ) [delete fact]` (897428),
+  `PROC_DismissToCamp` (897749), then `PROC_Hirelings_SendToCamp` (rule at 898156: hired flag
+  cleared, in-camp flag set, `Hirelings_InCamp_Count` 0 → 1 at 898177–898178), and
+  `event CharacterLeftParty(S_GLO_Hirelings_Bard_...)` (898528).
+- This confirms, for a hireling: step 4 of the table below (untick, Apply, sent to camp) and the
+  "send to camp" half of step 5, on v0.1.6. Not confirmed by this: that she is standing in camp
+  with her normal talk options, and bringing a hireling back from camp.
+
 Still not known:
 - (Answered 2026-10-13: the Bard has `origalign`, and "Brianna Brightsong" is this Bard, shown by
   the game as Brinna Brightsong.)

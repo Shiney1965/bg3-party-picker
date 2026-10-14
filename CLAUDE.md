@@ -79,7 +79,11 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
   hireling, `!pp_roster` shows offstage/cantmove/cantact/travelblock/campflag/hiredflag.
 
 ## Open issues
-1. **Update 2026-10-13 evening:** Alan loaded Calliope's game on v0.1.6 and ran `!pp_roster`. The
+1. **RESOLVED 2026-10-13:** Alan unticked the Bard in Calliope's game and she was sent to camp
+   ("she was removed from the party"; logs confirm Remove, MakeNPC, SendToCamp, CharacterLeftParty).
+   The 2026-10-12 report is closed. Left to watch: whether DaisyMorph puts her off stage on a later
+   load, as it does with the Rogue. History of this issue follows.
+   **Update 2026-10-13 evening:** Alan loaded Calliope's game on v0.1.6 and ran `!pp_roster`. The
    off-stage lock is confirmed in game on the Rogue (Maddala Deadeye) and Fighter (Varanna
    Sunblossom): `offstage`, `cantmove`, `cantact`, `IsOnStage=0`. The Bard (Brinna Brightsong) came
    back on stage during that load and lost the travel block, and has `origalign`, so unticking her
