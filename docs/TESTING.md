@@ -345,7 +345,7 @@ So it's ready to ship." The logs of those sessions:
 **2026-10-15, release renumbered to v1.0.0.** Alan: "Please change the version to 1.0.0 and redo the
 pak and documentation". The v1.0.0 pak was rebuilt from the v0.1.6 source with only `PP.VERSION`
 and the two `Version64` values changed; unpacking both paks and diffing them shows those three lines
-and nothing else. Tests: 114 passed. Not yet loaded in game: the check is
+and nothing else. Tests: 114 passed. Installed on Alan's PC 2026-10-16 (Alan: "please load the mod"; hash checked). Not yet loaded in game: the check is
 `[PartyPicker] server loaded (v1.0.0).` in the log and 1.0.0 in BG3 Mod Manager.
 
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
