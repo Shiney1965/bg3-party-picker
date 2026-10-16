@@ -64,7 +64,7 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
   The filter itself is kept (it only hides a hireling character that is in DB_PartOfTheTeam but
   neither hired nor in the party).
 - v0.1.6 (2026-10-12): fixes the Brianna Brightsong report. Size and SHA-256 are in RUN_CARD.md.
-  **Installed on Alan's PC 2026-10-12 at his request (hash checked). Not yet tested in game.**
+  **Installed on Alan's PC 2026-10-12 at his request (hash checked). Tested in game; long rest and raft confirmed by Alan 2026-10-15 ("ready to ship"). Released as v0.1.6: docs in `dist_docs/`, bundle built by `tools/make_docs.ps1` + `tools/assemble_bundle.ps1` into `release/` (git-ignored).**
 
 ## The 2026-10-12 report: cause (full evidence in docs/TESTING.md)
 - v0.1.4 ran. The Bard hireling (`4d3c9cb3`) joined; later the Rogue hireling was sent to camp.
@@ -104,8 +104,8 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
    needs (PM:1305).
 2. "Error . Server shutting down." on load (2026-10-11): logs point to another mod's network message,
    not Party Picker; not reproduced since.
-3. Not yet tested in game: long-rest hold (TESTING.md step 7, highest risk), restore after rest,
-   raft, multiplayer, and everything new in v0.1.6.
+3. Confirmed in game 2026-10-15: long-rest hold, restore after rest, raft. Still untested: multiplayer,
+   saving between trim and rest (step 10), the raft's lake encounter (step 11b).
 4. Not done, by choice: a "hired at Withers only" filter. Hirelings hired by another mod's script
    are listed like any other. If Alan wants them hidden: DB_Hirelings_Hired_Rehire is set after a
    real Withers hire (H:290â€“316) and never removed, but whether DaisyMorph's hires set it is not

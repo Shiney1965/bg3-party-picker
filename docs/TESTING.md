@@ -324,6 +324,24 @@ Still not known:
 - Whether two listed characters can show the same name (another mod transformed the Rogue in that
   session). Not seen; the named result line would show it.
 
+**2026-10-15, v0.1.6: long rest and raft.** Alan: "The mod works fine with the boat and long rest!
+So it's ready to ship." The logs of those sessions:
+- **Long rest** (`Extender Runtime 2026-10-15 12-18-20.log`): `party size limit set to 14` (1904),
+  `long rest held: party is larger than four` (2230), `request: join []; send to camp [Gale, Halsin,
+  Karlach, Minthara, Raphael, Wyll]` (2231), `Party updated. Sent to camp: Gale, Halsin, Karlach,
+  Minthara, Raphael, Wyll.` (2238), `Party trimmed to four for the night. Press End the Day again.`
+  (2239), then after waking `request: join [Gale, Halsin, Karlach, Minthara, Raphael, Wyll]; send to
+  camp []` (2331), `request refused: A party change is already in progress.` (2332, a second restore
+  trigger while the first was running; harmless), `Party updated. Joined: Gale, Halsin, Karlach,
+  Minthara, Raphael, Wyll.` (2381). Each message appears twice because the server and the client
+  both log it.
+- **Raft** (`Extender Runtime 2026-10-15 17-11-02.log`): `raft: added 36 landing positions` (3561);
+  the raft test helper: `party of 7; landing spots at that dock: 16` (3690). `!raft_fix` was not
+  used in that log.
+- Steps 7, 8, 9 and 11 below are confirmed by Alan's report. Not confirmed: step 10 (save between
+  trim and rest), step 11b (the lake encounter; not stated), step 12 (multiplayer).
+- Released as v0.1.6 (the same pak, unchanged). Release documents: `dist_docs\`.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 

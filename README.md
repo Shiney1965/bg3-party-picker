@@ -1,7 +1,8 @@
 # Party Picker (BG3)
 
 A Baldur's Gate 3 mod that lets you choose who is in your party from a menu. **Status: v0.1.6
-built, not yet tested in game.** v0.1.4 stopped camp followers and camp pets appearing in the Party
+released (2026-10-15). Tested in game, including the long rest and the Grymforge raft; multiplayer untested.
+Release documents and the Nexus page text are in [dist_docs/](dist_docs/).** v0.1.4 stopped camp followers and camp pets appearing in the Party
 list. v0.1.6 fixes the hireling who could be recruited but not sent back (reported 2026-10-12): she
 was off stage, so the game blocked her travel and Party Picker then refused to move her without
 saying why. Off-stage characters can no longer be recruited, and every refusal now stays on the

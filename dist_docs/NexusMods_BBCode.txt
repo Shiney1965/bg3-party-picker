@@ -1,0 +1,128 @@
+[size=5][b]Party Picker[/b][/size]
+
+[b]Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 16. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.[/b]
+
+Recruiting and dismissing companions normally means walking to each one and talking to them, one at a time. With a bigger party, the four-member parts of the game get in the way too: the camp has four beds, and the Underdark raft has four landing spots. Party Picker puts the whole roster on one screen and takes care of those two places.
+
+[b]Why another party mod?[/b] I wanted to swap companions in and out from one list, without hotbar spells, and to keep a large party through long rests and the raft crossing. [b]Your preferences may vary, so I am not saying this mod is better than others, only different.[/b]
+
+[b]No game files replaced, no executable patched.[/b] Party Picker uses the game's own recruit and dismiss procedures, the same ones the companions' dialogue and the dismiss button use, so the game's bookkeeping stays correct. A single pak file is all that is needed.
+
+[b]TODO: screenshot URLs go here.[/b]
+
+[line]
+
+[size=4][b]How to use — please read[/b][/size]
+[b]PARTY PICKER REQUIRES MOD CONFIGURATION MENU (MCM). THE PARTY LIST AND EVERY SETTING ARE IN MCM. LOAD MCM ABOVE PARTY PICKER.[/b]
+[list]
+[*][b]Set your party limit first.[/b] Open MCM (INSERT, or from the ESC menu), find Party Picker, and on the [b]Settings[/b] tab set [i]Maximum party size[/i] (4 to 16, default 6). It counts your own character.
+[*][b]Pick your party on the Party tab.[/b] Everyone you have recruited is listed with a checkbox. Tick who you want with you, untick who should go to camp, and press [b]Apply[/b]. The line under the buttons says what happened, for example [i]Party updated. Joined: Karlach. Sent to camp: Gale.[/i]
+[*][b]Greyed-out names are locked, and the reason is shown next to them.[/b] Your own character, the companion you are currently controlling, dead party members, and in multiplayer every character another player controls cannot be sent to camp. A character who is off stage (not present in the world at the moment) cannot be recruited.
+[*][b]Long rest with more than four:[/b] press End the Day as usual. Party Picker holds the rest and opens a small window: tick the four who stay with you tonight (your own character is always one of them) and press [b]Keep these 4[/b], then press End the Day again. The others wait in camp and rejoin a few seconds after you wake up. Or press [b]Keep everyone this time[/b], then End the Day again within two minutes: the game then rests as it does without the mod and puts only four to bed.
+[*][b]The Grymforge raft:[/b] nothing to do. Board with your whole party; everyone lands.
+[/list]
+
+[line]
+
+[size=4][b]Features[/b][/size]
+[list]
+[*][b]One list for your whole roster[/b] — player characters, origin companions, hirelings, and companions added by other mods. Withers, summons, familiars, followers and camp followers (Volo, Elminster, Scratch, Tara and the like) are never listed.
+[*][b]Join and dismiss in one step.[/b] Apply makes every change at once. New members are brought next to your character (switchable).
+[*][b]Larger parties.[/b] The limit goes from 4 to 16 and is re-applied each time a save loads.
+[*][b]Long rests with a large party.[/b] The camp has four beds and the game only puts four party members to bed. Party Picker asks which four to keep tonight; the others wait in camp and rejoin when you wake, as far as the limit allows. [b]Nobody is ever sent away to make room for them.[/b] The record of who waited is saved with the game, so a save and load in between should not lose it (not yet tested in game).
+[*][b]The Grymforge raft (Ebonlake, Act 1 Underdark).[/b] The raft takes everyone aboard but has only four landing spots per dock, so members five and up would be left on board, hidden and unable to move. Party Picker adds landing spots so the whole party arrives.
+[*][b]Every refusal says why.[/b] A change that cannot be made (combat, someone who cannot travel right now, an off-stage character) is refused as a whole, the reason stays on the Party tab, and it is written to the Script Extender log.
+[*][b]Safe in combat.[/b] By default no party changes are made while your character, or anyone joining or leaving, is in combat.
+[/list]
+
+[line]
+
+[size=4][b]Requirements[/b][/size]
+[list]
+[*]Baldur's Gate 3, current Steam release (tested October 2026).
+[*][b]BG3 Script Extender[/b] (version 29+). Required — Party Picker is entirely Script Extender Lua. Tested with v33.
+[*][b][url=https://www.nexusmods.com/baldursgate3/mods/9162]Mod Configuration Menu (BG3MCM)[/url][/b], version 1.38 or later — [b]required[/b], and listed as a dependency in Party Picker's metadata. Tested with v1.41.0. Load it [b]above[/b] Party Picker.
+[*]A mod manager (BG3 Mod Manager recommended) — Party Picker must be [b]active in your load order[/b].
+[*][b]Windows only[/b] (Script Extender is Windows-only). MCM's window is driven with [b]mouse and keyboard[/b].
+[/list]
+
+[size=4][b]Install / uninstall[/b][/size]
+[list]
+[*]Drop [b]PartyPicker.pak[/b] into [b]%LocalAppData%\Larian Studios\Baldur's Gate 3\Mods[/b], activate it in BG3MM, put [b]Mod Configuration Menu above Party Picker[/b], save the load order, launch.
+[*][b]Verify:[/b] the Script Extender log shows [code][PartyPicker] server loaded (v0.1.6)[/code] and, once a save is loaded, [code][PartyPicker] party size limit set to 6[/code] (or your own limit); type [b]server[/b] then [b]!pp_roster[/b] in the console and the first line reads [b]Party Picker v0.1.6 roster:[/b].
+[*][b]Mid-playthrough install is fine.[/b] Your recruited companions are listed straight away.
+[*][b]Uninstall:[/b] cut your party back to four on the Party tab and save first (what happens to a larger party once Party Picker is gone has not been tested), then deactivate and delete the pak. Party Picker adds no items, spells or statuses.
+[*][b]Honour Mode keeps a single save.[/b] Back up the save folder before trying any new mod there.
+[/list]
+Full instructions, a settings reference and a console reference are in the README and INSTALL files in the download (Markdown, Word and PDF).
+
+[line]
+
+[size=4][b]Configuration — the Settings and Party tabs[/b][/size]
+[list]
+[*][b]Settings, Party size[/b] — [i]Maximum party size[/i] (4–16, default 6); [i]Bring new members to you[/i] (on: a companion who joins from camp is moved next to your character); [i]No party changes in combat[/i] (on).
+[*][b]Settings, Where the game needs four[/b] — [i]Ask before a long rest[/i] (on); [i]Bring everyone back after the rest[/i] (on; off: press Restore when you want them back); [i]Let the whole party ride the Grymforge raft[/i] (on).
+[*][b]Party[/b] — the roster with checkboxes and a [i]Selected N of limit[/i] counter; [b]Apply[/b] (all changes at once; if a check fails first, nothing changes and the reason is shown), [b]Refresh[/b], and [b]Restore[/b], which appears only while some of your party are still waiting in camp after a rest.
+[/list]
+Every change applies straight away. Settings are kept [b]per MCM profile[/b], outside your save.
+
+[line]
+
+[size=4][b]Compatibility[/b][/size]
+[b]Compatible:[/b] companion mods and hireling mods that recruit through the game's normal party procedures, appearance mods, and mods that change what is in camp.
+
+[b]NOT compatible — do not run these alongside Party Picker:[/b]
+[list]
+[*][b]Party Limit Begone[/b] and any other mod that sets the party limit. Both set the same limit, and whichever applies it last wins. Pick one.
+[/list]
+
+[b]Caveats:[/b]
+[list]
+[*][b]Mods that change the long rest or the camp beds[/b] have not been tested with Party Picker's rest hold. If a rest misbehaves, turn [i]Ask before a long rest[/i] off, trim your party to four before resting, and tick everyone again afterwards.
+[*][b]Some mods take a hireling off stage for their own use[/b] (for example as a stand-in character). Party Picker then shows that hireling greyed out as "not available: off stage" instead of recruiting them.
+[*][b]Multiplayer:[/b] only the host can change the party; other players see the Party tab read-only, and characters controlled by other players are never moved. Every player needs the same versions of Party Picker, Script Extender and MCM. Note that the game itself dismisses a companion when a player joins. [b]Not yet tested in a live multiplayer session; reports welcome.[/b]
+[/list]
+
+[line]
+
+[size=4][b]Known limitations[/b][/size]
+[list]
+[*][b]Dialogue still seats the speaker plus three.[/b] That is the game's cutscene system and is not changed.
+[*][b]Quest items carried by members five and up are sometimes not registered by the game[/b], according to Party Limit Begone's notes. Party Picker does not address that. Keep quest items on your first four.
+[*][b]On the raft's lake stop[/b], members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.
+[*][b]Someone already in your party who is off stage cannot be sent to camp[/b] by Party Picker. The Party tab says so.
+[*][b]A companion the story is keeping in camp for a scene can still be ticked[/b], because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.
+[*][b]A companion added by another mod that the game does not mark as a companion[/b] is not listed until they have joined your party once the normal way. After that, Party Picker remembers them.
+[*][b]After a rest you may see [i]request refused: A party change is already in progress.[/i] in the log.[/b] Party Picker listens for two end-of-rest signals; the second restore attempt is turned away while the first one runs. It is harmless.
+[/list]
+
+[line]
+
+[size=4][b]Console commands[/b][/size]
+Script Extender console, type [b]server[/b] first: [b]!pp_roster[/b] (everyone, in party or in camp, why anyone is locked or not listed) [b]!pp_set Name1,Name2[/b] (set the party to these; locked characters are kept) [b]!pp_restore[/b] (bring back who waited in camp during a rest) [b]!pp_size[/b] (re-apply the limit) [b]!pp_forget Name[/b] (drop someone from the "seen in your party" record). In the client context (type [b]client[/b]), [b]!pp[/b] opens the Party list in its own window, without MCM. Full table in the README.
+
+[line]
+
+[size=4][b]Credits[/b][/size]
+[list]
+[*][b]Author:[/b] Serpentine (NexusMods: SerpentineShel)
+[*][b]BG3 Script Extender:[/b] Norbyte — Party Picker is built entirely on it
+[*][b]Mod Configuration Menu:[/b] AtilioA and contributors — the Party tab and every setting live in it
+[*][b]Larian Studios[/b] — for the party and camp scripts Party Picker works through
+[*]Thanks to the BG3 modding community for the public research on the game's story scripts, and to the authors of the party-size mods that mapped the four-member limits first
+[/list]
+
+[size=4][b]AI use disclosure[/b][/size]
+Party Picker was developed with substantial assistance from an AI coding assistant (Claude, by Anthropic) for code, research and documentation. It contains [b]no AI-generated art, images, audio, or other media[/b] — only code and text. All design decisions, testing and the final release were done by the author.
+
+[size=4][b]Source code[/b][/size]
+Party Picker is open source. Full source (Script Extender Lua, the MCM blueprint, the pak builder, tests and research notes) is on GitHub:
+[url=https://github.com/Shiney1965/bg3-party-picker]github.com/Shiney1965/bg3-party-picker[/url]
+
+[size=4][b]License[/b][/size]
+MIT — the full text ships with the download as [i]LICENSE[/i]. Party Picker bundles no third-party files; see LICENSE-THIRD-PARTY.md in the download. Reuse the code freely in your own mods; just keep the copyright notice with it.
+
+[size=4][b]Reporting issues[/b][/size]
+Comment on this page or open an issue on GitHub, with your BG3, Script Extender and MCM versions, every line starting [code][PartyPicker][/code] from the Script Extender log, and the output of [b]!pp_roster[/b].
+
+[b]TODO: mod page ID / permalink — fill in after the page is created.[/b]
