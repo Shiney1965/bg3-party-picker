@@ -46,7 +46,7 @@ Recruiting and dismissing companions normally means walking to each one and talk
 ## Install / uninstall
 
 - Drop **PartyPicker.pak** into **%LocalAppData%\Larian Studios\Baldur's Gate 3\Mods**, activate it in BG3MM, put **Mod Configuration Menu above Party Picker**, save the load order, launch.
-- **Verify:** the Script Extender log shows [code][PartyPicker] server loaded (v0.1.6)[/code] and, once a save is loaded, [code][PartyPicker] party size limit set to 6[/code] (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v0.1.6 roster:**.
+- **Verify:** the Script Extender log shows [code][PartyPicker] server loaded (v1.0.0)[/code] and, once a save is loaded, [code][PartyPicker] party size limit set to 6[/code] (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v1.0.0 roster:**.
 - **Mid-playthrough install is fine.** Your recruited companions are listed straight away.
 - **Uninstall:** cut your party back to four on the Party tab and save first (what happens to a larger party once Party Picker is gone has not been tested), then deactivate and delete the pak. Party Picker adds no items, spells or statuses.
 - **Honour Mode keeps a single save.** Back up the save folder before trying any new mod there.

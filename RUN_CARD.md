@@ -1,10 +1,17 @@
-# Party Picker: test run card (v0.1.6)
+# Party Picker: test run card (v1.0.0)
 
-**v0.1.6 is installed on Alan's PC** (2026-10-12, hash checked after the copy; steps 4–5 below are
-done). Tested in game 2026-10-13 to 2026-10-15, long rest and raft included; released as v0.1.6 (see docs/TESTING.md). It replaces v0.1.4; v0.1.5 was never installed.
+**v1.0.0 is the release build (2026-10-15).** It is v0.1.6 with the version changed and nothing
+else: unpacking both paks and comparing them shows only `PP.VERSION` in `Shared/Common.lua` and the
+two `Version64` values in `meta.lsx` differ. v0.1.6 was installed on Alan's PC on 2026-10-12 and
+tested in game 2026-10-13 to 2026-10-15, long rest and raft included (see docs/TESTING.md).
+**v1.0.0 is not installed yet.** The check after installing it: the log line reads
+`[PartyPicker] server loaded (v1.0.0).` and BG3 Mod Manager shows 1.0.0.
 
 **Pak:** `PartyPicker.pak` (30,043 bytes)
-SHA256 `8a73af064d42378231d0f39c13fe08b672ddb713df8b08dc14b3397d847b384d`
+SHA256 `89005f94feeab56fa4e79969bc2f258de1804a809b4359a587c82f4b07a56e3c`
+
+**The tested v0.1.6 pak** (30,043 bytes) was SHA256
+`8a73af064d42378231d0f39c13fe08b672ddb713df8b08dc14b3397d847b384d`.
 
 **Built with:** `python3 tools/lspk.py create src PartyPicker.pak`, from the files as git stores
 them (LF line endings). Rebuilding Scroll Repair's `src/` with the same tool gives a pak
@@ -52,11 +59,11 @@ and then untick her on the Party tab.
 7. Open the newest Script Extender log,
    `%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Script Extender\Scripe Extender Logs\Extender Runtime *.log`
    (the folder name really is misspelled). Look for:
-   - `[PartyPicker] server loaded (v0.1.6).`
-   - `[PartyPicker] client loaded (v0.1.6) (Party tab added to MCM).`
+   - `[PartyPicker] server loaded (v1.0.0).`
+   - `[PartyPicker] client loaded (v1.0.0) (Party tab added to MCM).`
    - `[PartyPicker] party size limit set to 6` (or your own limit)
 8. Open the SE console, type `server`, then `!pp_roster`. The first line must read
-   `Party Picker v0.1.6 roster:`. If it does not, the old pak is still loaded. Your companions
+   `Party Picker v1.0.0 roster:`. If it does not, the old pak is still loaded. Your companions
    should be listed, your character marked `locked(player character)`. Each line ends with
    `[in: ...; faction: ...; id: ...]`. **Send me the whole output.**
 9. Open MCM. Party Picker should have a **Settings** tab and a **Party** tab.

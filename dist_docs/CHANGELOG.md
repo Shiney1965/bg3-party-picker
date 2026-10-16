@@ -1,12 +1,16 @@
 # Changelog — Party Picker
 
-Party Picker's development history. **v0.1.6 is the first public release.** Everything below it was a test build that was never published; the list is here so the first public release carries an honest record of how it got here.
+Party Picker's development history. **v1.0.0 is the first public release.** Everything below it was a test build that was never published; the list is here so the first public release carries an honest record of how it got here.
 
 Dates are the day each build was completed.
 
 ---
 
-## v0.1.6 — 2026-10-12 — first public release
+## v1.0.0 — 2026-10-15 — first public release
+
+The tested v0.1.6 build, renumbered for release. Only the version number changed; the code is the same.
+
+## v0.1.6 — 2026-10-12 — the tested build, released as v1.0.0
 
 Tested in game on 2026-10-13 to 2026-10-15: joining and dismissing companions and hirelings from the Party tab, a party of more than four, the long-rest hold with a party of ten (six waited in camp and all six rejoined after waking), and the Grymforge raft crossing with a party of seven.
 

@@ -16,7 +16,7 @@ Party Picker is safe to add to a playthrough already in progress. Your recruited
 
 ## Install
 
-1. **Download and unzip** `PartyPicker-0.1.6.zip`. Inside you'll find `PartyPicker.pak` plus these documents.
+1. **Download and unzip** `PartyPicker-1.0.0.zip`. Inside you'll find `PartyPicker.pak` plus these documents.
 
 2. **Copy the `.pak` into your BG3 Mods folder.** Open File Explorer, paste this into the address bar, and press Enter:
    ```
@@ -43,8 +43,8 @@ Party Picker is safe to add to a playthrough already in progress. Your recruited
 **1. The Script Extender log or console.** Party Picker prints two lines at startup:
 
 ```
-[PartyPicker] client loaded (v0.1.6) (Party tab added to MCM). Client console: !pp
-[PartyPicker] server loaded (v0.1.6). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name
+[PartyPicker] client loaded (v1.0.0) (Party tab added to MCM). Client console: !pp
+[PartyPicker] server loaded (v1.0.0). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name
 ```
 
 and, once the save has loaded:
@@ -55,7 +55,7 @@ and, once the save has loaded:
 
 (or your own limit). The log is in `%LocalAppData%\Larian Studios\Baldur's Gate 3\Script Extender\Scripe Extender Logs\` (the folder name really is misspelled); open the newest `Extender Runtime *.log`.
 
-**2. `!pp_roster`.** In the Script Extender console type `server` and press Enter, then `!pp_roster`. The first line reads `Party Picker v0.1.6 roster:`. Your companions are listed, your own character marked `locked(player character)`, and the last line shows the active count and the limit.
+**2. `!pp_roster`.** In the Script Extender console type `server` and press Enter, then `!pp_roster`. The first line reads `Party Picker v1.0.0 roster:`. Your companions are listed, your own character marked `locked(player character)`, and the last line shows the active count and the limit.
 
 **3. The MCM page.** Press **INSERT** (or open MCM from the ESC menu) and find **Party Picker**. You should see two tabs: **Settings** and **Party**.
 
