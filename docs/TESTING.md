@@ -100,7 +100,7 @@ Volo. Withers: `not listed: Withers (in DB_PartOfTheTeam)`. `active 10, limit 14
 That build builds the list from `DB_PartOfTheTeam`, `DB_Hirelings_Hired` and `DB_Players`, so every
 camp entry came from the first two. Alan's requirement for the fix: list only "real party members --
 that is Tavs/Durges and companions", "and hirelings of course and companions added by mods", using
-a rule that works in every game, not just his. v0.1.4 does this (see README, "Who is listed").
+a rule that works in every game, not just his. v0.1.4 does this (see docs/DEVELOPMENT.md, "Who is listed").
 
 **2026-10-11, v0.1.4 installed.** Downloaded from the repository's `main` branch into
 `%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Mods\PartyPicker.pak`; Alan: "the hash is correct

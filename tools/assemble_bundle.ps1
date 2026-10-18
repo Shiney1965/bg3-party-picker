@@ -76,4 +76,18 @@ $lines | Set-Content (Join-Path $out 'MANIFEST.txt') -Encoding utf8
 Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip -Force:$Force
 Write-Output ('Bundle assembled: ' + $out)
 Get-ChildItem $out | Select-Object Name, Length | Format-Table -AutoSize
-Write-Output ('zip: ' + $zip + '  ' + (Get-Item $zip).Length + ' bytes  SHA256 ' + (Get-FileHash $zip -Algorithm SHA256).Hash)
+$zipSha = (Get-FileHash $zip -Algorithm SHA256).Hash
+Write-Output ('zip: ' + $zip + '  ' + (Get-Item $zip).Length + ' bytes  SHA256 ' + $zipSha)
+
+# GitHub release notes, with this build's hashes filled in (written to release\ and the repo root).
+$tpl = Join-Path $docs 'RELEASE_NOTES.md'
+if (Test-Path $tpl) {
+    $notes = [IO.File]::ReadAllText($tpl)
+    $notes = $notes.Replace('{{VERSION}}', $Version).Replace('{{PAK_SHA}}', $have).Replace('{{PAK_BYTES}}', ('{0:N0}' -f (Get-Item $pak).Length)).Replace('{{ZIP_SHA}}', $zipSha).Replace('{{ZIP_BYTES}}', ('{0:N0}' -f (Get-Item $zip).Length))
+    if ($notes -match '\{\{') { throw 'unfilled placeholder in RELEASE_NOTES.md' }
+    $utf8 = New-Object Text.UTF8Encoding $false
+    foreach ($dest in @((Join-Path $rel ('RELEASE_NOTES_v' + $Version + '.md')), (Join-Path $root ('RELEASE_NOTES_v' + $Version + '.md')))) {
+        [IO.File]::WriteAllText($dest, $notes, $utf8)
+    }
+    Write-Output ('release notes: RELEASE_NOTES_v' + $Version + '.md')
+}

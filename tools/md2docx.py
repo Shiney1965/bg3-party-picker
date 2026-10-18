@@ -64,6 +64,10 @@ def render(md_path, out_path, title):
     normal = doc.styles["Normal"]; normal.font.name = "Calibri"; normal.font.size = Pt(11)
     normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Calibri")
     doc.core_properties.title = title; doc.core_properties.author = "Serpentine (NexusMods: SerpentineShel)"
+    # Headings must be larger than the 11 pt body text. Word's built-in Heading 3 is 11 pt (the same
+    # as the body) and Heading 2 only 13 pt, so set every level explicitly.
+    for name, size in (("Title", 26), ("Heading 1", 20), ("Heading 2", 16), ("Heading 3", 13.5)):
+        st = doc.styles[name]; st.font.size = Pt(size); st.font.bold = True
     i = 0; n = len(lines); first_h1 = True
     while i < n:
         ln = lines[i]

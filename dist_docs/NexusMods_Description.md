@@ -1,5 +1,7 @@
 # Party Picker
 
+**[github.com/Shiney1965/bg3-party-picker](https://github.com/Shiney1965/bg3-party-picker)**
+
 **Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 16. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.**
 
 Recruiting and dismissing companions normally means walking to each one and talking to them, one at a time. With a bigger party, the four-member parts of the game get in the way too: the camp has four beds, and the Underdark raft has four landing spots. Party Picker puts the whole roster on one screen and takes care of those two places.
@@ -46,10 +48,11 @@ Recruiting and dismissing companions normally means walking to each one and talk
 ## Install / uninstall
 
 - Drop **PartyPicker.pak** into **%LocalAppData%\Larian Studios\Baldur's Gate 3\Mods**, activate it in BG3MM, put **Mod Configuration Menu above Party Picker**, save the load order, launch.
-- **Verify:** the Script Extender log shows [code][PartyPicker] server loaded (v1.0.0)[/code] and, once a save is loaded, [code][PartyPicker] party size limit set to 6[/code] (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v1.0.0 roster:**.
+- **Verify:** the Script Extender log shows **[PartyPicker] server loaded (v1.0.0)** and, once a save is loaded, **[PartyPicker] party size limit set to 6** (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v1.0.0 roster:**.
 - **Mid-playthrough install is fine.** Your recruited companions are listed straight away.
 - **Uninstall:** cut your party back to four on the Party tab and save first (what happens to a larger party once Party Picker is gone has not been tested), then deactivate and delete the pak. Party Picker adds no items, spells or statuses.
 - **Honour Mode keeps a single save.** Back up the save folder before trying any new mod there.
+
 Full instructions, a settings reference and a console reference are in the README and INSTALL files in the download (Markdown, Word and PDF).
 
 ---
@@ -59,6 +62,7 @@ Full instructions, a settings reference and a console reference are in the READM
 - **Settings, Party size** — *Maximum party size* (4–16, default 6); *Bring new members to you* (on: a companion who joins from camp is moved next to your character); *No party changes in combat* (on).
 - **Settings, Where the game needs four** — *Ask before a long rest* (on); *Bring everyone back after the rest* (on; off: press Restore when you want them back); *Let the whole party ride the Grymforge raft* (on).
 - **Party** — the roster with checkboxes and a *Selected N of limit* counter; **Apply** (all changes at once; if a check fails first, nothing changes and the reason is shown), **Refresh**, and **Restore**, which appears only while some of your party are still waiting in camp after a rest.
+
 Every change applies straight away. Settings are kept **per MCM profile**, outside your save.
 
 ---
@@ -118,6 +122,6 @@ MIT — the full text ships with the download as *LICENSE*. Party Picker bundles
 
 ## Reporting issues
 
-Comment on this page or open an issue on GitHub, with your BG3, Script Extender and MCM versions, every line starting [code][PartyPicker][/code] from the Script Extender log, and the output of **!pp_roster**.
+Comment on this page or open an issue on GitHub, with your BG3, Script Extender and MCM versions, every line starting **[PartyPicker]** from the Script Extender log, and the output of **!pp_roster**.
 
 **TODO: mod page ID / permalink — fill in after the page is created.**
