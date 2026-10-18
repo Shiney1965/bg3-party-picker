@@ -348,6 +348,14 @@ and the two `Version64` values changed; unpacking both paks and diffing them sho
 and nothing else. Tests: 114 passed. Installed on Alan's PC 2026-10-16 (Alan: "please load the mod"; hash checked). Not yet loaded in game: the check is
 `[PartyPicker] server loaded (v1.0.0).` in the log and 1.0.0 in BG3 Mod Manager.
 
+**2026-10-17, v1.0.0 loaded in game.** Alan: "You can check the SE log for the last game to see if
+the PartyPicker loaded with the right version". `Extender Runtime 2026-10-17 18-17-18.log`:
+`[PartyPicker] client loaded (v1.0.0) (Party tab added to MCM). Client console: !pp` (1034),
+`[PartyPicker] server loaded (v1.0.0). ...` (1603, again at 2515 after a second load),
+`[PartyPicker] party size limit set to 14` (1879, 3556). No error lines mention Party Picker.
+Confirms the 1.0.0 pak loads, adds the MCM tab and applies the limit. Whether BG3 Mod Manager shows
+1.0.0 is not in the log.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 

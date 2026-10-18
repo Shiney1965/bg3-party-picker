@@ -4,7 +4,7 @@
 else: unpacking both paks and comparing them shows only `PP.VERSION` in `Shared/Common.lua` and the
 two `Version64` values in `meta.lsx` differ. v0.1.6 was installed on Alan's PC on 2026-10-12 and
 tested in game 2026-10-13 to 2026-10-15, long rest and raft included (see docs/TESTING.md).
-**v1.0.0 installed on Alan's PC 2026-10-16** (at his request; hash checked after the copy: `89005f94…b07a56e3c`). Not yet loaded in game. The check: the log line reads
+**v1.0.0 installed on Alan's PC 2026-10-16** (at his request; hash checked after the copy: `89005f94…b07a56e3c`). **Loaded in game 2026-10-17** (`Extender Runtime 2026-10-17 18-17-18.log`: `server loaded (v1.0.0)` at 1603, `client loaded (v1.0.0) (Party tab added to MCM)` at 1034, `party size limit set to 14` at 1879). The check was: the log line reads
 `[PartyPicker] server loaded (v1.0.0).` and BG3 Mod Manager shows 1.0.0.
 
 **Pak:** `PartyPicker.pak` (30,043 bytes)
