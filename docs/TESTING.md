@@ -353,8 +353,8 @@ the PartyPicker loaded with the right version". `Extender Runtime 2026-10-17 18-
 `[PartyPicker] client loaded (v1.0.0) (Party tab added to MCM). Client console: !pp` (1034),
 `[PartyPicker] server loaded (v1.0.0). ...` (1603, again at 2515 after a second load),
 `[PartyPicker] party size limit set to 14` (1879, 3556). No error lines mention Party Picker.
-Confirms the 1.0.0 pak loads, adds the MCM tab and applies the limit. Whether BG3 Mod Manager shows
-1.0.0 is not in the log.
+Confirms the 1.0.0 pak loads, adds the MCM tab and applies the limit. Alan, the same day: "Redux shows the correct version" (BG3 Mod Manager Redux lists Party
+Picker as 1.0.0). The 1.0.0 install check is complete.
 
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
