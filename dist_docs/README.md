@@ -106,7 +106,7 @@ What Party Picker keeps in your save: the record of who waited in camp during a 
 ## Known limitations
 
 - **Dialogue still seats the speaker plus three.** That is the game's cutscene system and is not changed.
-- **Quest items carried by members five and up are sometimes not registered by the game.** This bug is according to Party Limit Begone's notes. Party Picker does not address that. Keep quest items on your first four.
+- **House of Hope (Act 3): only four party members get the Debtor's Attire.** The game has four sets and hands one to each party member in turn, so members five and up get none. Party Picker does not change this.
 - **On the raft's lake stop**, members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.
 - **Someone already in your party who is off stage cannot be sent to camp** by Party Picker. The Party tab says so.
 - **A companion the story is keeping in camp for a scene can still be ticked**, because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.

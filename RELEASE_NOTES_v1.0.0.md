@@ -18,6 +18,6 @@ Party Picker v1.0.0 — first public release.
 | File | SHA256 |
 |---|---|
 | PartyPicker.pak (30,043 bytes) | `89005F94FEEAB56FA4E79969BC2F258DE1804A809B4359A587C82F4B07A56E3C` |
-| PartyPicker-1.0.0.zip (699,604 bytes) | `F647E8BC73A2A0583AFAE60C506E6454171230C51D49D03226A07F68BB9274A9` |
+| PartyPicker-1.0.0.zip (699,147 bytes) | `B718DC93B765E8E2CF3BEFB9BAB6E98C010EC280366B2A035FC646F24FCBA97C` |
 
 Version 1.0.0 is the tested v0.1.6 build renumbered for release; only the version number differs. Source for this build is the `main` branch at this tag. See [dist_docs/CHANGELOG.md](dist_docs/CHANGELOG.md) for the history.

@@ -59,6 +59,12 @@ Other limits found, which this mod does not handle:
 - Dialogues seat the speaker plus three.
 - The Seeming spell targets four (**fan wiki only**).
 - Party Limit Begone's page reports that quest items carried by member 5+ are sometimes not registered *(search snippet)*.
+  **Checked 2026-10-22 on the live page:** "Some quest or important items aren't registered correctly if they are
+  carried by a fifth or higher party member." It names no item, quest or cause. PixellBytes' Adjustable Party Limit
+  (mod 11939), which raises the limit with the same `SetMaxPartySizeOverride` + `PROC_CheckPartyFull` calls as Party
+  Picker, does not list it. Not reproduced or tested; removed from the user docs.
+- Verified 2026-10-22: the House of Hope has four Debtor's Attire sets for the party (`Act3b_LOW_HouseOfHope2.txt`
+  L74–77, given out at L973–990); members 5+ get none.
 
 ## 3. Engine and story calls used
 

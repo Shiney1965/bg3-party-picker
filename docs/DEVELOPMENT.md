@@ -133,8 +133,13 @@ the raft's lake stop.
 - Every request from the Party tab is written to the Script Extender log: `request: join [...];
   send to camp [...]` when accepted, `request refused: ...` with the reason when not.
 - Dialogue still seats the speaker plus three. That is not changed.
-- Quest items carried by member 5+ are sometimes not registered, per Party Limit Begone's notes.
-  That is not addressed.
+- House of Hope: the game has four Debtor's Attire sets (`DB_LOW_HouseOfHope_DebtorClothes` rows
+  1–4, `Act3b_LOW_HouseOfHope2.txt` L74–77) and gives the next one to each `DB_Players` member
+  (L973–990), so members 5+ get none. Not addressed. (PixellBytes' Adjustable Party Limit adds a
+  copy for each extra member.)
+- Quest items on members 5+: Party Limit Begone's page says some "aren't registered correctly"; no
+  item, quest or cause is given, and nothing in Party Picker's own testing shows it. Not listed as
+  a limitation (decided with Alan 2026-10-22).
 
 ## History
 

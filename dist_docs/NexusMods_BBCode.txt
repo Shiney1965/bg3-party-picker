@@ -86,7 +86,7 @@
 [size=5][b]Known limitations[/b][/size]
 [list]
 [*][size=4][b]Dialogue still seats the speaker plus three.[/b] That is the game's cutscene system and is not changed.[/size]
-[*][size=4][b]Quest items carried by members five and up are sometimes not registered by the game.[/b] This bug is according to Party Limit Begone's notes. Party Picker does not address that. Keep quest items on your first four.[/size]
+[*][size=4][b]House of Hope (Act 3): only four party members get the Debtor's Attire.[/b] The game has four sets and hands one to each party member in turn, so members five and up get none. Party Picker does not change this.[/size]
 [*][size=4][b]On the raft's lake stop[/b], members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.[/size]
 [*][size=4][b]Someone already in your party who is off stage cannot be sent to camp[/b] by Party Picker. The Party tab says so.[/size]
 [*][size=4][b]A companion the story is keeping in camp for a scene can still be ticked[/b], because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.[/size]
