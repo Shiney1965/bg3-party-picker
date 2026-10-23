@@ -356,6 +356,14 @@ the PartyPicker loaded with the right version". `Extender Runtime 2026-10-17 18-
 Confirms the 1.0.0 pak loads, adds the MCM tab and applies the limit. Alan, the same day: "Redux shows the correct version" (BG3 Mod Manager Redux lists Party
 Picker as 1.0.0). The 1.0.0 install check is complete.
 
+**2026-10-23, v1.0.1, House of Hope.** Alan: "I think it worked -- the whole party got the debtors
+clothes." `Extender Runtime 2026-10-23 02-55-09.log`: `server loaded (v1.0.1)` (1380, 2193), then
+`House of Hope: giving the Debtor's Attire to 6 more party member(s): Alfira, Astarion, Halsin, Karlach,
+Mizora, Wyll` (3355). The party was ten: the game's own four sets went to Shadowheart, Lae'zel,
+Minthara and Gale (equip events for them just before, 3343-3354). No `did not arrive`, `could not give`,
+`could not put` or `failed` line in that log. Step 13 confirmed for the hand-out; not reported: walking a
+member five or up past a debtor spirit (the disguise status check).
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 

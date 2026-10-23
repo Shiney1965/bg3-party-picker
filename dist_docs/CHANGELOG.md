@@ -8,7 +8,7 @@ Dates are the day each build was completed.
 
 ## v1.0.1 — 2026-10-22 — first public release
 
-**Added: the House of Hope's Debtor's Attire for the whole party.** The game has four sets of the disguise Hope hands out and gives them to the first four party members, so members five and up got none. Party Picker now gives a set to every other party member inside the House when Hope hands them out, and puts it on. The extra sets are the game's own outfit: the game switches the wearer to it, and destroys it when the alarm is raised, exactly as it does its own four. New setting on the Settings tab, **Debtor's Attire for the whole party (House of Hope)**, on by default.
+**Added: the House of Hope's Debtor's Attire for the whole party.** The game has four sets of the disguise Hope hands out and gives them to the first four party members, so members five and up got none. Party Picker now gives a set to every other party member inside the House when Hope hands them out, and puts it on. The extra sets are the game's own outfit: the game switches the wearer to it, and destroys it when the alarm is raised, exactly as it does its own four. New setting on the Settings tab, **Debtor's Attire for the whole party (House of Hope)**, on by default. Tested in game with ten in the party: the game dressed four, Party Picker the other six.
 
 ## v1.0.0 — 2026-10-15 — not released
 

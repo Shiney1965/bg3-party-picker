@@ -10,7 +10,7 @@ Party Picker v1.0.1 — first public release.
 
 **No game files replaced, no executable patched.** Party Picker uses the game's own recruit and dismiss procedures, the ones the companions' dialogue and the dismiss button use.
 
-**Tested in game:** joining and dismissing companions and hirelings from the Party tab, a party of more than four, a long rest with ten in the party (six waited in camp, all six rejoined on waking), and the raft crossing with seven. **Not yet tested:** the House of Hope hand-out (new in 1.0.1; covered by the automated tests only), multiplayer, saving between the pick-four window and the rest, and the raft's lake stop. Reports welcome.
+**Tested in game:** joining and dismissing companions and hirelings from the Party tab, a party of more than four, a long rest with ten in the party (six waited in camp, all six rejoined on waking), the raft crossing with seven, and the House of Hope hand-out with ten (six extra sets). **Not yet tested:** multiplayer, saving between the pick-four window and the rest, and the raft's lake stop. Reports welcome.
 
 **Requires** BG3 Script Extender (v29+) and Mod Configuration Menu (Nexus 9162, v1.38+), loaded **above** Party Picker.
 
@@ -19,6 +19,6 @@ Party Picker v1.0.1 — first public release.
 | File | SHA256 |
 |---|---|
 | PartyPicker.pak (33,913 bytes) | `B3A9893CA4B66E140198879D2EBE1D7EEB444BE05E0E034D4FB72488148BFF60` |
-| PartyPicker-1.0.1.zip (706,275 bytes) | `4167E1F793E13243F28689030FD02201EC24DE034006D69F19D17D7CE4565770` |
+| PartyPicker-1.0.1.zip (706,301 bytes) | `58481BECD0AC67D8ED28FDC95D0BED39A6DCCDE46376D969AEFDB0AFA6DF5BA8` |
 
 Version 1.0.1 is the tested v0.1.6 code plus the House of Hope hand-out. Source for this build is the `main` branch at this tag. See [dist_docs/CHANGELOG.md](dist_docs/CHANGELOG.md) for the history.

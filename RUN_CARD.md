@@ -3,7 +3,7 @@
 **v1.0.1 (2026-10-22): the House of Hope's Debtor's Attire for the whole party.** Alan: "Let's add the
 fix to give the Debtor's attire then to the whole party." New `Server/HouseOfHope.lua`, one new MCM
 setting (`hope_attire_everyone`), version 1.0.1. Tests: 136 passed. Plan and code each reviewed
-adversarially (`docs/PLAN_hope_attire.md`). **Installed on Alan's PC 2026-10-22** (Alan: "install"; replaced 1.0.0 `89005f94…`, hash checked after the copy). **Not yet tested in game.**
+adversarially (`docs/PLAN_hope_attire.md`). **Installed on Alan's PC 2026-10-22** (Alan: "install"; replaced 1.0.0 `89005f94…`, hash checked after the copy). **Tested in game 2026-10-23:** "the whole party got the debtors clothes" (log line 3355 names the six extra members; see docs/TESTING.md).
 
 **Pak:** `PartyPicker.pak` (33,913 bytes)
 SHA256 `b3a9893ca4b66e140198879d2ebe1d7eeb444be05e0e034d4fb72488148bff60`
