@@ -2,17 +2,15 @@
 
 **[github.com/Shiney1965/bg3-party-picker](https://github.com/Shiney1965/bg3-party-picker)**
 
-**Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 16. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.**
+**Why this Mod: To choose the number and identity of your party members without spells, dialogues or using hotbar space.**
+
+Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 16. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.
 
 Recruiting and dismissing companions normally means walking to each one and talking to them, one at a time. With a bigger party, the four-member parts of the game get in the way too: the camp has four beds, and the Underdark raft has four landing spots. Party Picker puts the whole roster on one screen and takes care of those two places.
 
 **Why another party mod?** I wanted to swap companions in and out from one list, without hotbar spells, and to keep a large party through long rests and the raft crossing. **Your preferences may vary, so I am not saying this mod is better than others, only different.**
 
 **No game files replaced, no executable patched.** Party Picker uses the game's own recruit and dismiss procedures, the same ones the companions' dialogue and the dismiss button use, so the game's bookkeeping stays correct. A single pak file is all that is needed.
-
-**TODO: screenshot URLs go here.**
-
----
 
 ## How to use — please read
 
@@ -22,8 +20,6 @@ Recruiting and dismissing companions normally means walking to each one and talk
 - **Greyed-out names are locked, and the reason is shown next to them.** Your own character, the companion you are currently controlling, dead party members, and in multiplayer every character another player controls cannot be sent to camp. A character who is off stage (not present in the world at the moment) cannot be recruited.
 - **Long rest with more than four:** press End the Day as usual. Party Picker holds the rest and opens a small window: tick the four who stay with you tonight (your own character is always one of them) and press **Keep these 4**, then press End the Day again. The others wait in camp and rejoin a few seconds after you wake up. Or press **Keep everyone this time**, then End the Day again within two minutes: the game then rests as it does without the mod and puts only four to bed.
 - **The Grymforge raft:** nothing to do. Board with your whole party; everyone lands.
-
----
 
 ## Features
 
@@ -73,6 +69,7 @@ Every change applies straight away. Settings are kept **per MCM profile**, outsi
 
 **NOT compatible — do not run these alongside Party Picker:**
 - **Party Limit Begone** and any other mod that sets the party limit. Both set the same limit, and whichever applies it last wins. Pick one.
+- Other Party Limit Mods: Could lead to odd results; use at your own risk.
 
 **Caveats:**
 - **Mods that change the long rest or the camp beds** have not been tested with Party Picker's rest hold. If a rest misbehaves, turn *Ask before a long rest* off, trim your party to four before resting, and tick everyone again afterwards.
@@ -84,7 +81,7 @@ Every change applies straight away. Settings are kept **per MCM profile**, outsi
 ## Known limitations
 
 - **Dialogue still seats the speaker plus three.** That is the game's cutscene system and is not changed.
-- **Quest items carried by members five and up are sometimes not registered by the game**, according to Party Limit Begone's notes. Party Picker does not address that. Keep quest items on your first four.
+- **Quest items carried by members five and up are sometimes not registered by the game.** This bug is according to Party Limit Begone's notes. Party Picker does not address that. Keep quest items on your first four.
 - **On the raft's lake stop**, members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.
 - **Someone already in your party who is off stage cannot be sent to camp** by Party Picker. The Party tab says so.
 - **A companion the story is keeping in camp for a scene can still be ticked**, because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.

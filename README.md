@@ -1,7 +1,9 @@
 <!-- Generated from dist_docs/README.md by tools/repo_readme.py. Edit that file, not this one. -->
 # Party Picker
 
-**Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 16. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.**
+**Why this Mod: To choose the number and identity of your party members without spells, dialogues or using hotbar space.**
+
+Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 16. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.
 
 Recruiting and dismissing companions normally means walking to each one and talking to them, one at a time. With a bigger party, the four-member parts of the game get in the way too: the camp has four beds, and the Underdark raft has four landing spots. Party Picker puts the whole roster on one screen and takes care of those two places.
 
@@ -98,7 +100,7 @@ What Party Picker keeps in your save: the record of who waited in camp during a 
 
 **Compatible:** companion mods and hireling mods that recruit through the game's normal party procedures, appearance mods, and mods that change what is in camp.
 
-**Do not combine with another party-limit mod** (Party Limit Begone and similar). Both set the party limit, and whichever applies it last wins. Pick one.
+**Do not combine with another party-limit mod** (Party Limit Begone and similar). Both set the party limit, and whichever applies it last wins. Pick one. Other Party Limit Mods: Could lead to odd results; use at your own risk.
 
 **Caveats:**
 
@@ -109,7 +111,7 @@ What Party Picker keeps in your save: the record of who waited in camp during a 
 ## Known limitations
 
 - **Dialogue still seats the speaker plus three.** That is the game's cutscene system and is not changed.
-- **Quest items carried by members five and up are sometimes not registered by the game**, according to Party Limit Begone's notes. Party Picker does not address that. Keep quest items on your first four.
+- **Quest items carried by members five and up are sometimes not registered by the game.** This bug is according to Party Limit Begone's notes. Party Picker does not address that. Keep quest items on your first four.
 - **On the raft's lake stop**, members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.
 - **Someone already in your party who is off stage cannot be sent to camp** by Party Picker. The Party tab says so.
 - **A companion the story is keeping in camp for a scene can still be ticked**, because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.
