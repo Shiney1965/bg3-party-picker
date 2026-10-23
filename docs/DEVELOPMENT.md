@@ -58,6 +58,7 @@ src/Mods/PartyPicker/
     Shared/Common.lua            channels, helpers
     Server/Party.lua             roster, apply changes
     Server/Restrictions.lua      long-rest hold/restore, raft landing spots
+    Server/HouseOfHope.lua       Debtor's Attire for party members five and up
     Client/PartyTab.lua          the Party tab
     Client/PickFour.lua          the pick-four window
     Client/RosterList.lua        checkbox list used by both
@@ -135,8 +136,11 @@ the raft's lake stop.
 - Dialogue still seats the speaker plus three. That is not changed.
 - House of Hope: the game has four Debtor's Attire sets (`DB_LOW_HouseOfHope_DebtorClothes` rows
   1–4, `Act3b_LOW_HouseOfHope2.txt` L74–77) and gives the next one to each `DB_Players` member
-  (L973–990), so members 5+ get none. Not addressed. (PixellBytes' Adjustable Party Limit adds a
-  copy for each extra member.)
+  (L973–990), so members 5+ get none. **Handled from v1.0.1** by `Server/HouseOfHope.lua`: after
+  `PROC_GlobalFlagReactionAfterDialog(HopeGrantsDisguise)` it gives each party member inside the House
+  (`LOW_HouseOfHope` trigger set) without a set a copy (`TemplateAddTo`) and equips it on
+  `TemplateAddedTo`. Plan and review: `docs/PLAN_hope_attire.md`. (PixellBytes' Adjustable Party Limit
+  does the same.)
 - Quest items on members 5+: Party Limit Begone's page says some "aren't registered correctly"; no
   item, quest or cause is given, and nothing in Party Picker's own testing shows it. Not listed as
   a limitation (decided with Alan 2026-10-22).

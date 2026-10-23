@@ -123,6 +123,58 @@ function Osi.TeleportTo(...)
 end
 M.flags = {}
 function Osi.GetFlag(flag, obj) return M.flags[flag .. "|" .. uuidOf(obj)] and 1 or 0 end
+
+-- Items and triggers (House of Hope). An item is { id, template, owner (bare uuid) }.
+-- TemplateAddTo does not create the item at once: it queues it, and the test delivers it
+-- with M.deliverItems(), which also fires TemplateAddedTo, as the engine reports it.
+M.items = {}
+M.queuedItems = {}
+M.equipped = {}      -- bare uuid -> item id
+M.inTrigger = {}     -- "trigger|uuid" -> true
+local itemCount = 0
+function M.addItem(template, ownerId, id)
+    itemCount = itemCount + 1
+    local item = { id = id or ("ITEM_" .. string.format("00000000-0000-0000-0000-%012d", 900 + itemCount)),
+        template = template, owner = ownerId and uuidOf(ownerId) or nil }
+    M.items[uuidOf(item.id)] = item
+    return item
+end
+function Osi.GetTemplate(itemId)
+    local item = M.items[uuidOf(itemId)]
+    return item and item.template or nil
+end
+function Osi.GetInventoryOwner(itemId)
+    local item = M.items[uuidOf(itemId)]
+    if not item or not item.owner then return nil end
+    return M.chars[item.owner] and M.chars[item.owner].id or nil
+end
+function Osi.GetItemByTemplateInInventory(template, ownerId)
+    for _, item in pairs(M.items) do
+        if item.owner == uuidOf(ownerId) and uuidOf(item.template) == uuidOf(template) then return item.id end
+    end
+    return nil
+end
+function Osi.TemplateAddTo(template, ownerId, count, notify)
+    assert(count == 1 and notify == 0, "TemplateAddTo called as the game does: (template, holder, 1, 0)")
+    M.queuedItems[#M.queuedItems + 1] = { template = template, owner = ownerId }
+end
+function M.deliverItems()
+    local queue = M.queuedItems
+    M.queuedItems = {}
+    for _, q in ipairs(queue) do
+        local item = M.addItem(q.template, q.owner)
+        local fn = M.listeners["TemplateAddedTo/4/after"]
+        if fn then fn(q.template, item.id, q.owner, "") end
+    end
+end
+function Osi.Equip(charId, itemId, ...)
+    local n = select("#", ...)
+    assert(n == 0 or n == 3, "Equip has overloads with 2 and 5 arguments")
+    M.equipped[uuidOf(charId)] = itemId
+end
+function Osi.IsInTrigger(id, trigger)
+    return M.inTrigger[uuidOf(trigger) .. "|" .. uuidOf(id)] and 1 or 0
+end
 M.counters = { Hirelings_InCamp_Count = 0 }
 local IN_CAMP_FLAG = "Hireling_State_InCamp_e33aa0df-fcfc-4a30-8169-516d3956f02a"
 local HIRED_FLAG = "Hireling_State_Hired_0052da16-4401-4873-8176-16336d8942da"
@@ -292,10 +344,10 @@ M.Ext = {
         return required[path]
     end,
     Timer = {
-        -- Timers of a minute or more are expiry timers; tests fire them
-        -- explicitly with M.runLongTimers().
-        WaitFor = function(ms, fn) table.insert(ms >= 60000 and M.longTimers or M.timers, fn) end,
-        WaitForRealtime = function(ms, fn) table.insert(ms >= 60000 and M.longTimers or M.timers, fn) end,
+        -- Timers of ten seconds or more are timeouts and expiry timers; tests fire them
+        -- explicitly with M.runLongTimers(). (Every working delay in the mod is 3 s or less.)
+        WaitFor = function(ms, fn) table.insert(ms >= 10000 and M.longTimers or M.timers, fn) end,
+        WaitForRealtime = function(ms, fn) table.insert(ms >= 10000 and M.longTimers or M.timers, fn) end,
     },
     Vars = {
         RegisterModVariable = function() end,

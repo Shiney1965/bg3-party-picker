@@ -16,7 +16,7 @@ Party Picker is safe to add to a playthrough already in progress. Your recruited
 
 ## Install
 
-1. **Download and unzip** `PartyPicker-1.0.0.zip`. Inside you'll find `PartyPicker.pak` plus these documents.
+1. **Download and unzip** `PartyPicker-1.0.1.zip`. Inside you'll find `PartyPicker.pak` plus these documents.
 
 2. **Copy the `.pak` into your BG3 Mods folder.** Open File Explorer, paste this into the address bar, and press Enter:
    ```
@@ -43,8 +43,8 @@ Party Picker is safe to add to a playthrough already in progress. Your recruited
 **1. The Script Extender log or console.** Party Picker prints two lines at startup:
 
 ```
-[PartyPicker] client loaded (v1.0.0) (Party tab added to MCM). Client console: !pp
-[PartyPicker] server loaded (v1.0.0). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name
+[PartyPicker] client loaded (v1.0.1) (Party tab added to MCM). Client console: !pp
+[PartyPicker] server loaded (v1.0.1). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name
 ```
 
 and, once the save has loaded:
@@ -55,7 +55,7 @@ and, once the save has loaded:
 
 (or your own limit). The log is in `%LocalAppData%\Larian Studios\Baldur's Gate 3\Script Extender\Scripe Extender Logs\` (the folder name really is misspelled); open the newest `Extender Runtime *.log`.
 
-**2. `!pp_roster`.** In the Script Extender console type `server` and press Enter, then `!pp_roster`. The first line reads `Party Picker v1.0.0 roster:`. Your companions are listed, your own character marked `locked(player character)`, and the last line shows the active count and the limit.
+**2. `!pp_roster`.** In the Script Extender console type `server` and press Enter, then `!pp_roster`. The first line reads `Party Picker v1.0.1 roster:`. Your companions are listed, your own character marked `locked(player character)`, and the last line shows the active count and the limit.
 
 **3. The MCM page.** Press **INSERT** (or open MCM from the ESC menu) and find **Party Picker**. You should see two tabs: **Settings** and **Party**.
 
@@ -65,6 +65,7 @@ and, once the save has loaded:
 - **Pick your party** on the Party tab: tick who you want with you, untick who should go to camp, press **Apply**. The line under the buttons says what happened.
 - **Before a long rest with more than four**, press End the Day as usual. A small window asks which four stay with you tonight (your own character is always one of them). Tick four, press **Keep these 4**, then press End the Day again. The others rejoin a few seconds after you wake up.
 - **On the Grymforge raft**, board with everyone. They all land.
+- **In the House of Hope**, when Hope hands out the Debtor's Attire, every party member inside the House gets a set and puts it on.
 
 ## Troubleshooting
 
@@ -111,7 +112,7 @@ and, once the save has loaded:
 2. Deactivate **Party Picker** in BG3 Mod Manager and save the load order.
 3. Delete `PartyPicker.pak` from your BG3 Mods folder.
 
-Party Picker adds no items, spells or statuses. What stays in your save is its own small records (who waited in camp during a rest, and who it has seen join your party) and the extra raft landing rows, which the game only uses when more than four people ride the raft.
+Party Picker adds no spells or statuses. The only items it adds are the extra Debtor's Attire sets in the House of Hope; they are the game's own outfit, and the game destroys them like its own when the alarm is raised. What stays in your save is Party Picker's own small records (who waited in camp during a rest, and who it has seen join your party) and the extra raft landing rows, which the game only uses when more than four people ride the raft.
 
 Your settings are kept in MCM's profile folder in case you reinstall:
 

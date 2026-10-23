@@ -1,4 +1,20 @@
-# Party Picker: test run card (v1.0.0)
+# Party Picker: test run card (v1.0.1)
+
+**v1.0.1 (2026-10-22): the House of Hope's Debtor's Attire for the whole party.** Alan: "Let's add the
+fix to give the Debtor's attire then to the whole party." New `Server/HouseOfHope.lua`, one new MCM
+setting (`hope_attire_everyone`), version 1.0.1. Tests: 136 passed. Plan and code each reviewed
+adversarially (`docs/PLAN_hope_attire.md`). **Not installed yet; not tested in game.**
+
+**Pak:** `PartyPicker.pak` (33,913 bytes)
+SHA256 `b3a9893ca4b66e140198879d2ebe1d7eeb444be05e0e034d4fb72488148bff60`
+
+**The test for v1.0.1** (docs/TESTING.md step 13): a save in Act 3 before Hope hands out the
+Debtor's Attire in the House of Hope, with five or more in the party. After the conversation everyone
+wears the attire, and the log has `House of Hope: giving the Debtor's Attire to N more party
+member(s): <names>`. Then walk a member five or up past a debtor spirit: no crime reaction.
+Also check the log line `[PartyPicker] server loaded (v1.0.1).`
+
+## v1.0.0 (kept for the record)
 
 **v1.0.0 is the release build (2026-10-15).** It is v0.1.6 with the version changed and nothing
 else: unpacking both paks and comparing them shows only `PP.VERSION` in `Shared/Common.lua` and the

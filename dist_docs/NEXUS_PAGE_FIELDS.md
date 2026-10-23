@@ -1,4 +1,4 @@
-# Party Picker 1.0.0 — Nexus page fields
+# Party Picker 1.0.1 — Nexus page fields
 
 What to type into each field of the Nexus "add mod" form, matched to how the live MIR page
 (<https://www.nexusmods.com/baldursgate3/mods/24831>, read 2026-10-17) fills them in. Not part of
@@ -9,10 +9,10 @@ the download.
 | Field | Value |
 |---|---|
 | Mod name | `Party Picker (By SerpentineShel)` (MIR's page uses the same "(By SerpentineShel)" form) |
-| Version | `1.0.0` |
+| Version | `1.0.1` |
 | Category | Gameplay (MIR's category; there may be a better fit such as a party or companions category, your choice) |
 | Brief overview ("About this mod") | see below |
-| Description | paste `NexusMods_BBCode_v1.0.0.txt` |
+| Description | paste `NexusMods_BBCode_v1.0.1.txt` |
 | Tags | AI-Generated Content (as on MIR) |
 | Adult content | No |
 
@@ -40,17 +40,17 @@ not contradict each other.
 
 | Field | Value |
 |---|---|
-| File | `PartyPicker-1.0.0.zip` |
+| File | `PartyPicker-1.0.1.zip` |
 | File name shown | `Party Picker` |
-| Version | `1.0.0` |
+| Version | `1.0.1` |
 | Category | Main files |
-| Description | Party Picker 1.0.0: PartyPicker.pak plus README and INSTALL (Markdown, Word, PDF), CHANGELOG, licences and a manifest. Requires Script Extender and Mod Configuration Menu (load MCM above Party Picker). |
+| Description | Party Picker 1.0.1: PartyPicker.pak plus README and INSTALL (Markdown, Word, PDF), CHANGELOG, licences and a manifest. Requires Script Extender and Mod Configuration Menu (load MCM above Party Picker). |
 
-## Changelog entry (version 1.0.0)
+## Changelog entry (version 1.0.1)
 
 > First public release. Pick your party from a Mod Configuration Menu tab, party limit 4 to 16, a
-> pick-four window before a long rest with everyone brought back on waking, and landing spots for the
-> whole party on the Grymforge raft. Tested in game: joining and dismissing companions and hirelings,
+> pick-four window before a long rest with everyone brought back on waking, landing spots for the
+> whole party on the Grymforge raft, and the House of Hope's Debtor's Attire for every party member. Tested in game: joining and dismissing companions and hirelings,
 > a long rest with ten in the party, and the raft crossing with seven. Multiplayer not yet tested.
 
 ## Before publishing
@@ -61,5 +61,5 @@ not contradict each other.
    view, use it. Headings are `[size=5]` (24px), body text `[size=4]` (18px), the title
    `[size=6]` (32px).
 3. Preview: every section heading should be visibly larger than the text under it. Log lines such as
-   **[PartyPicker] server loaded (v1.0.0)** are bold rather than `[code]`, because Nexus turns
+   **[PartyPicker] server loaded (v1.0.1)** are bold rather than `[code]`, because Nexus turns
    `[code]` into a separate block that would split the sentence.

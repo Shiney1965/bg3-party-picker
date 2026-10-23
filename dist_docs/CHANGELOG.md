@@ -1,16 +1,20 @@
 # Changelog — Party Picker
 
-Party Picker's development history. **v1.0.0 is the first public release.** Everything below it was a test build that was never published; the list is here so the first public release carries an honest record of how it got here.
+Party Picker's development history. **v1.0.1 is the first public release.** Everything below it was a test build that was never published; the list is here so the first public release carries an honest record of how it got here.
 
 Dates are the day each build was completed.
 
 ---
 
-## v1.0.0 — 2026-10-15 — first public release
+## v1.0.1 — 2026-10-22 — first public release
 
-The tested v0.1.6 build, renumbered for release. Only the version number changed; the code is the same.
+**Added: the House of Hope's Debtor's Attire for the whole party.** The game has four sets of the disguise Hope hands out and gives them to the first four party members, so members five and up got none. Party Picker now gives a set to every other party member inside the House when Hope hands them out, and puts it on. The extra sets are the game's own outfit: the game switches the wearer to it, and destroys it when the alarm is raised, exactly as it does its own four. New setting on the Settings tab, **Debtor's Attire for the whole party (House of Hope)**, on by default.
 
-## v0.1.6 — 2026-10-12 — the tested build, released as v1.0.0
+## v1.0.0 — 2026-10-15 — not released
+
+The tested v0.1.6 build, renumbered for release. Only the version number changed; the code is the same. Superseded by v1.0.1 before upload.
+
+## v0.1.6 — 2026-10-12 — the tested build (its code is in v1.0.0 and v1.0.1)
 
 Tested in game on 2026-10-13 to 2026-10-15: joining and dismissing companions and hirelings from the Party tab, a party of more than four, the long-rest hold with a party of ten (six waited in camp and all six rejoined after waking), and the Grymforge raft crossing with a party of seven.
 

@@ -20,6 +20,7 @@ Recruiting and dismissing companions normally means walking to each one and talk
 - **Greyed-out names are locked, and the reason is shown next to them.** Your own character, the companion you are currently controlling, dead party members, and in multiplayer every character another player controls cannot be sent to camp. A character who is off stage (not present in the world at the moment) cannot be recruited.
 - **Long rest with more than four:** press End the Day as usual. Party Picker holds the rest and opens a small window: tick the four who stay with you tonight (your own character is always one of them) and press **Keep these 4**, then press End the Day again. The others wait in camp and rejoin a few seconds after you wake up. Or press **Keep everyone this time**, then End the Day again within two minutes: the game then rests as it does without the mod and puts only four to bed.
 - **The Grymforge raft:** nothing to do. Board with your whole party; everyone lands.
+- **The House of Hope:** nothing to do. When Hope hands out the Debtor's Attire, everyone in the party gets a set.
 
 ## Features
 
@@ -28,6 +29,7 @@ Recruiting and dismissing companions normally means walking to each one and talk
 - **Larger parties.** The limit goes from 4 to 16 and is re-applied each time a save loads.
 - **Long rests with a large party.** The camp has four beds and the game only puts four party members to bed. Party Picker asks which four to keep tonight; the others wait in camp and rejoin when you wake, as far as the limit allows. **Nobody is ever sent away to make room for them.** The record of who waited is saved with the game, so a save and load in between should not lose it (not yet tested in game).
 - **The Grymforge raft (Ebonlake, Act 1 Underdark).** The raft takes everyone aboard but has only four landing spots per dock, so members five and up would be left on board, hidden and unable to move. Party Picker adds landing spots so the whole party arrives.
+- **The House of Hope's Debtor's Attire (Act 3).** The game has only four sets of the disguise Hope hands out, so members five and up would get none. When Hope hands them out, Party Picker gives a set to every other party member inside the House and puts it on. The game treats the extra sets exactly like its own, including destroying them when the alarm is raised.
 - **Every refusal says why.** A change that cannot be made (combat, someone who cannot travel right now, an off-stage character) is refused as a whole, the reason stays on the Party tab, and it is written to the Script Extender log.
 - **Safe in combat.** By default no party changes are made while your character, or anyone joining or leaving, is in combat.
 
@@ -44,9 +46,9 @@ Recruiting and dismissing companions normally means walking to each one and talk
 ## Install / uninstall
 
 - Drop **PartyPicker.pak** into **%LocalAppData%\Larian Studios\Baldur's Gate 3\Mods**, activate it in BG3MM, put **Mod Configuration Menu above Party Picker**, save the load order, launch.
-- **Verify:** the Script Extender log shows **[PartyPicker] server loaded (v1.0.0)** and, once a save is loaded, **[PartyPicker] party size limit set to 6** (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v1.0.0 roster:**.
+- **Verify:** the Script Extender log shows **[PartyPicker] server loaded (v1.0.1)** and, once a save is loaded, **[PartyPicker] party size limit set to 6** (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v1.0.1 roster:**.
 - **Mid-playthrough install is fine.** Your recruited companions are listed straight away.
-- **Uninstall:** cut your party back to four on the Party tab and save first (what happens to a larger party once Party Picker is gone has not been tested), then deactivate and delete the pak. Party Picker adds no items, spells or statuses.
+- **Uninstall:** cut your party back to four on the Party tab and save first (what happens to a larger party once Party Picker is gone has not been tested), then deactivate and delete the pak. Party Picker adds no spells or statuses; the only items it adds are the extra Debtor's Attire sets in the House of Hope.
 - **Honour Mode keeps a single save.** Back up the save folder before trying any new mod there.
 
 Full instructions, a settings reference and a console reference are in the README and INSTALL files in the download (Markdown, Word and PDF).
@@ -56,7 +58,7 @@ Full instructions, a settings reference and a console reference are in the READM
 ## Configuration — the Settings and Party tabs
 
 - **Settings, Party size** — *Maximum party size* (4–16, default 6); *Bring new members to you* (on: a companion who joins from camp is moved next to your character); *No party changes in combat* (on).
-- **Settings, Where the game needs four** — *Ask before a long rest* (on); *Bring everyone back after the rest* (on; off: press Restore when you want them back); *Let the whole party ride the Grymforge raft* (on).
+- **Settings, Where the game needs four** — *Ask before a long rest* (on); *Bring everyone back after the rest* (on; off: press Restore when you want them back); *Let the whole party ride the Grymforge raft* (on); *Debtor's Attire for the whole party (House of Hope)* (on).
 - **Party** — the roster with checkboxes and a *Selected N of limit* counter; **Apply** (all changes at once; if a check fails first, nothing changes and the reason is shown), **Refresh**, and **Restore**, which appears only while some of your party are still waiting in camp after a rest.
 
 Every change applies straight away. Settings are kept **per MCM profile**, outside your save.
@@ -81,7 +83,7 @@ Every change applies straight away. Settings are kept **per MCM profile**, outsi
 ## Known limitations
 
 - **Dialogue still seats the speaker plus three.** That is the game's cutscene system and is not changed.
-- **House of Hope (Act 3): only four party members get the Debtor's Attire.** The game has four sets and hands one to each party member in turn, so members five and up get none. Party Picker does not change this.
+- **Debtor's Attire: only for those in the party at the moment Hope hands it out.** A member who joins the party later, or who is outside the House of Hope at that moment, gets none. The game itself hands its four sets to the first four party members wherever they are; Party Picker does not move those sets to someone else.
 - **On the raft's lake stop**, members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.
 - **Someone already in your party who is off stage cannot be sent to camp** by Party Picker. The Party tab says so.
 - **A companion the story is keeping in camp for a scene can still be ticked**, because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.

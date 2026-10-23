@@ -33,6 +33,7 @@ Once installed (see [INSTALL.md](dist_docs/INSTALL.md)):
 - **Greyed-out names are locked, and the reason is shown next to them.** Your own character, the companion you are currently controlling, dead party members, and in multiplayer every character another player controls cannot be sent to camp. A character who is off stage (not present in the world at the moment) cannot be recruited.
 - **Long rest with more than four:** press End the Day as usual. Party Picker holds the rest and opens a small window: tick the four who stay with you tonight (your own character is always one of them) and press **Keep these 4**, then press End the Day again. The others wait in camp and rejoin a few seconds after you wake up. Or press **Keep everyone this time**, then End the Day again within two minutes: the game then rests as it does without the mod and puts only four to bed.
 - **The Grymforge raft:** nothing to do. Board with your whole party; everyone lands.
+- **The House of Hope:** nothing to do. When Hope hands out the Debtor's Attire, everyone in the party gets a set.
 
 ## Features
 
@@ -41,6 +42,7 @@ Once installed (see [INSTALL.md](dist_docs/INSTALL.md)):
 - **Larger parties.** The limit goes from 4 to 16 and is re-applied each time a save loads.
 - **Long rests with a large party.** The camp has four beds and the game only puts four party members to bed. Party Picker asks which four to keep tonight; the others wait in camp and rejoin when you wake, as far as the limit allows. **Nobody is ever sent away to make room for them.** The record of who waited is saved with the game, so a save and load in between should not lose it (not yet tested in game).
 - **The Grymforge raft (Ebonlake, Act 1 Underdark).** The raft takes everyone aboard but has only four landing spots per dock, so members five and up would be left on board, hidden and unable to move. Party Picker adds landing spots so the whole party arrives.
+- **The House of Hope's Debtor's Attire (Act 3).** The game has only four sets of the disguise Hope hands out, so members five and up would get none. When Hope hands them out, Party Picker gives a set to every other party member inside the House and puts it on. The game treats the extra sets exactly like its own, including destroying them when the alarm is raised.
 - **Every refusal says why.** A change that cannot be made (combat, someone who cannot travel right now, an off-stage character) is refused as a whole, the reason stays on the Party tab, and it is written to the Script Extender log.
 - **Safe in combat.** By default no party changes are made while your character, or anyone joining or leaving, is in combat.
 
@@ -71,6 +73,7 @@ All on the **Settings** tab of Party Picker's MCM page. Every change applies str
 | Ask before a long rest | On | If your party is larger than four, End the Day is held and you are asked which four to keep tonight. The others wait in camp. |
 | Bring everyone back after the rest | On | When you wake up, the members who waited in camp rejoin, as far as the party limit allows. Nobody is sent away to make room. Off: press **Restore** on the Party tab when you want them back. |
 | Let the whole party ride the Grymforge raft | On | Adds landing spots so members five and up arrive with everyone else. |
+| Debtor's Attire for the whole party (House of Hope) | On | When Hope hands out the disguise, every party member inside the House gets a set, not just four. |
 
 ## The Party tab
 
@@ -93,6 +96,7 @@ The two four-member situations are handled with Script Extender listeners and th
 
 - **Long rest:** Party Picker adds a story reason to the camp's existing "not ready for night" check. That is the mechanism the game itself uses to block resting at certain story moments. When the hold fires, the pick-four window opens. After `LongRestFinished`, the members who waited rejoin through the same join procedure, in add-only mode.
 - **Raft:** Party Picker adds rows 5 to 16 to the raft's landing-position table for each dock. They reuse that dock's existing four positions.
+- **House of Hope:** after Hope's dialog that hands out the disguise, Party Picker gives each party member inside the House who has no set a copy of the same Debtor's Attire (`TemplateAddTo`) and equips it when it arrives, with the call the game uses for its own four.
 
 What Party Picker keeps in your save: the record of who waited in camp during a rest, the record of who it has seen join your party (so that companions added by other mods stay listed), and the extra raft landing rows (used only when more than four ride the raft). Nothing else.
 
@@ -111,7 +115,7 @@ What Party Picker keeps in your save: the record of who waited in camp during a 
 ## Known limitations
 
 - **Dialogue still seats the speaker plus three.** That is the game's cutscene system and is not changed.
-- **House of Hope (Act 3): only four party members get the Debtor's Attire.** The game has four sets and hands one to each party member in turn, so members five and up get none. Party Picker does not change this.
+- **Debtor's Attire: only for those in the party at the moment Hope hands it out.** A member who joins the party later, or who is outside the House of Hope at that moment, gets none. The game itself hands its four sets to the first four party members wherever they are; Party Picker does not move those sets to someone else.
 - **On the raft's lake stop**, members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.
 - **Someone already in your party who is off stage cannot be sent to camp** by Party Picker. The Party tab says so.
 - **A companion the story is keeping in camp for a scene can still be ticked**, because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.

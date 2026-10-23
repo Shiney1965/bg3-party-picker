@@ -2,6 +2,7 @@
 Ext.Require("Shared/Common.lua")
 local Party = Ext.Require("Server/Party.lua")
 local Restrictions = Ext.Require("Server/Restrictions.lua")
+local HouseOfHope = Ext.Require("Server/HouseOfHope.lua")
 
 local function rosterReply()
     local entries = {}
@@ -90,6 +91,7 @@ PP.Net.Restore:SetRequestHandler(safeHandler(function(_, user)
 end))
 
 Restrictions.Register()
+HouseOfHope.Register()
 
 Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", function()
     Party.ApplyMaxSize()

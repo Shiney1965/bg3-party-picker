@@ -62,6 +62,13 @@
                             "Type": "checkbox",
                             "Default": true,
                             "Description": "The Ebonlake raft takes everyone aboard but only has four landing spots, so members five and up are left behind. This adds landing spots so everyone arrives."
+                        },
+                        {
+                            "Id": "hope_attire_everyone",
+                            "Name": "Debtor's Attire for the whole party (House of Hope)",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "In the House of Hope the game has only four sets of the Debtor's Attire, so party members five and up get none. When Hope hands them out, this gives a set to every other party member in the House and puts it on."
                         }
                     ]
                 }

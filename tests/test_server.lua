@@ -516,5 +516,172 @@ check(#M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason").rows == 0, "
 settings.extend_raft = false
 check(Restrictions.ExtendRaft() == 0, "setting off: raft untouched")
 
+-- 24. House of Hope: the Debtor's Attire for party members five and up
+--     (GustavDev Act3b_LOW_HouseOfHope2.txt L70-82, L973-999, L1024-1046).
+settings.prompt_long_rest = nil
+local HouseOfHope = Ext.Require("Server/HouseOfHope.lua")
+HouseOfHope.Register()
+local GRANT = "LOW_HouseOfHope_Event_HopeGrantsDisguise_bb82e10f-9c0f-5c16-9f1d-e482d9074ca8"
+local VANITY = "ARM_Vanity_Prison_EternalDebtors_6f7d15a8-9bcb-45de-94c5-8c77424aaf42"
+local REFUGEE = "UNI_Camp_Refugee_EternalDebtors_30c5721d-bdc3-4150-8cd1-d99197eb4870"
+local HOH_SUB = "S_LOW_HouseOfHope_SUB_49462249-7f39-4b91-af1d-ba121c711213"
+M.db("DB_LOW_HouseOfHope_DebtorTemplates")(REFUGEE)
+M.db("DB_LOW_HouseOfHope_DebtorTemplates")(VANITY)
+M.db("DB_TriggerEvents_TriggerSet")("LOW_HouseOfHope", HOH_SUB)
+M.db("DB_TriggerEvents_TriggerSet")("LOW_HouseOfHope", "S_LOW_HouseOfHope_Prison_SUB_829b3df1-01b1-4d31-b251-0495c7692bec")
+-- Seven in the party: Tav, Shadowheart, Astarion, Gale, Laezel, Karlach, Wyll (the wolf is a summon).
+settings.max_party_size = 8
+Party.ApplyMaxSize()
+M.runLongTimers() -- clear expiry timers left by earlier scenarios
+-- Set the party directly: this scenario is about the hand-out, not recruiting.
+for _, ch in ipairs({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel, c.Karlach, c.Wyll }) do
+    M.setOnStage(ch, true)
+    M.db("DB_Players")(ch.id)
+end
+local party7 = { M.host, c.Shadowheart, c.Astarion, c.Gale, c.Laezel, c.Karlach, c.Wyll }
+check(#party7 == 7 and #M.db("DB_Players"):Get(c.Wyll.id) == 1, "seven in the party for the House of Hope")
+for _, ch in ipairs(party7) do M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. ch.uuid] = true end
+M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. wolf.uuid] = true
+-- The game hands out its four sets (to the first four DB_Players rows) and equips them.
+local originals = {}
+for i, ch in ipairs({ M.host, c.Shadowheart, c.Astarion, c.Gale }) do
+    local item = M.addItem(VANITY, ch.id, string.format("S_LOW_HouseOfHope_DebtorClothes0%d_00000000-0000-0000-0000-%012d", i, 800 + i))
+    originals[i] = item
+    M.db("DB_LOW_HouseOfHope_DebtorClothes")(i, item.id)
+    M.equipped[ch.uuid] = item.id
+end
+local function attireCount(ch)
+    local n = 0
+    for _, item in pairs(M.items) do
+        if item.owner == ch.uuid and (PP.BareUuid(item.template) == PP.BareUuid(VANITY)) then n = n + 1 end
+    end
+    return n
+end
+
+-- Another flag: nothing.
+M.log = {}
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", "SOME_OtherFlag_11111111-2222-3333-4444-555555555555")
+M.runTimers()
+check(#M.queuedItems == 0, "another flag: no hand-out")
+
+-- Setting off: nothing.
+settings.hope_attire_everyone = false
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 0, "setting off: no hand-out")
+settings.hope_attire_everyone = nil
+
+-- Alarm already raised: nothing.
+M.db("DB_LOW_HouseOfHope_AlarmIsReady")(1)
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 0, "alarm raised: no hand-out")
+M.db("DB_LOW_HouseOfHope_AlarmIsReady"):Delete(1)
+
+-- Karlach is not in the House of Hope; Laezel is dead; one of the four originals is still landing
+-- (its owner is set but she does not yet show it by template).
+M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. c.Karlach.uuid] = nil
+c.Laezel.dead = true
+M.log = {}
+originals[4].template = "STILL_LANDING" -- Gale's set: owner known, not yet findable by template
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", "bb82e10f-9c0f-5c16-9f1d-e482d9074ca8") -- bare flag form
+M.runTimers()
+originals[4].template = VANITY
+check(#M.queuedItems == 1 and PP.BareUuid(M.queuedItems[1].owner) == c.Wyll.uuid,
+    "copy only for the member in the House without one (not the four, the dead, the absent, the summon)")
+check(logText():find("giving the Debtor's Attire to 1 more party member%(s%): Wyll"), "hand-out logged with names")
+check(logText():find("no Debtor's Attire for Karlach %(not in the House of Hope%)"), "absent member logged")
+check(not M.equipped[c.Wyll.uuid], "not equipped before the item arrives")
+-- Fired again before the item arrives: no second copy.
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 1, "second firing while waiting: no extra copy")
+M.deliverItems()
+check(attireCount(c.Wyll) == 1 and M.equipped[c.Wyll.uuid] ~= nil
+    and PP.BareUuid(Osi.GetTemplate(M.equipped[c.Wyll.uuid])) == PP.BareUuid(VANITY),
+    "copy arrives and is worn")
+-- Fired again afterwards: everyone served, no extra copies.
+M.log = {}
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 0 and not logText():find("giving the Debtor"), "everyone served: nothing more")
+c.Laezel.dead = nil
+
+-- An item of another template arriving for a pending member is ignored; the alarm between the
+-- add and the arrival means it is not worn; the timeout reports what never arrived.
+M.db("DB_LOW_HouseOfHope_DebtorClothes"):Delete(nil, nil)
+for _, it in ipairs(originals) do M.items[PP.BareUuid(it.id)] = nil end
+for _, ch in ipairs(party7) do M.equipped[ch.uuid] = nil end
+for u, item in pairs(M.items) do if PP.BareUuid(item.template) == PP.BareUuid(VANITY) then M.items[u] = nil end end
+M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. c.Karlach.uuid] = true
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 7, "no originals handed out: all seven get a copy (fallback template)")
+check(PP.BareUuid(M.queuedItems[1].template) == PP.BareUuid(VANITY), "fallback is the vanity template")
+local other = M.addItem("OBJ_Something_99999999-9999-9999-9999-999999999999", M.host.id)
+M.fire("TemplateAddedTo", 4, "after", other.template, other.id, M.host.id, "")
+check(not M.equipped[M.host.uuid], "another template arriving is ignored")
+M.db("DB_LOW_HouseOfHope_AlarmIsReady")(1)
+local first = table.remove(M.queuedItems, 1)
+local q1 = M.queuedItems
+M.queuedItems = { first }
+M.deliverItems()
+check(not M.equipped[PP.BareUuid(first.owner)], "alarm raised before the copy arrived: not worn")
+M.db("DB_LOW_HouseOfHope_AlarmIsReady"):Delete(1)
+M.queuedItems = {}
+M.log = {}
+M.runLongTimers() -- the 10 s equip timeout
+check(select(2, logText():gsub("did not arrive", "")) == 6, "timeout reports the six copies that never arrived")
+
+-- The template the game really hands out is copied when it is a debtor template.
+for u, item in pairs(M.items) do if PP.BareUuid(item.template) == PP.BareUuid(VANITY) then M.items[u] = nil end end
+local refugeeSet = M.addItem(REFUGEE, M.host.id, "S_LOW_HouseOfHope_DebtorClothes01_00000000-0000-0000-0000-000000000801")
+M.db("DB_LOW_HouseOfHope_DebtorClothes")(1, refugeeSet.id)
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 6 and PP.BareUuid(M.queuedItems[1].template) == PP.BareUuid(REFUGEE),
+    "copies use the template of the set the game hands out (host already holds it)")
+M.queuedItems = {}
+M.runLongTimers()
+
+-- A call that raises is logged and the others are still served.
+for u, item in pairs(M.items) do M.items[u] = nil end
+M.db("DB_LOW_HouseOfHope_DebtorClothes"):Delete(nil, nil)
+local realAdd = Osi.TemplateAddTo
+Osi.TemplateAddTo = function(template, ownerId, n, notify)
+    if PP.BareUuid(ownerId) == c.Gale.uuid then error("boom") end
+    return realAdd(template, ownerId, n, notify)
+end
+M.log = {}
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+Osi.TemplateAddTo = realAdd
+check(#M.queuedItems == 6 and logText():find("could not give the Debtor's Attire to Gale"), "failure logged, others served")
+M.queuedItems = {}
+M.runLongTimers()
+
+-- Two hand-outs overlap: the first one's timeout must not clear the second one's members.
+for u in pairs(M.items) do M.items[u] = nil end
+for _, ch in ipairs(party7) do M.equipped[ch.uuid] = nil; M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. ch.uuid] = nil end
+M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. M.host.uuid] = true
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 1, "first hand-out: only Tav is in the House")
+for _, ch in ipairs(party7) do M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. ch.uuid] = true end
+M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
+M.runTimers()
+check(#M.queuedItems == 7, "second hand-out: the other six, Tav still waiting")
+local firstTimeout = table.remove(M.longTimers, 1)
+M.log = {}
+firstTimeout()
+check(select(2, logText():gsub("did not arrive", "")) == 1 and logText():find("for Tav did not arrive"),
+    "first timeout reports only its own member")
+M.deliverItems()
+local worn = 0
+for _, ch in ipairs(party7) do if ch ~= M.host and M.equipped[ch.uuid] then worn = worn + 1 end end
+check(worn == 6, "the second hand-out's copies are still worn after the first timeout: " .. worn)
+M.runLongTimers()
+settings.max_party_size = 6
+
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end
