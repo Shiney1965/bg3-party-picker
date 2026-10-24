@@ -85,11 +85,11 @@ end
 -- 1. Level start applies the limit and extends the raft.
 M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
 check(M.maxOverride == 6, "limit applied on level start")
-check(#M.db(RAFT):Get(docks.cave, nil, nil) == 16, "cave dock has 16 landing positions")
+check(#M.db(RAFT):Get(docks.cave, nil, nil) == 30, "cave dock has 30 landing positions (PP.MAX_PARTY_SIZE)")
 local lake9 = M.db(RAFT):Get(docks.lake, 9, nil)[1]
 check(lake9 and lake9[3] == M.db(RAFT):Get(docks.lake, 1, nil)[1][3], "position 9 reuses position 1")
 M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
-check(#M.db(RAFT).rows == 32, "second level start adds nothing")
+check(#M.db(RAFT).rows == 60, "second level start adds nothing")
 
 -- 2. Roster: 8 characters, summon left out, avatar locked.
 local roster = Party.Roster()
@@ -249,7 +249,21 @@ check(otherListed, "dismissed avatar listed")
 local camp = "UND_EbonLake_State_RaftAtCamp_526b966d-e826-4290-8331-e4747c1df3a5"
 for i = 1, 4 do M.db(RAFT)(camp, i, "S_UND_DarkLake_BoatPassengerPositionAtCamp_3478b34d-0e4f-4a4b-8f9f-b7d9361eec8b") end
 M.fire("PROC_UND_EbonLake_DisembarkCrew", 1, "before", camp)
-check(#M.db(RAFT):Get(camp, nil, nil) == 16, "late raft goal rows extended at disembark")
+check(#M.db(RAFT):Get(camp, nil, nil) == 30, "late raft goal rows extended at disembark")
+-- A party larger than the maximum (the story can add members itself) still gets a row each.
+local extraRows = {}
+for i = 1, 31 do local x = M.addChar("Extra" .. i, U(900 + i)); extraRows[i] = x; M.db("DB_Players")(x.id) end
+Restrictions.ExtendRaft()
+check(#M.db(RAFT):Get(camp, nil, nil) == #M.db("DB_Players").rows, "raft rows follow a party larger than 30: " .. #M.db(RAFT):Get(camp, nil, nil))
+for _, x in ipairs(extraRows) do M.db("DB_Players"):Delete(x.id); M.chars[x.uuid] = nil end
+-- The party-size setting is capped at the maximum.
+settings.max_party_size = 99
+check(Party.MaxSize() == 30, "party size capped at 30")
+settings.max_party_size = 30
+Party.ApplyMaxSize()
+check(M.maxOverride == 30, "a limit of 30 reaches the game")
+settings.max_party_size = 6
+Party.ApplyMaxSize()
 
 -- 18. Reported in game 2026-10-11: Withers and summons were listed.
 local withers = M.addChar("Withers", "0133f2ad-e121-4590-b5f0-a79413919805")
@@ -682,6 +696,25 @@ for _, ch in ipairs(party7) do if ch ~= M.host and M.equipped[ch.uuid] then worn
 check(worn == 6, "the second hand-out's copies are still worn after the first timeout: " .. worn)
 M.runLongTimers()
 settings.max_party_size = 6
+
+-- 25. The Inspiration probe, !pp_inspiration (docs/PLAN_inspiration_and_30.md, step 0).
+local INSP = M.staticData["a9c98304-08e7-44b5-aaf9-da2ef5a50672"]
+M.host.actionResources = { Resources = { ["a9c98304-08e7-44b5-aaf9-da2ef5a50672"] = { { Amount = 2.0, MaxAmount = 4.0 } } } }
+M.log = {}
+M.console["pp_inspiration"]("pp_inspiration")
+check(logText():find("limit in the game's definition = 4 ") and logText():find("Tav%s+personal"), "probe shows the limit and each member")
+check(logText():find("Tav[^\n]*Amount 2 / MaxAmount 4"), "probe reads the character's ActionResources entry")
+M.log = {}
+M.console["pp_inspiration"]("pp_inspiration", "3")
+check(INSP.MaxValue == 4 and logText():find("usage"), "a limit below 4 is refused")
+M.console["pp_inspiration"]("pp_inspiration", "8")
+check(INSP.MaxValue == 8 and logText():find("Inspiration limit set to 8"), "probe sets a test limit")
+M.log = {}
+M.console["pp_inspiration"]("pp_inspiration", "99")
+check(INSP.MaxValue == 8 and logText():find("usage"), "out-of-range value refused")
+M.console["pp_inspiration"]("pp_inspiration", "reset")
+check(INSP.MaxValue == 4, "reset restores the game's 4")
+check(M.partyInspiration == 0, "the probe never changes points")
 
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end

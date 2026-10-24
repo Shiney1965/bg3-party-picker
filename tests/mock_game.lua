@@ -172,6 +172,20 @@ function Osi.Equip(charId, itemId, ...)
     assert(n == 0 or n == 3, "Equip has overloads with 2 and 5 arguments")
     M.equipped[uuidOf(charId)] = itemId
 end
+-- Static data: just the game's Inspiration definition (Shared ActionResourceDefinitions.lsx).
+M.staticData = { ["a9c98304-08e7-44b5-aaf9-da2ef5a50672"] = { Name = "InspirationPoint", MaxValue = 4.0 } }
+M.partyInspiration = 0
+function Osi.PartyGetActionResourceValue(player, name)
+    assert(name == "InspirationPoint", "unexpected resource " .. tostring(name))
+    return M.partyInspiration
+end
+function Osi.GetActionResourceValuePersonal(player, name, level)
+    assert(level == 0, "level argument")
+    return M.partyInspiration
+end
+-- Inspiration points must never be changed by Party Picker: these fail the test if called.
+function Osi.PartyIncreaseActionResourceValue() error("PartyIncreaseActionResourceValue called: Party Picker must never change points") end
+function Osi.GiveInspirationPoints() error("GiveInspirationPoints called: Party Picker must never change points") end
 function Osi.IsInTrigger(id, trigger)
     return M.inTrigger[uuidOf(trigger) .. "|" .. uuidOf(id)] and 1 or 0
 end
@@ -367,12 +381,17 @@ M.Ext = {
     Entity = { Get = function(u)
         local c = M.chars[u]
         if not c then return nil end
-        return { IsSummon = c.entitySummon and {} or nil, PartyFollower = c.entityFollower and {} or nil }
+        return { IsSummon = c.entitySummon and {} or nil, PartyFollower = c.entityFollower and {} or nil,
+            ActionResources = c.actionResources }
     end },
     ModEvents = { BG3MCM = setmetatable({}, { __index = function()
         return { Subscribe = function() end }
     end }) },
     RegisterConsoleCommand = function(name, fn) M.console[name] = fn end,
+    StaticData = { Get = function(uuid, kind)
+        assert(kind == "ActionResource", "static data type")
+        return M.staticData[uuid]
+    end },
 }
 
 function M.runTimers()

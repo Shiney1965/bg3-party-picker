@@ -1,4 +1,27 @@
-# Party Picker: test run card (v1.0.1)
+# Party Picker: test run card (v1.0.2, test build)
+
+**v1.0.2 (2026-10-24): test build toward 1.1.0.** Party limit up to 30, and the Inspiration probe
+command (plan `docs/PLAN_inspiration_and_30.md`, step 0). No Inspiration setting yet. Tests: 146
+passed. Plan and code each reviewed adversarially; the code review's no-copying check against
+Configurable Party Limit passed. **Not installed yet; not tested in game.**
+
+**Pak:** `PartyPicker.pak` (37,207 bytes)
+SHA256 `f4cf50d26a8301b1a4f9f2ffebb31a0c7e862c9624ac63dd286d955d63ed04eb`
+
+**Test card for v1.0.2** (record results in docs/TESTING.md):
+1. Log: `[PartyPicker] server loaded (v1.0.2).`
+2. MCM, Party Picker, Settings: the Maximum party size slider goes up to 30.
+3. If you can field 17 or more: set the limit to 17+, tick them, Apply; check the portraits, travel, a long
+   rest (still four in bed).
+4. Inspiration probe, in a save where the party has some Inspiration. SE console: type server, then
+   !pp_inspiration (shows the limit, the party total, and each member's points). Then
+   !pp_inspiration 8 (sets a test limit of 8 and shows the same again). If convenient, earn one
+   Inspiration with the limit at 8 and run !pp_inspiration again. Then save, reload, and run
+   !pp_inspiration once more (shows whether the test limit survives a reload). Finally
+   !pp_inspiration reset (back to the game's 4). Send the log.
+
+# v1.0.1 (kept for the record)
+
 
 **v1.0.1 (2026-10-22): the House of Hope's Debtor's Attire for the whole party.** Alan: "Let's add the
 fix to give the Debtor's attire then to the whole party." New `Server/HouseOfHope.lua`, one new MCM

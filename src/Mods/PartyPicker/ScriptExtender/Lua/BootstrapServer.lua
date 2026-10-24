@@ -3,6 +3,7 @@ Ext.Require("Shared/Common.lua")
 local Party = Ext.Require("Server/Party.lua")
 local Restrictions = Ext.Require("Server/Restrictions.lua")
 local HouseOfHope = Ext.Require("Server/HouseOfHope.lua")
+local Inspiration = Ext.Require("Server/Inspiration.lua")
 
 local function rosterReply()
     local entries = {}
@@ -154,6 +155,12 @@ Ext.RegisterConsoleCommand("pp_forget", function(_, ...)
         or ("nobody named " .. name .. " in the seen record (see !pp_roster)"))
 end)
 
+-- !pp_inspiration [4-30 | reset]: the Inspiration probe (docs/PLAN_inspiration_and_30.md, step 0).
+Ext.RegisterConsoleCommand("pp_inspiration", function(_, arg)
+    local ok, err = pcall(Inspiration.Console, arg)
+    if not ok then PP.Log("!pp_inspiration failed: " .. tostring(err)) end
+end)
+
 Ext.RegisterConsoleCommand("pp_size", function()
     Party.ApplyMaxSize()
 end)
@@ -183,4 +190,4 @@ Ext.RegisterConsoleCommand("pp_set", function(_, ...)
     PP.Log(message)
 end)
 
-PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name")
+PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name  !pp_inspiration")

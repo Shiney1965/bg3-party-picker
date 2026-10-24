@@ -273,6 +273,7 @@ end
 function Party.MaxSize()
     local n = tonumber(PP.Setting("max_party_size", 6)) or 6
     if n < PP.RESTRICTED_SIZE then n = PP.RESTRICTED_SIZE end
+    if n > PP.MAX_PARTY_SIZE then n = PP.MAX_PARTY_SIZE end
     return math.floor(n)
 end
 

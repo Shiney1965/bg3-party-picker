@@ -16,9 +16,11 @@
 --    raft takes the whole party aboard (PROC_UND_EbonLake_Raft_ComposeCrew
 --    adds every DB_Players member in the party group) but lands them by index
 --    from DB_UND_EbonLake_Raft_Locations_PlayerPositions, which has indexes
---    1-4 per dock; members 5+ are never teleported and stay behind. No choice
---    is needed here: we add indexes 5-16, reusing the existing positions, so
---    everyone lands. The single-player raft path starts the dialog without a
+--    1-4 per dock; boarding hides and freezes the whole crew (L490-497) and
+--    landing only releases those with a position row (L589-609), so members 5+
+--    stay hidden and frozen. No choice is needed here: we add indexes 5 up to
+--    the party maximum (or the party's actual size, if larger), reusing the
+--    existing positions, so everyone lands. The single-player raft path starts the dialog without a
 --    ready check, so holding the crossing is not possible anyway.
 --
 -- Both use listeners and story databases only; no story file is replaced.
@@ -29,7 +31,6 @@ local Restrictions = {}
 
 local REST_REASON = "PartyPicker_PartyLargerThanFour"
 local RAFT_POSITIONS_DB = "DB_UND_EbonLake_Raft_Locations_PlayerPositions"
-local RAFT_MAX_INDEX = 16
 local RESTORE_DELAY_MS = 2000
 local RESTORE_RETRY_MS = 3000
 local RESTORE_TRIES = 5
@@ -153,8 +154,10 @@ local function autoRestore()
     Ext.Timer.WaitFor(RESTORE_DELAY_MS, attempt)
 end
 
--- Raft: add landing positions 5..16 for every dock, cycling through the
--- existing positions 1..4 of that dock. Only runs where the raft goal's rows
+-- Raft: add landing positions 5..N for every dock, cycling through the
+-- existing positions 1..4 of that dock. N is the party maximum, or the number
+-- of party rows if the story has made the party larger than that
+-- (_GLO_Shared_PartyMembers.txt L134-155). Only runs where the raft goal's rows
 -- exist; inserting an existing row is a no-op.
 function Restrictions.ExtendRaft()
     if PP.Setting("extend_raft", true) == false then return 0 end
@@ -168,10 +171,13 @@ function Restrictions.ExtendRaft()
             byFlag[flag][index] = trigger
         end
     end
+    local okP, players = pcall(function() return Osi.DB_Players:Get(nil) end)
+    local partyRows = (okP and type(players) == "table") and #players or 0
+    local maxIndex = math.max(PP.MAX_PARTY_SIZE, partyRows)
     local added = 0
     for flag, positions in pairs(byFlag) do
         if positions[1] and positions[2] and positions[3] and positions[4] then
-            for i = 5, RAFT_MAX_INDEX do
+            for i = 5, maxIndex do
                 if not positions[i] then
                     local trigger = positions[((i - 1) % 4) + 1]
                     local okInsert = pcall(function() Osi[RAFT_POSITIONS_DB](flag, i, trigger) end)

@@ -16,10 +16,10 @@
                             "Name": "Maximum party size",
                             "Type": "slider_int",
                             "Default": 6,
-                            "Description": "How many characters can be in the active party, including your own. Applied when you load a save and whenever you change it.",
+                            "Description": "How many characters can be in the active party, including your own (4 to 30). Applied when you load a save and whenever you change it. Parties above 16 have not been tested by the author.",
                             "Options": {
                                 "Min": 4,
-                                "Max": 16
+                                "Max": 30
                             }
                         },
                         {

@@ -6,10 +6,14 @@ PP = PP or {}
 PP.MOD = "PartyPicker"
 -- Keep in step with Version64 in meta.lsx; printed at load so logs show
 -- which build was running.
-PP.VERSION = "1.0.1"
+PP.VERSION = "1.0.2"
 -- The four-member situations are hard limits in the game's own scripts
 -- (four beds in camp, four raft seats), so this is not a setting.
 PP.RESTRICTED_SIZE = 4
+-- Largest party-size limit offered. The base game fields about 14 at once (the player, ten
+-- origin companions, three hireling slots: SharedDev Hirelings.txt L100-120), about 17 with four
+-- players; companion mods add more. Above 16 is untested.
+PP.MAX_PARTY_SIZE = 30
 
 function PP.Log(msg)
     Ext.Utils.Print("[" .. PP.MOD .. "] " .. tostring(msg))
