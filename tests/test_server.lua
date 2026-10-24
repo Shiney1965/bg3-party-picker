@@ -697,6 +697,40 @@ check(worn == 6, "the second hand-out's copies are still worn after the first ti
 M.runLongTimers()
 settings.max_party_size = 6
 
+-- 26. "Send everyone to camp": the Party tab sends an Apply with nobody ticked. The server keeps
+--     the locked members (here Tav, the player character) and sends everyone else to camp.
+for _, ch in ipairs({ c.Shadowheart, c.Astarion, c.Gale }) do M.db("DB_Players")(ch.id) end
+check(#M.db("DB_Players"):Get(c.Gale.id) == 1, "party has companions before sending everyone to camp")
+M.log = {}
+local campReply = apply({ uuids = {} })
+check(campReply and campReply.accepted, "send everyone to camp accepted: " .. tostring(campReply and campReply.message))
+-- The request names every unlocked party member and never the locked player character.
+-- (Whether each removal then succeeds is the game's side; scenarios above cover it.)
+local req = logText():match("request: join %[%]; send to camp %[([^%]]*)%]") or ""
+check(req:find("Shadowheart") and req:find("Astarion") and req:find("Gale") and not req:find("Tav"),
+    "everyone but the locked player character is sent to camp: " .. req)
+check(#M.db("DB_Players"):Get(c.Shadowheart.id) == 0 and #M.db("DB_Players"):Get(M.host.id) == 1,
+    "companions who can leave are in camp; the player character stays")
+
+-- 26b. With the host controlling a companion, an off-stage member passed along (as the tab does) and
+--      a pending long-rest record: the controlled companion and the off-stage member stay, the record
+--      is cleared (the Apply handler clears it when the party changed).
+for _, ch in ipairs({ c.Shadowheart, c.Astarion, c.Gale }) do M.db("DB_Players")(ch.id) end
+M.db("DB_GLO_PartyMembers_DefaultFaction")(c.Shadowheart.id, "PlayerFaction")
+M.controlled = c.Astarion
+M.setOnStage(c.Gale, false)
+M.fire("PROC_Camp_TryEnterNightModeFailed", 2, "after", M.host.id, "PartyPicker_PartyLargerThanFour")
+check(Restrictions.GetPending() ~= nil, "a long-rest record is pending")
+M.log = {}
+local camp2 = apply({ uuids = { ids.Gale } })
+local req2 = logText():match("request: join %[%]; send to camp %[([^%]]*)%]") or ""
+check(camp2 and camp2.accepted and req2:find("Shadowheart") and not req2:find("Astarion") and not req2:find("Gale"),
+    "controlled companion and off-stage member are not sent to camp: " .. req2)
+check(#M.db("DB_Players"):Get(c.Astarion.id) == 1 and #M.db("DB_Players"):Get(c.Gale.id) == 1, "both still in the party")
+check(Restrictions.GetPending() == nil, "the pending long-rest record is cleared")
+M.controlled = nil
+M.setOnStage(c.Gale, true)
+
 -- 25. The Inspiration probe, !pp_inspiration (docs/PLAN_inspiration_and_30.md, step 0).
 local INSP = M.staticData["a9c98304-08e7-44b5-aaf9-da2ef5a50672"]
 M.host.actionResources = { Resources = { ["a9c98304-08e7-44b5-aaf9-da2ef5a50672"] = { { Amount = 2.0, MaxAmount = 4.0 } } } }

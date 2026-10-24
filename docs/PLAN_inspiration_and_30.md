@@ -13,7 +13,7 @@ before coding"). Decisions for Alan are marked **DECIDE**, each with a recommend
 "Match the party limit" checkbox**; lowering the limit: **never take points away**; release: **wait for
 1.1.0** (1.0.1 is not uploaded; the first public release will be 1.1.0).
 
-**Build order:** test build 1.0.2 = Part A + the step-0 probe command (`!pp_inspiration`); after Alan's
+**Build order:** test build 1.0.3 = Part A + the step-0 probe command (`!pp_inspiration`) + Part C (1.0.2 was built but never installed); after Alan's
 in-game run of the probe, the Inspiration settings; then 1.1.0.
 
 **Source rule (Alan, 2026-10-24):** "Please don't use the configurable party limit code in our rewrite of our
@@ -152,6 +152,20 @@ goals); the counter shows more than four and points can be spent; save, reload, 
 check again; set the limit back to four and note what happens to the extra points.
 
 ---
+
+## Part C: "Send everyone to camp" button
+
+Alan, 2026-10-24: "Yes 1.1.0 should also get a one-click 'send everyone to camp' button."
+
+- Party tab: a **Send everyone to camp** button next to Refresh. It asks first ("Send N party members to
+  camp?" with **Yes, send them to camp** / **Cancel**), then sends the same request as Apply with nobody else
+  ticked. The server already keeps the locked members (you, the character you control, other players'
+  characters, the dead) and makes every check Apply makes (combat, travel blocks), so nothing new runs on the
+  server. Disabled when nobody can be moved, and for non-host players.
+- Our own design (the idea of such a button is common; nothing taken from another mod's code).
+- Test (server): an empty selection sends every unlocked member to camp and never the player character.
+- In game: press it with several companions, confirm, check they are in camp; press it in combat and see
+  the refusal.
 
 ## Release (**DECIDE**; recommended)
 

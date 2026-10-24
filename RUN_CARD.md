@@ -1,19 +1,23 @@
-# Party Picker: test run card (v1.0.2, test build)
+# Party Picker: test run card (v1.0.3, test build)
 
-**v1.0.2 (2026-10-24): test build toward 1.1.0.** Party limit up to 30, and the Inspiration probe
-command (plan `docs/PLAN_inspiration_and_30.md`, step 0). No Inspiration setting yet. Tests: 146
-passed. Plan and code each reviewed adversarially; the code review's no-copying check against
-Configurable Party Limit passed. **Not installed yet; not tested in game.**
+**v1.0.3 (2026-10-24): test build toward 1.1.0.** Party limit up to 30, the Inspiration probe command
+(plan `docs/PLAN_inspiration_and_30.md`, step 0), and the **Send everyone to camp** button (Part C). No
+Inspiration setting yet. 1.0.2 was built but never installed. Tests: 154 passed. Plan and each code
+change reviewed adversarially; both no-copying checks against Configurable Party Limit passed.
+**Not installed yet; not tested in game.**
 
-**Pak:** `PartyPicker.pak` (37,207 bytes)
-SHA256 `f4cf50d26a8301b1a4f9f2ffebb31a0c7e862c9624ac63dd286d955d63ed04eb`
+**Pak:** `PartyPicker.pak` (38,104 bytes)
+SHA256 `469b6da73ceee7a8052dafe71eccaa0757f7c504e052c4ba3f2e2a7cf4047af4`
 
-**Test card for v1.0.2** (record results in docs/TESTING.md):
-1. Log: `[PartyPicker] server loaded (v1.0.2).`
+**Test card for v1.0.3** (record results in docs/TESTING.md):
+1. Log: `[PartyPicker] server loaded (v1.0.3).`
 2. MCM, Party Picker, Settings: the Maximum party size slider goes up to 30.
 3. If you can field 17 or more: set the limit to 17+, tick them, Apply; check the portraits, travel, a long
    rest (still four in bed).
-4. Inspiration probe, in a save where the party has some Inspiration. SE console: type server, then
+4. Party tab: press Send everyone to camp. It asks "Send N party members to camp?"; press Yes. Everyone
+   except your own character goes to camp. Tick them again and Apply to bring them back. Also try it in
+   combat: it should be refused with the reason.
+5. Inspiration probe, in a save where the party has some Inspiration. SE console: type server, then
    !pp_inspiration (shows the limit, the party total, and each member's points). Then
    !pp_inspiration 8 (sets a test limit of 8 and shows the same again). If convenient, earn one
    Inspiration with the limit at 8 and run !pp_inspiration again. Then save, reload, and run

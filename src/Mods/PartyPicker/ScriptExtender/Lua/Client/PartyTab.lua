@@ -70,7 +70,62 @@ local function render(slot, reply)
     refresh.SameLine = true
     refresh.OnClick = function()
         setStatus("")
+        slot.confirmCamp = false
         PartyTab.Refresh()
+    end
+
+    -- One click to camp for everyone who can go. The request is the same as
+    -- Apply with nobody else ticked, so the server keeps the locked members
+    -- (you, the character you control, other players' characters, the dead)
+    -- and makes every check Apply makes. Party members who are off stage are
+    -- kept as well: the game does not move them (see RosterList), and asking
+    -- would refuse the whole request. It asks once first; every redraw goes
+    -- through PartyTab.Refresh, which fetches the party again, so the count
+    -- is current and no button is destroyed while its own click is running.
+    local movable, keepOffStage = 0, {}
+    for _, e in ipairs(entries) do
+        if e.active and not e.locked then
+            if e.offStage then keepOffStage[#keepOffStage + 1] = e.uuid else movable = movable + 1 end
+        end
+    end
+    if slot.confirmCamp then
+        local text = string.format("Send %d party member%s to camp?", movable, movable == 1 and "" or "s")
+        if #keepOffStage > 0 then
+            text = text .. string.format(" (%d off stage stay%s.)", #keepOffStage, #keepOffStage == 1 and "s" or "")
+        end
+        root:AddText(text)
+        local yes = root:AddButton("Yes, send them to camp")
+        yes.IDContext = "PartyPicker_CampYes"
+        yes.Disabled = (not isHost) or movable == 0
+        yes.OnClick = function()
+            yes.Disabled = true -- one request per confirmation
+            slot.confirmCamp = false
+            setStatus("Changing the party...")
+            PP.Net.Apply:RequestToServer({ uuids = keepOffStage }, function(resp)
+                setStatus(resp and resp.message or "No reply.")
+                if resp and resp.accepted then
+                    Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+                else
+                    PartyTab.Refresh()
+                end
+            end)
+        end
+        local cancel = root:AddButton("Cancel")
+        cancel.IDContext = "PartyPicker_CampCancel"
+        cancel.SameLine = true
+        cancel.OnClick = function()
+            slot.confirmCamp = false
+            PartyTab.Refresh()
+        end
+    else
+        local toCamp = root:AddButton("Send everyone to camp")
+        toCamp.IDContext = "PartyPicker_CampAll"
+        toCamp.SameLine = true
+        toCamp.Disabled = (not isHost) or movable == 0
+        toCamp.OnClick = function()
+            slot.confirmCamp = true
+            PartyTab.Refresh()
+        end
     end
 
     if reply.pending and reply.pending.trimmed then
@@ -107,6 +162,7 @@ function PartyTab.SetStatus(text) setStatus(text) end
 -- from an earlier visit is not taken for a fresh one.
 function PartyTab.Activated()
     setStatus("")
+    for _, slot in ipairs(roots) do slot.confirmCamp = false end
     PartyTab.Refresh()
 end
 
