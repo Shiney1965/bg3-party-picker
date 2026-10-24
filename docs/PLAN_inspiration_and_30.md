@@ -9,6 +9,13 @@ could exceed 16."
 Status: **plan only**, nothing built. Rev 2 takes in an adversarial review (verdict on rev 1: "revise
 before coding"). Decisions for Alan are marked **DECIDE**, each with a recommendation.
 
+**Decisions (Alan, 2026-10-24):** party limit maximum **30**; Inspiration settings: **the slider plus the
+"Match the party limit" checkbox**; lowering the limit: **never take points away**; release: **wait for
+1.1.0** (1.0.1 is not uploaded; the first public release will be 1.1.0).
+
+**Build order:** test build 1.0.2 = Part A + the step-0 probe command (`!pp_inspiration`); after Alan's
+in-game run of the probe, the Inspiration settings; then 1.1.0.
+
 **Source rule (Alan, 2026-10-24):** "Please don't use the configurable party limit code in our rewrite of our
 own mod." Party Picker's code for both parts is written from primary sources only: the game's own data,
 story scripts and text, and the Script Extender source and documentation. Other party mods are mentioned only
