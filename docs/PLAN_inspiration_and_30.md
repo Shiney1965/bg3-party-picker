@@ -118,8 +118,19 @@ below. It ships only if useful as a diagnostic.
    `Ext.StaticData.GetSources("ActionResource")` (API.md L1842) for a mod that redefines InspirationPoint;
    `Ext.Mod.IsModLoaded("16b5fbb6-72fe-4a08-814a-87a9fc0b14bc")` for Configurable Party Limit (its meta.lsx
    UUID), which sets both values. Docs keep Alan's wording: other party mods, use at your own risk.
-6. MCM description and README: a higher limit means Inspiration that would have turned into experience is
-   kept instead; the in-game tutorial still says four.
+6. **Warning in the MCM panel** (Alan, 2026-10-24: "Please put a warning in the Experience Point slider panel
+   that raising the limit will block experience point awards for experience points above 4"). Exact text:
+   - Slider **Inspiration limit**, description: "How many Inspiration points the party can hold. The game's
+     own limit is 4. WARNING: the game turns Inspiration you earn beyond the limit into experience points. Set
+     above 4, the extra points are kept as Inspiration instead, so you get fewer experience points from
+     background goals and other Inspiration awards. Experience from combat and quests is not affected."
+   - Checkbox **Match the party limit**, description: "Keep the Inspiration limit equal to the party-size
+     limit. WARNING: this raises the Inspiration limit above 4, with the same loss of experience points
+     described under Inspiration limit."
+   - The README and Nexus description carry the same warning, and note that the in-game tutorial still says
+     four. The probe and the in-game test confirm the conversion threshold really moves with the limit
+     before release (the game text describes it only for its own limit of four); if it does not, the warning
+     is reworded to what the test shows.
 7. Uninstall: the write is in memory only (nothing new goes into the save); after removing the mod the game's
    four returns at the next start. What happens to stored points above four is to be seen in game and written
    into the uninstall notes.
