@@ -1,0 +1,109 @@
+{
+    "SchemaVersion": 1,
+    "ModName": "Party Picker",
+    "ModDescription": "Choose who is in your party. The Party tab lists everyone you have recruited; tick the ones you want with you and press Apply.",
+    "Tabs": [
+        {
+            "TabId": "settings",
+            "TabName": "Settings",
+            "Sections": [
+                {
+                    "SectionId": "limits",
+                    "SectionName": "Party size",
+                    "Settings": [
+                        {
+                            "Id": "max_party_size",
+                            "Name": "Maximum party size",
+                            "Type": "slider_int",
+                            "Default": 6,
+                            "Description": "How many characters can be in the active party, including your own (4 to 30). Applied when you load a save and whenever you change it. It can't be set below the number already in your party: send members to camp first. Parties above 16 have not been tested by the author.",
+                            "Options": {
+                                "Min": 4,
+                                "Max": 30
+                            }
+                        },
+                        {
+                            "Id": "teleport_joiners",
+                            "Name": "Bring new members to you",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "When a companion joins from camp, move them next to your character. Off: they stay where they are until you fetch them or travel."
+                        },
+                        {
+                            "Id": "block_in_combat",
+                            "Name": "No party changes in combat",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "Refuse to change the party while your character, or anyone joining or leaving, is in combat."
+                        }
+                    ]
+                },
+                {
+                    "SectionId": "four",
+                    "SectionName": "Where the game needs four",
+                    "Settings": [
+                        {
+                            "Id": "prompt_long_rest",
+                            "Name": "Ask before a long rest",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "The camp has four beds, and the game only puts four party members to bed. If your party is larger, End the Day is held and you are asked which four to keep tonight. The others wait in camp."
+                        },
+                        {
+                            "Id": "auto_restore",
+                            "Name": "Bring everyone back after the rest",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "When you wake up, the members who waited in camp rejoin, as far as the party limit allows. Nobody is sent away to make room. Off: use Restore on the Party tab."
+                        },
+                        {
+                            "Id": "extend_raft",
+                            "Name": "Let the whole party ride the Grymforge raft",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "The Ebonlake raft takes everyone aboard but only has four landing spots, so members five and up are left behind. This adds landing spots so everyone arrives."
+                        },
+                        {
+                            "Id": "hope_attire_everyone",
+                            "Name": "Debtor's Attire for the whole party (House of Hope)",
+                            "Type": "checkbox",
+                            "Default": true,
+                            "Description": "In the House of Hope the game has only four sets of the Debtor's Attire, so party members five and up get none. When Hope hands them out, this gives a set to every other party member in the House and puts it on."
+                        }
+                    ]
+                },
+                {
+                    "SectionId": "inspiration",
+                    "SectionName": "Inspiration",
+                    "Settings": [
+                        {
+                            "Id": "inspiration_limit",
+                            "Name": "Inspiration limit",
+                            "Type": "slider_int",
+                            "Default": 4,
+                            "Description": "How many Inspiration points the party can hold. The game's own limit is 4. WARNING: the game turns Inspiration you earn beyond the limit into experience points. Set above 4, the extra points are kept as Inspiration instead, so you get fewer experience points from background goals and other Inspiration awards. Experience from combat and quests is not affected. The limit never goes below the Inspiration your party already holds. While Match the party limit is ticked, this slider is held at the party limit (Maximum party size) and moves back if you drag it.",
+                            "Options": {
+                                "Min": 4,
+                                "Max": 30
+                            }
+                        },
+                        {
+                            "Id": "inspiration_match_party",
+                            "Name": "Match the party limit",
+                            "Type": "checkbox",
+                            "Default": false,
+                            "Description": "Keep the Inspiration limit equal to the Maximum party size (your setting, not the number currently in the party). The Inspiration limit slider moves to match and stays there while this is ticked. Unticking leaves the slider at the party limit: move it back to 4 for the game's own limit. WARNING: this raises the Inspiration limit above 4, with the same loss of experience points described under Inspiration limit."
+                        },
+                        {
+                            "Id": "inspiration_point_controls",
+                            "Name": "Show Inspiration point controls",
+                            "Type": "checkbox",
+                            "Default": false,
+                            "Description": "Adds - and + buttons for the party's Inspiration points on the Party tab (and lets the console command !pp_inspiration_points set them). This edits your game directly, which some players consider a cheat. Points can't be raised above the Inspiration limit or lowered below 0. The buttons appear on the Party tab when you tick this (if they do not, press Refresh there)."
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
