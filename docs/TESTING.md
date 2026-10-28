@@ -411,6 +411,32 @@ before the game had applied the change. Found from the log, not reported: in 1.0
 "The game kept N Inspiration (asked for N+1)" on the status line after every press, and the tab redrew
 before the change landed, so its count lagged one press behind. All four fixed in 1.0.7.
 
+**2026-10-27, v1.0.7, Act 2 (Lae'zel game).** The author: "There may be a bug in the way the game counts excess
+party members as being present for quest purposes.  In Act 2, Halsin was with the party when they met Jaheira,
+but the dialogue with Halsin after assumed he was not present during the meeting. Also, when the player
+character (in this instance Laezel) spoke to Art Cullagh and heard him speaking and thinking of Thaniel, and
+then spoke to Halsin, Halsin seemed unaware that Thaniel was mentioned, and although Halsin referred to
+Thaniel, the player character did not mention the connection to Cullagh.  To my recollection, once Halsin
+learns of Cullagh speaking of Thaniel, he stays with Cullagh until Cullagh wakes up.  But in this instance
+nothing triggered with Halsin." Then: "I caused Halsin to speak directly to Cullaugh, and that did not trigger
+his Thaniel quest either although he asked about the name". **Cause: a Party Picker bug, not party size.**
+Party members past four are counted: in `Osiris Runtime 2026-10-28 00-51-02.log` the Art Cullagh dialog
+(`HAV_CursedFist`, started by Lae'zel at 1565763) walks all eight `DB_Players`, Halsin included (1566962 ff.).
+But Halsin joins Art only in his quest state `SCL_LiftingTheCurse_State_HalsinAtHaven`
+(`Act2_HAV_LiftingTheCurse_CursedFist.txt` L241-250, which also sets `HalsinAvailableForFist`), reached from
+camp (`Act2_CAMP_LiftingTheCurse.txt` L44-60). The game keeps him out of the party until Thaniel is saved
+(`GLO_LiftingTheCurse_State_HalsinRecruitable`, set in `Act2_TWN_LiftingTheCurse_Finale.txt` L163/L181;
+bg3.wiki: he "can be recruited in Act Two after the party progress in the quest to lift the Shadow Curse to a
+certain point"). On 2026-10-11, in Act 2, Party Picker added him from camp: `Extender Runtime 2026-10-11
+03-01-41.log` 2788-2801 (`... Halsin ... joined the party`, `[PartyPicker] Party updated: 1 joined`) and
+`Osiris Runtime 2026-10-11 03-10-45.log` 443056-443059 (first `RecruitedFirstTime_Halsin`). That first add ran
+`GLO_Companion_Halsin.txt` L41-47 (recruitable flag set, normal companion), so his quest states never ran: no
+`SCL_LiftingTheCurse_State_Halsin*` change in any log since. Only the journal entry fired
+(`QuestUpdate(Halsin, "SCL_LiftingTheCurse", "ArtMentionsThaniel")`, 1661403). Party Picker lists him because
+the story puts him in `DB_PartOfTheTeam` and `DB_OriginNPCAlignment` (`GLO_Companion_Halsin.txt` L5) before he
+is recruitable; `PROC_GLO_PartyMembers_CheckAdd` checks only the player-count flag (`_GLO_Shared_PartyMembers.txt`
+L478-482). 1.0.7 still allows it. The Jaheira meeting is probably the same cause (not checked in the logs).
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 
