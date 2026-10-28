@@ -1,5 +1,34 @@
-# Party Picker: test run card (v1.0.7, test build)
+# Party Picker: test run card (v1.0.8, test build)
 
+**v1.0.8 (2026-10-27): Halsin's recruit gate and a repair for the author's save** (docs/TESTING.md, last
+entry; plan docs/PLAN_halsin_recruit_gate.md). On 2026-10-11 an early Party Picker added Halsin from camp in
+Act 2, before the story made him recruitable, so his Lifting the Curse steps never ran (no stay at Art
+Cullagh's bedside). 1.0.8:
+1. The Party tab locks Halsin, while he is not in the party, until the game marks him recruitable ("not
+   recruitable yet: they join later in the story"). Minthara and Minsc are locked the same way while the story
+   blocks their recruitment (DB_GLO_PartyMembers_BlockRecruitmentDialog).
+2. Server console `!pp_halsin` reports his state; `!pp_halsin repair` puts him back where the story expects him
+   (camp, his Act 2 camp dialog, not recruitable); `!pp_halsin haven` is the fallback that sends him to Last
+   Light if the camp conversation does not.
+Tests: 260 server + 17 client checks pass. Plan and code each reviewed adversarially (plan: proceed with
+changes; code: ship with changes; all changes made). The pak contains no occurrence of the author's name.
+**Not installed yet; not tested in game.**
+
+**Pak:** `PartyPicker.pak` (57,650 bytes)
+SHA256 `4e5a8637b80c561a1dafffede19c279832b505576add372d0346e942aed6e224`
+
+**Test card for v1.0.8** (record results in docs/TESTING.md). Make a hard save first, and do steps 3-7 before
+any long rest.
+1. Log: `[PartyPicker] server loaded (v1.0.8).`
+2. Server console `!pp_halsin`: lines starting `!pp_halsin:` with his state, flags and dialog. Send them over.
+3. Party tab: untick Halsin, Apply. He goes to camp.
+4. Server console `!pp_halsin repair`: `done. Talk to Halsin in camp ...`. The Party tab now shows Halsin locked.
+5. In camp, talk to Halsin and let him go ahead to Last Light. If no such option: `!pp_halsin haven`.
+6. `!pp_halsin`: state `SCL_LiftingTheCurse_State_HalsinAtHaven`.
+7. At Last Light, Halsin is by Art Cullagh; talk to Art: Halsin joins the conversation.
+Until Halsin rejoins after Thaniel, a knockout is permanent for him (as in the unmodded game).
+
+# v1.0.7 (kept for the record)
 **v1.0.7 (2026-10-27): fixes from the author's 1.0.6 test the same day** (docs/TESTING.md, 2026-10-27).
 1. Ticking **Show Inspiration point controls** now redraws the Party tab by itself (and so do the Inspiration
    limit, Match the party limit and Maximum party size). Ticks not yet applied are kept. The checkbox

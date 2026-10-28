@@ -1127,5 +1127,171 @@ settings.max_party_size = savedSize
 settings.inspiration_limit = 4
 M.runTimers()
 
+-- 31. Halsin's recruit gate and !pp_halsin (reported in game 2026-10-27; docs/PLAN_halsin_recruit_gate.md).
+-- The story keeps him in camp before he is recruitable; an earlier Party Picker added him from there.
+local NULLU = "00000000-0000-0000-0000-000000000000"
+local RECRUITABLE = "GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa"
+local function globalFlag(f) return M.flags[f .. "|" .. NULLU] == true end
+local function setGlobal(f, on) M.flags[f .. "|" .. NULLU] = on or nil end
+local halsin = M.addChar("S_GLO_Halsin", "7628bc0e-52b8-42a7-856a-13a6fd413323")
+M.db("DB_PartOfTheTeam")(halsin.id)
+M.db("DB_InCamp")(halsin.id)
+M.db("DB_OriginNPCAlignment")(halsin.id, "GLO_Halsin_01ebccd1-8a58-4ca6-9726-c4bb484b85f2")
+M.db("DB_GLO_PartyMembers_OriginalAlignment")(halsin.id, "GLO_Halsin_01ebccd1-8a58-4ca6-9726-c4bb484b85f2")
+M.db("DB_GLO_PartyMembers_DefaultFaction")(halsin.id, "PlayerFaction")
+local savedMax = settings.max_party_size
+settings.max_party_size = 12
+local function halsinEntry()
+    for _, e in ipairs(Party.Roster()) do if e.uuid == halsin.uuid then return e end end
+end
+local function activeUuids()
+    local out = {}
+    for _, e in ipairs(Party.Roster()) do if e.active then out[#out + 1] = e.uuid end end
+    return out
+end
+local e31 = halsinEntry()
+check(e31 and e31.locked and e31.lockReason:find("not recruitable yet"), "Halsin in camp before he is recruitable: locked")
+local wanted = activeUuids()
+wanted[#wanted + 1] = halsin.uuid
+local r31 = apply({ uuids = wanted })
+check(r31 and not r31.accepted and r31.message:find("cannot join"), "Apply refuses him with the reason")
+check(#M.db("DB_Players"):Get(halsin.id) == 0, "he stays in camp")
+-- A Minthara-style block (DB_GLO_PartyMembers_BlockRecruitmentDialog) locks the same way.
+M.db("DB_GLO_PartyMembers_BlockRecruitmentDialog")(c.Wyll.id)
+local wyll31
+for _, e in ipairs(Party.Roster()) do if e.uuid == c.Wyll.uuid then wyll31 = e end end
+check(not wyll31.active and wyll31.locked and wyll31.lockReason:find("not recruitable yet"),
+    "a companion the story blocks from recruitment is locked while in camp")
+M.db("DB_GLO_PartyMembers_BlockRecruitmentDialog"):Delete(c.Wyll.id)
+-- Recruitable: he can join, and once in the party he can be sent back.
+-- A failed flag read locks him (and is logged once).
+local realGetFlag = Osi.GetFlag
+Osi.GetFlag = function(f, o)
+    if f == RECRUITABLE then error("no such flag") end
+    return realGetFlag(f, o)
+end
+M.log = {}
+check(halsinEntry().locked and logText():find("could not read Halsin's recruitable flag"), "failed flag read: locked, logged")
+Osi.GetFlag = realGetFlag
+setGlobal(RECRUITABLE, true)
+check(not halsinEntry().locked, "recruitable: not locked")
+r31 = apply({ uuids = wanted })
+check(r31 and r31.accepted and #M.db("DB_Players"):Get(halsin.id) == 1, "recruitable: he joins")
+setGlobal(RECRUITABLE, false)
+check(not halsinEntry().locked, "in the party: never locked by the gate")
+local without = {}
+for _, u in ipairs(activeUuids()) do if u ~= halsin.uuid then without[#without + 1] = u end end
+r31 = apply({ uuids = without })
+check(r31 and r31.accepted and #M.db("DB_Players"):Get(halsin.id) == 0, "he can be sent to camp")
+M.db("DB_GLO_PartyMembers_DefaultFaction")(halsin.id, "PlayerFaction") -- as a dismissal leaves it (L1313)
+
+-- !pp_halsin: the story procedures it calls, as far as the plan uses them.
+local calls31 = {}
+local H31 = halsin.id
+local function st(n) return "SCL_LiftingTheCurse_State_" .. n end
+Osi.PROC_State_Progress = function(ch, quest, s)
+    calls31[#calls31 + 1] = "progress " .. s
+    M.db("DB_State_Current"):Delete(ch, quest, nil)
+    M.db("DB_State_Current")(ch, quest, s)
+end
+Osi.PROC_RemoveDialog = function(ch) calls31[#calls31 + 1] = "removedialog"; M.db("DB_Dialogs"):Delete(ch, nil) end
+Osi.SetHasDialog = function() calls31[#calls31 + 1] = "hasdialog" end
+Osi.PROC_GlobalClearFlagAndCache = function(f) calls31[#calls31 + 1] = "clear " .. f; setGlobal(f, false) end
+Osi.PROC_GlobalSetFlagAndCache = function(f) calls31[#calls31 + 1] = "set " .. f; setGlobal(f, true) end
+Osi.PROC_GlobalFlagReactionAfterDialog = function(f)
+    calls31[#calls31 + 1] = "reaction " .. f
+    Osi.PROC_State_Progress(H31, "SCL_LiftingTheCurse", st("HalsinAtHaven")) -- Act2_CAMP_LiftingTheCurse.txt L56-63
+end
+local function halsinConsole(arg)
+    M.log = {}
+    M.console["pp_halsin"]("pp_halsin", arg)
+    return logText()
+end
+-- The author's save: recruited early (flag + first-recruit record set), state never moved on.
+setGlobal(RECRUITABLE, true)
+M.db("DB_OnlyOnce")("RecruitedFirstTime_Halsin")
+M.db("DB_State_Current")(H31, "SCL_LiftingTheCurse", st("HalsinInAct2"))
+M.db("DB_Dialogs")(H31, "Halsin_InParty_890c2586-6b71-ca01-5bd6-19d533181c71")
+M.db("DB_Players")(H31) -- in the party, as in the author's game
+local rep = halsinConsole()
+check(rep:find("state: SCL_LiftingTheCurse_State_HalsinInAct2") and rep:find("in party yes")
+    and rep:find("recruitable yes") and rep:find("Halsin_InParty"), "report shows state, party, flags and dialog")
+check(#calls31 == 0, "the report changes nothing")
+rep = halsinConsole("repair")
+check(rep:find("not repaired") and rep:find("level SCL_Main_A"), "repair refused outside Act 2")
+M.db("DB_CurrentLevel")("SCL_Main_A")
+rep = halsinConsole("repair")
+check(rep:find("not repaired") and rep:find("Send him to camp"), "repair refused while he is in the party")
+M.db("DB_Players"):Delete(H31)
+M.db("DB_KnockedOut")(H31)
+rep = halsinConsole("repair")
+check(rep:find("not repaired") and rep:find("knocked out") and globalFlag(RECRUITABLE), "repair refused while knocked out")
+M.db("DB_KnockedOut"):Delete(H31)
+halsin.dead = true
+rep = halsinConsole("repair")
+check(rep:find("not repaired") and rep:find("is dead"), "repair refused while dead")
+halsin.dead = nil
+setGlobal("SCL_AncientFist_State_HasWokenUpFist_45cddb53-edf5-4a9e-9943-898f55b29af3", true)
+rep = halsinConsole("repair")
+check(rep:find("not repaired") and rep:find("already awake"), "repair refused once Art is awake")
+setGlobal("SCL_AncientFist_State_HasWokenUpFist_45cddb53-edf5-4a9e-9943-898f55b29af3", false)
+check(#calls31 == 0, "refusals change nothing")
+rep = halsinConsole("haven")
+check(rep:find("repair first") and #calls31 == 0, "haven refused before repair")
+rep = halsinConsole("repair")
+check(rep:find("done%."), "repair runs")
+check(not globalFlag(RECRUITABLE), "recruitable flag cleared")
+check(#M.db("DB_OnlyOnce"):Get("RecruitedFirstTime_Halsin") == 0, "first-recruit record cleared")
+local dlg = M.db("DB_Dialogs"):Get(H31, nil)
+check(#dlg == 1 and dlg[1][2]:find("^CAMP_Halsin2_c0ab0f6f"), "his Act 2 camp dialog is set")
+check(not table.concat(calls31, ","):find("progress"), "state already InAct2: not moved")
+check(halsinEntry().locked, "after the repair the Party tab locks him again")
+rep = halsinConsole("repair")
+check(rep:find("not repaired") and rep:find("nothing to undo"), "a second repair is refused")
+-- From HalsinWaiting the repair first moves him to HalsinInAct2.
+calls31 = {}
+setGlobal(RECRUITABLE, true)
+M.db("DB_State_Current"):Delete(H31, "SCL_LiftingTheCurse", nil)
+M.db("DB_State_Current")(H31, "SCL_LiftingTheCurse", st("HalsinWaiting"))
+rep = halsinConsole("repair")
+check(calls31[1] == "progress " .. st("HalsinInAct2") and rep:find("done%.") and not globalFlag(RECRUITABLE),
+    "from HalsinWaiting: moved to HalsinInAct2 first, then repaired")
+-- A state move the game ignores stops the repair before anything else changes.
+local realProgress = Osi.PROC_State_Progress
+Osi.PROC_State_Progress = function() calls31[#calls31 + 1] = "progress ignored" end
+setGlobal(RECRUITABLE, true)
+M.db("DB_State_Current"):Delete(H31, "SCL_LiftingTheCurse", nil)
+M.db("DB_State_Current")(H31, "SCL_LiftingTheCurse", st("HalsinWaiting"))
+calls31 = {}
+rep = halsinConsole("repair")
+check(rep:find("did not move his state") and #calls31 == 1 and globalFlag(RECRUITABLE), "ignored state move: stops, nothing else changed")
+Osi.PROC_State_Progress = realProgress
+halsinConsole("repair")
+-- Fallback: the reaction the camp conversation would trigger.
+calls31 = {}
+rep = halsinConsole("haven")
+check(rep:find("on his way") and calls31[1]:find("^set GLO_LiftingTheCurse_Event_TravelToHaven")
+    and calls31[2]:find("^reaction GLO_LiftingTheCurse_Event_TravelToHaven"), "haven sets the flag and runs the reaction")
+check(M.db("DB_State_Current"):Get(H31, "SCL_LiftingTheCurse", nil)[1][3] == st("HalsinAtHaven"), "he is now at Last Light")
+calls31 = {}
+rep = halsinConsole("haven")
+check(rep:find("already been sent") and #calls31 == 0, "haven runs once")
+rep = halsinConsole("nonsense")
+check(rep:find("usage"), "unknown argument: usage")
+-- Clean up: Halsin leaves the test world.
+for _, db in ipairs({ "DB_PartOfTheTeam", "DB_InCamp", "DB_Players", "DB_PartyMembers" }) do M.db(db):Delete(H31) end
+M.db("DB_GLO_PartyMembers_DefaultFaction"):Delete(H31, nil)
+M.db("DB_CurrentLevel"):Delete("SCL_Main_A")
+M.db("DB_State_Current"):Delete(H31, nil, nil)
+M.db("DB_Dialogs"):Delete(H31, nil)
+M.db("DB_OnlyOnce"):Delete("RecruitedFirstTime_Halsin")
+setGlobal(RECRUITABLE, false)
+setGlobal("GLO_LiftingTheCurse_Event_TravelToHaven_a946f0b8-badb-435d-915d-2e6a45845c7c", false)
+Osi.PROC_State_Progress, Osi.PROC_RemoveDialog, Osi.SetHasDialog = nil, nil, nil
+Osi.PROC_GlobalClearFlagAndCache, Osi.PROC_GlobalSetFlagAndCache, Osi.PROC_GlobalFlagReactionAfterDialog = nil, nil, nil
+M.chars[halsin.uuid] = nil
+settings.max_party_size = savedMax
+M.runTimers()
+
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end

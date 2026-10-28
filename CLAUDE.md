@@ -72,6 +72,9 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
   are in docs/TESTING.md; each build's size, SHA-256 and test card are in RUN_CARD.md (latest at the top).
   1.1.0 waits for the author's tests; then update `dist_docs/` and release. Tests: `tests/run_tests.py` runs
   `test_server.lua` and (since 1.0.7) `test_client.lua`, each in its own Lua state.
+- v1.0.8 (2026-10-27): Halsin (and Minthara/Minsc while the story blocks them) locked until recruitable;
+  `!pp_halsin [repair|haven]` repairs a save where an earlier build added Halsin early. Plan
+  `docs/PLAN_halsin_recruit_gate.md`; test card in RUN_CARD.md.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).

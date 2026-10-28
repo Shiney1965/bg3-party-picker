@@ -6,7 +6,7 @@ PP = PP or {}
 PP.MOD = "PartyPicker"
 -- Keep in step with Version64 in meta.lsx; printed at load so logs show
 -- which build was running.
-PP.VERSION = "1.0.7"
+PP.VERSION = "1.0.8"
 -- The four-member situations are hard limits in the game's own scripts
 -- (four beds in camp, four raft seats), so this is not a setting.
 PP.RESTRICTED_SIZE = 4

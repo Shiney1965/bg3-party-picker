@@ -321,6 +321,36 @@ function Party.ApplyMaxSize()
     end
 end
 
+-- Companions the story keeps in camp before they can be recruited. The game
+-- gates them by dialog only, and CheckAdd checks only the player-count flag
+-- (_GLO_Shared_PartyMembers.txt L478-482), so adding one from camp skips their
+-- story (reported in game 2026-10-27: Halsin, added in Act 2, never went to
+-- Last Light to sit with Art Cullagh).
+--   Halsin: recruitable once GLO_LiftingTheCurse_State_HalsinRecruitable is
+--     set, by his first real join (GLO_Companion_Halsin.txt L41-47) or the
+--     Act 2 fallbacks (Act2_TWN_LiftingTheCurse_Finale.txt L153-181).
+--   Minthara, Minsc: DB_GLO_PartyMembers_BlockRecruitmentDialog until the
+--     story allows it (GLO_Companion_Minthara.txt L13, GLO_Companion_Minsc.txt
+--     L49; read at _GLO_Shared_Origins.txt L320-324).
+local HALSIN_UUID = "7628bc0e-52b8-42a7-856a-13a6fd413323"
+Party.HALSIN_RECRUITABLE_FLAG = "GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa"
+local NULL_ID = "NULL_00000000-0000-0000-0000-000000000000"
+local NOT_YET = "not recruitable yet: they join later in the story (talk to them)"
+
+local flagReadFailLogged = false
+local function notRecruitableYet(e)
+    if e.uuid == HALSIN_UUID then
+        -- A failed read counts as not recruitable: never skip his story by mistake.
+        local ok, v = pcall(Osi.GetFlag, Party.HALSIN_RECRUITABLE_FLAG, NULL_ID)
+        if not ok and not flagReadFailLogged then
+            flagReadFailLogged = true
+            PP.Log("could not read Halsin's recruitable flag (" .. tostring(v) .. "); he stays locked")
+        end
+        if not ok or v ~= 1 then return true end
+    end
+    return inDb("DB_GLO_PartyMembers_BlockRecruitmentDialog", e.id)
+end
+
 -- Everyone the player could choose from.
 -- Each entry: id (Osiris string), uuid, name, active, inCamp, avatar,
 -- hireling, dead, locked (this mod never moves them), lockReason.
@@ -377,6 +407,8 @@ function Party.Roster()
                 end
             elseif not e.active and e.offStage then
                 e.locked, e.lockReason = true, OFF_STAGE
+            elseif not e.active and notRecruitableYet(e) then
+                e.locked, e.lockReason = true, NOT_YET
             end
             out[#out + 1] = e
         end

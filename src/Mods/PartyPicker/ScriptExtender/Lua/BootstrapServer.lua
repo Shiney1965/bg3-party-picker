@@ -5,6 +5,7 @@ local Restrictions = Ext.Require("Server/Restrictions.lua")
 local HouseOfHope = Ext.Require("Server/HouseOfHope.lua")
 local Inspiration = Ext.Require("Server/Inspiration.lua")
 local LimitGuard = Ext.Require("Server/LimitGuard.lua")
+local HalsinRepair = Ext.Require("Server/HalsinRepair.lua")
 
 local function rosterReply()
     local entries = {}
@@ -219,6 +220,13 @@ Ext.RegisterConsoleCommand("pp_inspiration_points", function(_, arg)
     if not ok then PP.Log("!pp_inspiration_points failed: " .. tostring(err)) end
 end)
 
+-- !pp_halsin [repair | haven]: report on, or repair, a Halsin an earlier Party Picker added before the story
+-- made him recruitable (docs/PLAN_halsin_recruit_gate.md).
+Ext.RegisterConsoleCommand("pp_halsin", function(_, arg)
+    local ok, err = pcall(HalsinRepair.Console, arg)
+    if not ok then PP.Log("!pp_halsin failed: " .. tostring(err)) end
+end)
+
 -- !pp_inspiration [4-30 | reset]: the Inspiration probe (docs/PLAN_inspiration_and_30.md, step 0).
 Ext.RegisterConsoleCommand("pp_inspiration", function(_, arg)
     local ok, err = pcall(Inspiration.Console, arg)
@@ -254,4 +262,4 @@ Ext.RegisterConsoleCommand("pp_set", function(_, ...)
     PP.Log(message)
 end)
 
-PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name  !pp_inspiration  !pp_inspiration_points")
+PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name  !pp_inspiration  !pp_inspiration_points  !pp_halsin")
