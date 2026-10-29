@@ -437,6 +437,18 @@ the story puts him in `DB_PartOfTheTeam` and `DB_OriginNPCAlignment` (`GLO_Compa
 is recruitable; `PROC_GLO_PartyMembers_CheckAdd` checks only the player-count flag (`_GLO_Shared_PartyMembers.txt`
 L478-482). 1.0.7 still allows it. The Jaheira meeting is probably the same cause (not checked in the logs).
 
+**2026-10-28, v1.0.8 (installed that day, game closed, hash 4E5A8637 checked), same Lae'zel game.** The author ran
+`!pp_halsin` with Halsin still in the party and pasted the output:
+"[PartyPicker] !pp_halsin: state: SCL_LiftingTheCurse_State_HalsinInAct2 /
+in party yes; in camp no; team yes; dead no; knocked out no; perma-defeated no /
+flags: recruitable yes; inAct2 yes; travelToHaven no; liftingCurse no; atHaven no; availableForFist no; goToLake no; artAwake no /
+dialog: Halsin_InParty_890c2586-6b71-ca01-5bd6-19d533181c71 /
+first-recruit record (DB_OnlyOnce RecruitedFirstTime_Halsin): yes / level: SCL_Main_A"
+(lines joined with " / "). Confirms the cause above: his quest state stopped at HalsinInAct2 (never AtCamp or
+AtHaven), the recruitable flag and first-recruit record came from Party Picker's early add, and Art is still
+asleep. The repair applies (InAct2 is an allowed state); the only check it would refuse today is "in party".
+Next: send him to camp with the Party tab, hard save, `!pp_halsin repair`.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 
