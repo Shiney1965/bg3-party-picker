@@ -474,6 +474,12 @@ worked fine". **Confirmed in game: `!pp_halsin repair` plus the camp conversatio
 and the Thaniel quest started". **The 2026-10-27 Halsin / Art Cullagh report is closed: cause confirmed, save
 repaired in game.** Still untested in game: the 1.0.8 lock itself (Halsin locked on the Party tab before he is
 recruitable, in a game where Party Picker never added him) and its unlock after Thaniel is saved.
+`!pp_halsin` afterwards (the author pasted it): "state: SCL_LiftingTheCurse_State_HalsinAtHaven / in party no; in camp
+no; team yes; dead no; knocked out no; perma-defeated no / flags: recruitable no; inAct2 yes; travelToHaven yes;
+liftingCurse yes; atHaven yes; availableForFist yes; goToLake no; artAwake no / dialog:
+HAV_HalsinQuest_Halsin_2b827a2e-2358-d97a-a59a-e52b8be10a46 / first-recruit record ...: no / level: SCL_Main_A".
+Matches the game's own path: L56-63 (AtHaven, LiftingCurse, HAV_HalsinQuest dialog) and CursedFist L241-250
+(AvailableForFist).
 
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
