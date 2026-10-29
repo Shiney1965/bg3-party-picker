@@ -470,8 +470,10 @@ alternate camp spots, used when Halsin and Minthara are both in the team (`Act2_
 L5-12, L25-82), not his usual corner. So he is in camp, at the other spot. Not a Party Picker or repair fault.
 The author: "I found him", then: "OK I spoke to him and he went to the Last Light Inn. So the repair seems to have
 worked fine". **Confirmed in game: `!pp_halsin repair` plus the camp conversation sent Halsin to Last Light**
-(the TravelToHaven option appeared; `!pp_halsin haven` was not needed). Still to confirm: Art Cullagh's
-conversation brings Halsin in and starts the Thaniel quest.
+(the TravelToHaven option appeared; `!pp_halsin haven` was not needed). Then the author: "Art brought Halsin in
+and the Thaniel quest started". **The 2026-10-27 Halsin / Art Cullagh report is closed: cause confirmed, save
+repaired in game.** Still untested in game: the 1.0.8 lock itself (Halsin locked on the Party tab before he is
+recruitable, in a game where Party Picker never added him) and its unlock after Thaniel is saved.
 
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
