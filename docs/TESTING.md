@@ -461,6 +461,14 @@ State stays HalsinInAct2, as designed: the TravelToHaven reaction (`Act2_CAMP_Li
 him straight to HalsinAtHaven, and PROC_State_Progress allows that upward move. Not yet confirmed: that the camp
 conversation offers the Last Light option (fallback `!pp_halsin haven`), and that Art then brings Halsin in.
 
+Then the author: "I went back to camp and Halsin is not there" (a second `!pp_halsin` still showed "in camp yes",
+on stage not in question: no SetOnStage 0 for him in the session). `Osiris Runtime 2026-10-29 00-29-24.log`: the
+send-to-camp walk (658080 ff.) ended with `DB_InCamp` (662695) and a teleport to
+`S_Spawnpoint_Halsin_Fallback_SCLMain_A` (663295-663307); at the camp change to "HAVEN" he was teleported to
+`S_Spawnpoint_Halsin_Fallback_Haven_A` (1231519, `PROC_CampSwap_UpdateAnubisCampPos`, 1232669). Those are his
+alternate camp spots, used when Halsin and Minthara are both in the team (`Act2_CAMP_HalsinMintharaCFM.txt`
+L5-12, L25-82), not his usual corner. So he is in camp, at the other spot. Not a Party Picker or repair fault.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 
