@@ -1,5 +1,36 @@
-# Party Picker: test run card (v1.0.8, test build)
+# Party Picker: test run card (v1.0.9, test build)
 
+**v1.0.9 (2026-10-28): "Let Halsin join early" and "Put Halsin's quest back on track"** (asked for by the author
+2026-10-28; plan docs/PLAN_halsin_early_option.md, "As built"). Default unchanged from 1.0.8: Halsin is locked
+until Thaniel is saved.
+1. MCM Settings, new section **Story companions**, checkbox **Let Halsin join early** (off by default). Ticked,
+   the Party tab lets him join in Act Two only, before his quest at Last Light begins (Art Cullagh asleep).
+2. Party tab, new section (only for a Halsin who joined early and whose quest hasn't reached Last Light): button
+   **Put Halsin's quest back on track**, available once the party has reached Last Light. It asks once ("Make a
+   hard save first"), sends Halsin to camp if he is in the party, then does what `!pp_halsin repair` does. Then
+   talk to him in camp and let him go ahead to Last Light. After that he stays locked until Thaniel is saved,
+   even with the checkbox ticked.
+3. The first time the party reaches Last Light with an early-joined Halsin, a message window says what to do.
+Tests: 292 server + 25 client checks pass. Plan reviewed (proceed with changes; the author then chose Act Two only
+and a button instead of an automatic reset) and code reviewed (ship with changes; all changes made). The pak
+contains no occurrence of the author's name. **Not installed yet; not tested in game.**
+
+**Pak:** `PartyPicker.pak` (62,451 bytes)
+SHA256 `87e30b987425b09a1e074ac5e382dd4d5e499900f5df61830036bd11d99e0459`
+
+**Test card for v1.0.9** (record results in docs/TESTING.md). Your Lae'zel game is already repaired, so the full
+path needs a save in Act Two before Last Light with Halsin in camp (not yet recruited). Make a hard save first.
+1. Log: `[PartyPicker] server loaded (v1.0.9).`
+2. Checkbox off: Halsin locked on the Party tab ("not recruitable yet ...").
+3. Tick **Let Halsin join early**: the Party tab unlocks him; tick him, Apply. He joins.
+4. Party tab: the Halsin section shows; the button is greyed: "Available once your party has reached Last Light."
+5. Walk into Last Light: a message window tells you to press the button before talking to Art Cullagh.
+6. Press **Put Halsin's quest back on track**, then **Yes**. He goes to camp; a message window says his quest is
+   back on track. `!pp_halsin`: recruitable no, dialog CAMP_Halsin2.
+7. In camp, talk to Halsin; let him go ahead to Last Light. Then talk to Art Cullagh: Halsin joins the scene.
+In your current Lae'zel game only steps 1-2 apply (and the checkbox should NOT unlock him: his quest is under way).
+
+# v1.0.8 (kept for the record)
 **v1.0.8 (2026-10-27): Halsin's recruit gate and a repair for the author's save** (docs/TESTING.md, last
 entry; plan docs/PLAN_halsin_recruit_gate.md). On 2026-10-11 an early Party Picker added Halsin from camp in
 Act 2, before the story made him recruitable, so his Lifting the Curse steps never ran (no stay at Art

@@ -102,6 +102,19 @@
                             "Description": "Adds - and + buttons for the party's Inspiration points on the Party tab (and lets the console command !pp_inspiration_points set them). This edits your game directly, which some players consider a cheat. Points can't be raised above the Inspiration limit or lowered below 0. The buttons appear on the Party tab when you tick this (if they do not, press Refresh there)."
                         }
                     ]
+                },
+                {
+                    "SectionId": "story",
+                    "SectionName": "Story companions",
+                    "Settings": [
+                        {
+                            "Id": "halsin_early",
+                            "Name": "Let Halsin join early",
+                            "Type": "checkbox",
+                            "Default": false,
+                            "Description": "In the base game Halsin can't join you in Act Two until Thaniel is saved, and the Party tab follows that. Tick this to let him join earlier: in Act Two only, before his quest at Last Light begins. WARNING: once he has joined early, his quest at Last Light won't start by itself, even after you send him back to camp. Once your party has reached Last Light, and before you talk to Art Cullagh, press \"Put Halsin's quest back on track\" on the Party tab. It sends him to camp and resets his quest; then talk to him in camp. After that he can't join again until Thaniel is saved. Without Party Picker that button is gone, so don't remove the mod while Halsin is with you early."
+                        }
+                    ]
                 }
             ]
         }

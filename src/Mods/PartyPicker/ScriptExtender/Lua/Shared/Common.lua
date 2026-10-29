@@ -6,7 +6,7 @@ PP = PP or {}
 PP.MOD = "PartyPicker"
 -- Keep in step with Version64 in meta.lsx; printed at load so logs show
 -- which build was running.
-PP.VERSION = "1.0.8"
+PP.VERSION = "1.0.9"
 -- The four-member situations are hard limits in the game's own scripts
 -- (four beds in camp, four raft seats), so this is not a setting.
 PP.RESTRICTED_SIZE = 4
@@ -54,6 +54,8 @@ PP.Net = PP.Net or {
     Inspiration = Ext.Net.CreateChannel(ModuleUUID, "Inspiration"),
     -- client -> server request: change the party's Inspiration points by one (plan Part F)
     InspirationPoints = Ext.Net.CreateChannel(ModuleUUID, "InspirationPoints"),
+    -- client -> server request: put Halsin's quest back on track (docs/PLAN_halsin_early_option.md)
+    HalsinReset = Ext.Net.CreateChannel(ModuleUUID, "HalsinReset"),
 }
 
 -- The trimmed party waiting to be restored; saved with the game, server-only.
@@ -67,6 +69,13 @@ end)
 -- other mods stay listed after going to camp; saved with the game, server-only.
 pcall(function()
     Ext.Vars.RegisterModVariable(ModuleUUID, "Seen", {
+        Server = true, Client = false, SyncToClient = false,
+    })
+end)
+-- Halsin's quest was put back on track ({ reset = true }), so "Let Halsin join early" no longer
+-- unlocks him; saved with the game, server-only (Server/HalsinRepair.lua).
+pcall(function()
+    Ext.Vars.RegisterModVariable(ModuleUUID, "Halsin", {
         Server = true, Client = false, SyncToClient = false,
     })
 end)

@@ -503,3 +503,22 @@ Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 
 If step 7 fails, there is a fallback. Turn off "Ask before a long rest", trim with the Party tab
 before resting, and tick everyone again afterwards.
+
+**2026-10-28, v1.0.8, Lae'zel game: no Inspiration reroll offered.** First the author: "Also, the Inspiration may
+not be working properly. I just had a persuasion check with Talli that I used a cheat to lose. After losing the
+check I did not get a chance to try again with an Inspiration point, although the Party Picker UI says I have 6
+inspiration points. Can you check the log on that." (`Osiris Runtime 2026-10-28 00-51-02.log`: Talli's dialog
+`HAV_HavenOutcasts_HarperQuartermaster`, instance 81426; SC_FAIL_CHECKS on the party, on Lae'zel at 6113349; roll
+failed at 6144688, DialogRollResult 6144817; SC_FAIL_CHECKS removed from Lae'zel at 6713294.) Then, after a test
+without Talli: "I ran the check in the Inspirations and failed an DC check. No Inspiration rolls were offered
+although MCM said I had 6 inspirations available." Log analysis (subagent, 2026-10-28; `Osiris Runtime
+2026-10-29 00-29-24.log`, `Extender Runtime 2026-10-29 00-27-03.log`): the fails were Karlach's, in the House of
+Healing surgeon's dialogue (instance 81897), two failed ACTIVE rolls (result 0, IsActiveRoll 1, criticality NONE:
+Osiris 7674270 / 7684173) and one pass between them (7676903). No forced-fail status this time: no SC_FAIL /
+FAIL_CHECK anywhere; Karlach's statuses after the load were SOAP_WASH, S5E_RITUAL_SPELL_REMOVAL,
+EVOLVED_CONTROLLED_CHANGED, TRAVELBLOCK_CANTMOVE, PASSIVE_PEACE_BREAKER, FLANKED, MAG_CQCASTER_SPELLDC_BONUS.
+Party Picker 1.0.8 loaded (SE 2646, 3362), `Inspiration limit set to 6` (SE 3543), no Party Picker errors. The
+logs cannot show why the dialogue offered no reroll. Leading suspect (inferred): points and limit above the
+game's own 4. Also seen: another mod hooks every dialogue start (`PROC_DisablePassiveCheck_ISBF`, 7662300; it
+checks LUCKY / TIDES_OF_CHAOS / *_INSPIRATION *_ON_ISBF statuses). Proposed A/B test: limit 4 with 3 points;
+limit 6 with 3 points; limit 6 with 6 points; each on a fresh failed active check.

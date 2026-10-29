@@ -24,6 +24,7 @@ local tabSettings = {
     inspiration_limit = true,
     inspiration_match_party = true,
     max_party_size = true,
+    halsin_early = true, -- locks or unlocks Halsin on the tab
 }
 pcall(function()
     Ext.ModEvents.BG3MCM["MCM_Setting_Saved"]:Subscribe(function(payload)

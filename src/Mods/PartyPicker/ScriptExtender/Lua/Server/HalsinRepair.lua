@@ -9,6 +9,9 @@
 --                       recruitable, so the game's own rules run again. Then talk to him in camp.
 --   !pp_halsin haven    fallback after repair, if that conversation offers no way to send him to Last Light:
 --                       the reaction the conversation would trigger.
+-- From 1.0.9 (docs/PLAN_halsin_early_option.md) the same repair is the Party tab's "Put Halsin's quest back
+-- on track" button (it sends him to camp first if he is in the party), and this file decides when the
+-- "Let Halsin join early" setting may unlock him (Party.HalsinEarlyGate).
 -- Story files: the author's extract, Mods/GustavDev/Story/RawFiles/Goals/ unless noted.
 
 local Party = Ext.Require("Server/Party.lua")
@@ -33,9 +36,15 @@ local FLAGS = {
     availableForFist = "HAV_LiftingTheCurse_State_HalsinAvailableForFist_38bd3ada-29d4-4a1d-900b-c58799aad3df",
     goToLake = "HAV_LiftingTheCurse_State_HalsinGoToLake_bc4cd1f7-5e60-40e1-a583-aa886fe5b682",
     artAwake = "SCL_AncientFist_State_HasWokenUpFist_45cddb53-edf5-4a9e-9943-898f55b29af3",
+    -- Set once, by the first party member to enter Last Light (Act2_CAMP.txt L90; Shared
+    -- _Greevers_Little_Helpers.txt L3022-3036).
+    reachedLastLight = "HAV_PartyProgress_EnteredHaven_0afbb64d-f996-4e41-ab6b-a51d37c29fd3",
 }
-local FLAG_ORDER = { "recruitable", "inAct2", "travelToHaven", "liftingCurse", "atHaven", "availableForFist",
-    "goToLake", "artAwake" }
+-- The states the repair starts from: his quest has not reached Last Light yet.
+local EARLY_STATES = { [state("HalsinWaiting")] = true, [state("HalsinInAct2")] = true,
+    [state("HalsinAtCamp")] = true }
+local FLAG_ORDER = { "recruitable", "inAct2", "reachedLastLight", "travelToHaven", "liftingCurse", "atHaven",
+    "availableForFist", "goToLake", "artAwake" }
 
 local function say(msg) PP.Log("!pp_halsin: " .. msg) end
 
@@ -94,15 +103,16 @@ function HalsinRepair.Report()
     say("make a hard save before !pp_halsin repair or !pp_halsin haven.")
 end
 
--- Why the repair cannot run now, or nil. `allowed` = state names it may start from.
-local function refusal(allowed)
+-- Why the repair cannot run now, or nil. `allowed` = state names it may start from. With `inPartyOk`,
+-- being in the party is no reason (the Party tab sends him to camp first).
+local function refusal(allowed, inPartyOk)
     if not inDb("DB_CurrentLevel", "SCL_Main_A") then
         return "only in the Shadow-Cursed Lands (Act 2, level SCL_Main_A)."
     end
     if not inDb("DB_PartOfTheTeam", H) then return "Halsin is not in your camp team." end
     -- A party change still running could add him after the repair, undoing it (review 2026-10-27).
     if Party.IsBusy() then return "a party change is still running. Wait a moment and try again." end
-    if inDb("DB_Players", H) then
+    if not inPartyOk and inDb("DB_Players", H) then
         return "Halsin is in the party. Send him to camp on the Party tab first (untick him, Apply), then run this again."
     end
     local okD, dead = pcall(Osi.IsDead, H)
@@ -132,16 +142,29 @@ local function call(what, fn, ...)
     return ok
 end
 
-function HalsinRepair.Repair()
-    local why = refusal({ [state("HalsinWaiting")] = true, [state("HalsinInAct2")] = true,
-        [state("HalsinAtCamp")] = true })
-    if why then say("not repaired: " .. why); return false end
+-- The saved record (Common.lua, mod variable "Halsin"). Written as a whole table, as Restrictions does.
+local function record()
+    local ok, v = pcall(function() return Ext.Vars.GetModVariables(ModuleUUID).Halsin end)
+    return (ok and type(v) == "table") and v or {}
+end
+local function setRecord(t)
+    pcall(function() Ext.Vars.GetModVariables(ModuleUUID).Halsin = t end)
+end
+
+-- Every reason the repair may not run, or nil.
+local function repairRefusal(inPartyOk)
+    local why = refusal(EARLY_STATES, inPartyOk)
+    if why then return why end
     local recruitable = flag("recruitable")
-    if recruitable == nil then say("not repaired: the recruitable flag could not be read."); return false end
+    if recruitable == nil then return "the recruitable flag could not be read." end
     if not recruitable then
-        say("not repaired: Halsin is not marked recruitable, so the story's gate is already in place (nothing to undo).")
-        return false
+        return "Halsin is not marked recruitable, so the story's gate is already in place (nothing to undo)."
     end
+    return nil
+end
+
+-- The repair itself, once repairRefusal(false) has passed. Returns true when done.
+local function doRepair()
     -- HalsinInAct2's own effects (Act2_GLO_LiftingTheCurse_SetUp.txt L121-128) if the state never got there.
     -- PROC_State_Progress only moves to a state of equal or higher priority (Shared _Global_StateProgression.txt
     -- L37-50) and can do nothing without an error, so the result is read back.
@@ -167,6 +190,15 @@ function HalsinRepair.Repair()
     if not call("clearing the recruitable flag", Osi.PROC_GlobalClearFlagAndCache, FLAGS.recruitable) then
         return false
     end
+    -- From now on "Let Halsin join early" no longer unlocks him: re-adding him would undo this.
+    setRecord({ reset = true })
+    return true
+end
+
+function HalsinRepair.Repair()
+    local why = repairRefusal(false)
+    if why then say("not repaired: " .. why); return false end
+    if not doRepair() then return false end
     say("done. Talk to Halsin in camp and let him go ahead to Last Light. If that conversation has no such"
         .. " option, run !pp_halsin haven. Until he rejoins after Thaniel, a knockout is permanent for him (as in"
         .. " the unmodded game), and the Party tab keeps him locked.")
@@ -189,6 +221,120 @@ function HalsinRepair.Haven()
     HalsinRepair.Report()
     return true
 end
+
+-- "Let Halsin join early" (MCM halsin_early), for a Halsin the story does not yet let join: nil when he
+-- may join now, else the reason he stays locked. Only in Act 2 before his quest reaches Last Light, so a
+-- repair can always put it back (review 2026-10-28: an Act 1 join gets his camp dialog while in the party,
+-- Act2_GLO_LiftingTheCurse_SetUp.txt L130-142, and the Leave-for-Haven reaction does not check the party,
+-- Act2_CAMP_LiftingTheCurse.txt L56-63).
+local QUEST_UNDER_WAY = "his quest at Last Light is under way: he joins once Thaniel is saved"
+function HalsinRepair.EarlyGate()
+    if PP.Setting("halsin_early", false) ~= true then return Party.NOT_YET end
+    if record().reset then return QUEST_UNDER_WAY end
+    if not inDb("DB_CurrentLevel", "SCL_Main_A") then
+        return "not recruitable yet: Let Halsin join early works in Act Two only (the Shadow-Cursed Lands)"
+    end
+    if flag("artAwake") ~= false or flag("goToLake") ~= false then return QUEST_UNDER_WAY end
+    local states = currentStates()
+    if #states ~= 1 or not EARLY_STATES[states[1]] then return QUEST_UNDER_WAY end
+    return nil
+end
+Party.HalsinEarlyGate = HalsinRepair.EarlyGate
+
+-- Party.Apply keeps a party member it may not move (controlled by you or another player): then he
+-- cannot be sent to camp from the tab (review 2026-10-28).
+local function cannotMoveReason()
+    for _, e in ipairs(Party.Roster()) do
+        if e.uuid == Party.HALSIN_UUID and e.active and e.locked then
+            return "Halsin can't be sent to camp right now (" .. tostring(e.lockReason)
+                .. "). Switch to another character first."
+        end
+    end
+    return nil
+end
+
+-- For the Party tab: nil when there is nothing to put back (the usual case), else
+-- { inParty, why } where why is nil when the button may be pressed now.
+function HalsinRepair.TabInfo()
+    if not inDb("DB_CurrentLevel", "SCL_Main_A") or not inDb("DB_PartOfTheTeam", H) then return nil end
+    if flag("recruitable") ~= true or flag("artAwake") ~= false or flag("goToLake") ~= false then return nil end
+    local states = currentStates()
+    if #states ~= 1 or not EARLY_STATES[states[1]] then return nil end
+    local info = { inParty = inDb("DB_Players", H) }
+    if flag("reachedLastLight") ~= true then
+        info.why = "Available once your party has reached Last Light."
+    else
+        info.why = repairRefusal(true) or (info.inParty and cannotMoveReason()) or nil
+    end
+    return info
+end
+
+local DONE_TEXT = "Halsin's quest is back on track. Talk to Halsin in camp and let him go ahead to Last Light, then"
+    .. " talk to Art Cullagh. (When Minthara is also in camp, Halsin stands at another spot there.) Until Thaniel"
+    .. " is saved, Halsin can't join the party, as in the base game."
+
+-- The Party tab's "Put Halsin's quest back on track": sends him to camp if he is in the party, then
+-- repairs. Returns accepted, message; `tell(text)` shows the outcome in a message window.
+function HalsinRepair.TabReset(tell)
+    if flag("reachedLastLight") ~= true then
+        return false, "Halsin's quest was not changed: your party has not reached Last Light yet."
+    end
+    local why = repairRefusal(true)
+    if why then return false, "Halsin's quest was not changed: " .. why end
+    -- Party.Apply's error path can call its callback a second time; repair at most once.
+    local ran = false
+    local function finish()
+        if ran then return false end
+        ran = true
+        local why2 = repairRefusal(false)
+        if why2 then tell("Halsin's quest was not changed: " .. why2); return false end
+        say("before the reset from the Party tab:")
+        HalsinRepair.Report()
+        if not doRepair() then
+            tell("Halsin's quest could not be put back on track (see the Script Extender log).")
+            return false
+        end
+        say("reset from the Party tab.")
+        HalsinRepair.Report()
+        tell(DONE_TEXT)
+        return true
+    end
+    if not inDb("DB_Players", H) then
+        if finish() then return true, "Halsin's quest is back on track." end
+        return false, "Halsin's quest was not changed."
+    end
+    -- In the party: everyone else stays (Party.Apply keeps locked members anyway).
+    local stuck = cannotMoveReason()
+    if stuck then return false, "Halsin's quest was not changed: " .. stuck end
+    local keep = {}
+    for _, e in ipairs(Party.Roster()) do
+        if e.active and e.uuid ~= Party.HALSIN_UUID then keep[#keep + 1] = e.uuid end
+    end
+    local accepted, message = Party.Apply(keep, nil, function(result)
+        if inDb("DB_Players", H) then
+            tell("Halsin could not be sent to camp, so his quest was not changed. " .. tostring(result.message))
+            return
+        end
+        finish()
+    end)
+    if not accepted then return false, "Halsin could not be sent to camp: " .. tostring(message) end
+    return true, "Sending Halsin to camp..."
+end
+
+-- The party reached Last Light for the first time (FlagSet of reachedLastLight): if Halsin joined early,
+-- say what to do before talking to Art Cullagh (whose awakening ends the repair's window).
+function HalsinRepair.OnReachedLastLight(tell)
+    local info = HalsinRepair.TabInfo()
+    if not info then return end
+    local text = "Your party has reached Last Light. Halsin joined before the story allowed it, so his quest here"
+        .. " won't start by itself. Before you talk to Art Cullagh, the host should open Mod Configuration Menu,"
+        .. " Party Picker, Party tab, and press \"Put Halsin's quest back on track\" (it sends him to camp if he"
+        .. " is with you)."
+    -- The flag is set just before this runs, so a reason left is a real one (e.g. knocked out).
+    if info.why then text = text .. " Right now the button is not available: " .. info.why end
+    tell(text)
+end
+HalsinRepair.ENTERED_HAVEN_FLAG = FLAGS.reachedLastLight
 
 function HalsinRepair.Console(arg)
     arg = string.lower(tostring(arg or ""))

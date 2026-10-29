@@ -1293,5 +1293,185 @@ M.chars[halsin.uuid] = nil
 settings.max_party_size = savedMax
 M.runTimers()
 
+-- 32. "Let Halsin join early" and the Party tab's "Put Halsin's quest back on track"
+-- (asked for by the author 2026-10-28; docs/PLAN_halsin_early_option.md).
+local ENTERED = "HAV_PartyProgress_EnteredHaven_0afbb64d-f996-4e41-ab6b-a51d37c29fd3"
+local ARTAWAKE = "SCL_AncientFist_State_HasWokenUpFist_45cddb53-edf5-4a9e-9943-898f55b29af3"
+halsin = M.addChar("S_GLO_Halsin", "7628bc0e-52b8-42a7-856a-13a6fd413323")
+local H32 = halsin.id
+M.db("DB_PartOfTheTeam")(H32)
+M.db("DB_InCamp")(H32)
+M.db("DB_OriginNPCAlignment")(H32, "GLO_Halsin_01ebccd1-8a58-4ca6-9726-c4bb484b85f2")
+M.db("DB_GLO_PartyMembers_OriginalAlignment")(H32, "GLO_Halsin_01ebccd1-8a58-4ca6-9726-c4bb484b85f2")
+M.db("DB_GLO_PartyMembers_DefaultFaction")(H32, "PlayerFaction")
+M.db("DB_CurrentLevel")("SCL_Main_A")
+M.db("DB_State_Current")(H32, "SCL_LiftingTheCurse", st("HalsinInAct2"))
+M.db("DB_Dialogs")(H32, "CAMP_Halsin2_c0ab0f6f-3ffc-d06d-0d6d-d1aaef70dfe4")
+settings.max_party_size = 12
+Ext.Vars.GetModVariables(ModuleUUID).Halsin = nil
+calls31 = {}
+H31 = H32
+Osi.PROC_State_Progress = function(ch, quest, s)
+    calls31[#calls31 + 1] = "progress " .. s
+    M.db("DB_State_Current"):Delete(ch, quest, nil)
+    M.db("DB_State_Current")(ch, quest, s)
+end
+Osi.PROC_RemoveDialog = function(ch) calls31[#calls31 + 1] = "removedialog"; M.db("DB_Dialogs"):Delete(ch, nil) end
+Osi.SetHasDialog = function() end
+Osi.PROC_GlobalClearFlagAndCache = function(f) calls31[#calls31 + 1] = "clear " .. f; setGlobal(f, false) end
+-- The game's first-recruit block, as GLO_Companion_Halsin.txt L41-47 (the mock's add does not run it).
+local function firstRecruit()
+    if #M.db("DB_OnlyOnce"):Get("RecruitedFirstTime_Halsin") == 0 then
+        M.db("DB_OnlyOnce")("RecruitedFirstTime_Halsin")
+        setGlobal(RECRUITABLE, true)
+    end
+end
+local function roster32() return PP.Net.Roster.requestHandler({}, M.hostPeer) end
+local function tabReset() return PP.Net.HalsinReset.requestHandler({}, M.hostPeer) end
+local function withHalsin()
+    local w = activeUuids()
+    w[#w + 1] = halsin.uuid
+    return w
+end
+
+-- Default: locked, as 1.0.8.
+check(halsinEntry().locked and halsinEntry().lockReason == Party.NOT_YET, "default: Halsin locked until recruitable")
+check(roster32().halsin == nil, "default: no Halsin section on the Party tab")
+-- Reaching Last Light with no early join: no message.
+M.broadcasts = {}
+M.fire("FlagSet", 3, "after", ENTERED, "NULL_00000000-0000-0000-0000-000000000000", 0)
+setGlobal(ENTERED, true)
+M.runTimers()
+check(#M.messages() == 0, "Last Light without an early join: no message")
+setGlobal(ENTERED, false)
+-- The setting unlocks him in Act 2 before his quest reaches Last Light.
+settings.halsin_early = true
+check(not halsinEntry().locked, "join early on: not locked in Act 2 (HalsinInAct2)")
+-- ... but never on a failed flag read.
+Osi.GetFlag = function(f, o)
+    if f == RECRUITABLE then error("no such flag") end
+    return realGetFlag(f, o)
+end
+check(halsinEntry().locked, "join early on, flag unreadable: still locked")
+Osi.GetFlag = realGetFlag
+-- ... nor outside Act 2, once Art is awake, or once his quest has reached Last Light.
+M.db("DB_CurrentLevel"):Delete("SCL_Main_A")
+check(halsinEntry().locked and halsinEntry().lockReason:find("Act Two only"), "join early: locked outside Act 2")
+M.db("DB_CurrentLevel")("SCL_Main_A")
+setGlobal(ARTAWAKE, true)
+check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "join early: locked once Art is awake")
+setGlobal(ARTAWAKE, false)
+local GOTOLAKE = "HAV_LiftingTheCurse_State_HalsinGoToLake_bc4cd1f7-5e60-40e1-a583-aa886fe5b682"
+setGlobal(GOTOLAKE, true)
+check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "join early: locked once he heads to the lake")
+setGlobal(GOTOLAKE, false)
+M.db("DB_State_Current"):Delete(H32, "SCL_LiftingTheCurse", nil)
+M.db("DB_State_Current")(H32, "SCL_LiftingTheCurse", st("HalsinAtHaven"))
+check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "join early: locked once his quest is at Last Light")
+M.db("DB_State_Current"):Delete(H32, "SCL_LiftingTheCurse", nil)
+M.db("DB_State_Current")(H32, "SCL_LiftingTheCurse", st("HalsinInAct2"))
+-- He joins.
+local r32 = apply({ uuids = withHalsin() })
+check(r32 and r32.accepted and #M.db("DB_Players"):Get(H32) == 1, "join early: he joins")
+firstRecruit()
+M.db("DB_Dialogs"):Delete(H32, nil)
+M.db("DB_Dialogs")(H32, "Halsin_InParty_890c2586-6b71-ca01-5bd6-19d533181c71")
+-- Before Last Light the tab shows the section, button disabled.
+local info = roster32().halsin
+check(info and info.inParty and info.why and info.why:find("reached Last Light"), "tab: section shown, waits for Last Light")
+local before = #calls31
+local rr = tabReset()
+check(rr and not rr.accepted and rr.message:find("not reached Last Light") and #calls31 == before
+    and #M.db("DB_Players"):Get(H32) == 1, "reset before Last Light: refused, nothing changed")
+-- Reaching Last Light: the one-time notice.
+M.broadcasts = {}
+M.fire("FlagSet", 3, "after", ENTERED, "NULL_00000000-0000-0000-0000-000000000000", 0)
+setGlobal(ENTERED, true)
+M.runTimers()
+local msgs = M.messages()
+check(#msgs == 1 and msgs[1]:find("Put Halsin's quest back on track"), "reaching Last Light: a message says what to do")
+M.broadcasts = {}
+M.fire("FlagSet", 3, "after", "SOME_OtherFlag_11111111-1111-1111-1111-111111111111", "NULL_00000000-0000-0000-0000-000000000000", 0)
+M.runTimers()
+check(#M.messages() == 0, "another flag: no message")
+info = roster32().halsin
+check(info and info.why == nil, "tab: button enabled at Last Light")
+-- While the host controls Halsin, the tab cannot send him to camp: disabled, with the reason.
+M.controlled = halsin
+info = roster32().halsin
+check(info and info.why and info.why:find("Switch to another character"), "controlling Halsin: button disabled, reason given")
+before = #calls31
+rr = tabReset()
+check(rr and not rr.accepted and rr.message:find("Switch to another character") and #calls31 == before
+    and #M.db("DB_Players"):Get(H32) == 1, "controlling Halsin: reset refused, nothing changed")
+M.controlled = nil
+-- Only the host.
+M.hostPeer = 131072
+rr = tabReset()
+check(rr and not rr.accepted and rr.message:find("host") and globalFlag(RECRUITABLE), "another player: refused")
+M.hostPeer = 65536
+-- The reset from the tab while he is in the party: sent to camp, then repaired.
+M.broadcasts = {}
+rr = tabReset()
+check(rr and rr.accepted and rr.message:find("Sending Halsin to camp"), "reset: accepted, sending him to camp")
+M.runTimers()
+check(#M.db("DB_Players"):Get(H32) == 0, "reset: he left the party")
+check(not globalFlag(RECRUITABLE) and #M.db("DB_OnlyOnce"):Get("RecruitedFirstTime_Halsin") == 0, "reset: flag and first-recruit record cleared")
+local dlg32 = M.db("DB_Dialogs"):Get(H32, nil)
+check(#dlg32 == 1 and dlg32[1][2]:find("^CAMP_Halsin2_c0ab0f6f"), "reset: camp dialog set")
+msgs = M.messages()
+check(#msgs == 1 and msgs[1]:find("back on track"), "reset: the outcome in a message window")
+check(Ext.Vars.GetModVariables(ModuleUUID).Halsin.reset == true, "reset: recorded")
+-- After the reset, join early no longer unlocks him; the section is gone.
+check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "after the reset: locked even with join early on")
+check(roster32().halsin == nil, "after the reset: no Halsin section")
+rr = tabReset()
+check(rr and not rr.accepted and rr.message:find("nothing to undo"), "a second reset is refused")
+-- Thaniel saved: the story makes him recruitable and the lock goes.
+setGlobal(RECRUITABLE, true)
+check(not halsinEntry().locked, "recruitable after Thaniel: not locked")
+-- The reset while he is already in camp runs at once (record cleared to test it from the start).
+setGlobal(RECRUITABLE, false)
+Ext.Vars.GetModVariables(ModuleUUID).Halsin = nil
+r32 = apply({ uuids = withHalsin() })
+firstRecruit()
+r32 = apply({ uuids = (function()
+    local w = {}
+    for _, u in ipairs(activeUuids()) do if u ~= halsin.uuid then w[#w + 1] = u end end
+    return w
+end)() })
+M.runTimers()
+M.db("DB_GLO_PartyMembers_DefaultFaction")(H32, "PlayerFaction")
+-- ... from HalsinWaiting, moved to HalsinInAct2 first, as the console repair does.
+M.db("DB_State_Current"):Delete(H32, "SCL_LiftingTheCurse", nil)
+M.db("DB_State_Current")(H32, "SCL_LiftingTheCurse", st("HalsinWaiting"))
+M.broadcasts = {}
+calls31 = {}
+rr = tabReset()
+check(rr and rr.accepted and rr.message:find("back on track") and not globalFlag(RECRUITABLE), "reset in camp: done at once")
+check(calls31[1] == "progress " .. st("HalsinInAct2"), "reset from HalsinWaiting: moved to HalsinInAct2 first")
+-- The console repair writes the same record.
+Ext.Vars.GetModVariables(ModuleUUID).Halsin = nil
+setGlobal(RECRUITABLE, true)
+halsinConsole("repair")
+check(Ext.Vars.GetModVariables(ModuleUUID).Halsin.reset == true, "console repair: recorded too")
+-- Join early off again: plain 1.0.8 lock.
+settings.halsin_early = nil
+Ext.Vars.GetModVariables(ModuleUUID).Halsin = nil
+check(halsinEntry().locked and halsinEntry().lockReason == Party.NOT_YET, "join early off: locked as before")
+-- Clean up.
+for _, db in ipairs({ "DB_PartOfTheTeam", "DB_InCamp", "DB_Players", "DB_PartyMembers" }) do M.db(db):Delete(H32) end
+M.db("DB_GLO_PartyMembers_DefaultFaction"):Delete(H32, nil)
+M.db("DB_CurrentLevel"):Delete("SCL_Main_A")
+M.db("DB_State_Current"):Delete(H32, nil, nil)
+M.db("DB_Dialogs"):Delete(H32, nil)
+M.db("DB_OnlyOnce"):Delete("RecruitedFirstTime_Halsin")
+setGlobal(RECRUITABLE, false)
+setGlobal(ENTERED, false)
+Osi.PROC_State_Progress, Osi.PROC_RemoveDialog, Osi.SetHasDialog, Osi.PROC_GlobalClearFlagAndCache = nil, nil, nil, nil
+M.chars[halsin.uuid] = nil
+settings.max_party_size = savedMax
+M.runTimers()
+
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end

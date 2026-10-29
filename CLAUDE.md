@@ -75,6 +75,9 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5â€
 - v1.0.8 (2026-10-27): Halsin (and Minthara/Minsc while the story blocks them) locked until recruitable;
   `!pp_halsin [repair|haven]` repairs a save where an earlier build added Halsin early. Plan
   `docs/PLAN_halsin_recruit_gate.md`; test card in RUN_CARD.md.
+- v1.0.9 (2026-10-28): MCM "Let Halsin join early" (Act Two only, before his quest reaches Last Light) and a
+  Party tab button "Put Halsin's quest back on track" (sends him to camp, then the !pp_halsin repair). Plan
+  `docs/PLAN_halsin_early_option.md` ("As built"); test card in RUN_CARD.md.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).

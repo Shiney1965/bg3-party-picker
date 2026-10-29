@@ -96,6 +96,7 @@ local function render(slot, reply)
     refresh.OnClick = function()
         setStatus("")
         slot.confirmCamp = false
+        slot.confirmHalsin = false
         PartyTab.Refresh()
     end
 
@@ -226,6 +227,55 @@ local function render(slot, reply)
         end
     end
 
+    -- Halsin joined before the story allowed it (docs/PLAN_halsin_early_option.md): the server sends
+    -- `halsin` only then. Asks once first, as "Send everyone to camp" does.
+    local hal = reply.halsin
+    if hal then
+        root:AddSeparator()
+        root:AddText("Halsin joined before the story allowed it, so his quest at Last Light won't start by itself.")
+        root:AddText("Before talking to Art Cullagh, put it back on track here.")
+        if hal.why then
+            root:AddText(tostring(hal.why))
+            slot.confirmHalsin = false -- a confirmation must not come back by itself later
+        end
+        if slot.confirmHalsin and not hal.why then
+            root:AddText((hal.inParty and "This sends Halsin to camp and puts" or "This puts")
+                .. " his quest back where the story expects it. Make a hard save first. Continue?")
+            local yes = root:AddButton("Yes, put it back on track")
+            yes.IDContext = "PartyPicker_HalsinYes"
+            yes.Disabled = not isHost
+            yes.OnClick = function()
+                yes.Disabled = true -- one request per confirmation
+                slot.confirmHalsin = false
+                setStatus("Putting Halsin's quest back on track...")
+                PP.Net.HalsinReset:RequestToServer({}, function(resp)
+                    setStatus(resp and resp.message or "No reply.")
+                    -- Sending him to camp takes about a second; the outcome comes in a message window.
+                    if resp and resp.accepted then
+                        Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+                    else
+                        PartyTab.Refresh()
+                    end
+                end)
+            end
+            local cancel = root:AddButton("Cancel")
+            cancel.IDContext = "PartyPicker_HalsinCancel"
+            cancel.SameLine = true
+            cancel.OnClick = function()
+                slot.confirmHalsin = false
+                PartyTab.Refresh()
+            end
+        else
+            local button = root:AddButton("Put Halsin's quest back on track")
+            button.IDContext = "PartyPicker_HalsinReset"
+            button.Disabled = (not isHost) or hal.why ~= nil
+            button.OnClick = function()
+                slot.confirmHalsin = true
+                PartyTab.Refresh()
+            end
+        end
+    end
+
     slot.status = root:AddText(lastStatus)
     onChange(list:Count())
 end
@@ -277,6 +327,7 @@ function PartyTab.Activated()
     setStatus("")
     for _, slot in ipairs(roots) do
         slot.confirmCamp = false
+        slot.confirmHalsin = false
         slot.keepTicks = nil
     end
     PartyTab.Refresh()

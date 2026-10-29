@@ -336,19 +336,33 @@ local HALSIN_UUID = "7628bc0e-52b8-42a7-856a-13a6fd413323"
 Party.HALSIN_RECRUITABLE_FLAG = "GLO_LiftingTheCurse_State_HalsinRecruitable_2c8b6be0-558d-485c-b4f2-93ec1926a2fa"
 local NULL_ID = "NULL_00000000-0000-0000-0000-000000000000"
 local NOT_YET = "not recruitable yet: they join later in the story (talk to them)"
+Party.HALSIN_UUID, Party.NOT_YET = HALSIN_UUID, NOT_YET
+-- The "Let Halsin join early" setting (docs/PLAN_halsin_early_option.md). Server/HalsinRepair.lua sets
+-- this (it requires this file, so it cannot be required from here): returns nil when the setting may
+-- let a not-yet-recruitable Halsin join now, else the reason he stays locked.
+Party.HalsinEarlyGate = nil
 
+-- Why a character not in the party may not join yet, or nil.
 local flagReadFailLogged = false
-local function notRecruitableYet(e)
+local function notRecruitableReason(e)
     if e.uuid == HALSIN_UUID then
-        -- A failed read counts as not recruitable: never skip his story by mistake.
+        -- A failed read counts as not recruitable, whatever the setting: never skip his story by mistake.
         local ok, v = pcall(Osi.GetFlag, Party.HALSIN_RECRUITABLE_FLAG, NULL_ID)
         if not ok and not flagReadFailLogged then
             flagReadFailLogged = true
             PP.Log("could not read Halsin's recruitable flag (" .. tostring(v) .. "); he stays locked")
         end
-        if not ok or v ~= 1 then return true end
+        if not ok then return NOT_YET end
+        if v ~= 1 then
+            local gate = Party.HalsinEarlyGate
+            local okGate, why = true, NOT_YET
+            if gate then okGate, why = pcall(gate) end
+            if not okGate then return NOT_YET end
+            if why then return why end
+        end
     end
-    return inDb("DB_GLO_PartyMembers_BlockRecruitmentDialog", e.id)
+    if inDb("DB_GLO_PartyMembers_BlockRecruitmentDialog", e.id) then return NOT_YET end
+    return nil
 end
 
 -- Everyone the player could choose from.
@@ -407,8 +421,9 @@ function Party.Roster()
                 end
             elseif not e.active and e.offStage then
                 e.locked, e.lockReason = true, OFF_STAGE
-            elseif not e.active and notRecruitableYet(e) then
-                e.locked, e.lockReason = true, NOT_YET
+            elseif not e.active then
+                local why = notRecruitableReason(e)
+                if why then e.locked, e.lockReason = true, why end
             end
             out[#out + 1] = e
         end

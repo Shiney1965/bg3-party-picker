@@ -27,6 +27,11 @@ local function rosterReply()
             return ok and info or nil
         end)(),
         pending = pending and { reason = pending.reason, trimmed = pending.trimmed == true } or nil,
+        -- "Put Halsin's quest back on track" (nil: nothing to put back)
+        halsin = (function()
+            local ok, info = pcall(HalsinRepair.TabInfo)
+            return ok and info or nil
+        end)(),
     }
 end
 
@@ -112,8 +117,35 @@ PP.Net.InspirationPoints:SetRequestHandler(safeHandler(function(data, peer)
     return { accepted = accepted, message = message }
 end))
 
+local function messageWindow(text)
+    pcall(function() PP.Net.Message:Broadcast({ text = text }) end)
+end
+
+-- The Party tab's "Put Halsin's quest back on track" (docs/PLAN_halsin_early_option.md). Host only.
+PP.Net.HalsinReset:SetRequestHandler(safeHandler(function(_, peer)
+    if not isHostUser(peer) then
+        return { accepted = false, message = "Only the host can change the party." }
+    end
+    local accepted, message = HalsinRepair.TabReset(messageWindow)
+    return { accepted = accepted, message = message }
+end))
+
 Restrictions.Register()
 HouseOfHope.Register()
+
+-- First arrival at Last Light: if Halsin joined early, say how to put his quest back on track.
+-- FlagSet fires for every flag, so the check is a string compare first.
+local ENTERED_HAVEN = PP.BareUuid(HalsinRepair.ENTERED_HAVEN_FLAG)
+pcall(function()
+    Ext.Osiris.RegisterListener("FlagSet", 3, "after", function(flag)
+        if PP.BareUuid(flag) ~= ENTERED_HAVEN then return end
+        -- After the story's own rules for the same event.
+        Ext.Timer.WaitFor(1000, function()
+            local ok, err = pcall(HalsinRepair.OnReachedLastLight, messageWindow)
+            if not ok then PP.Log("Halsin notice failed: " .. tostring(err)) end
+        end)
+    end)
+end)
 
 -- The Inspiration limit: when a save starts loading (before its values are read; StatsLoaded does not
 -- fire on the server, bg3se ScriptExtender.cpp OnStatsLoadGuarded), again when it has loaded, on every
@@ -220,8 +252,8 @@ Ext.RegisterConsoleCommand("pp_inspiration_points", function(_, arg)
     if not ok then PP.Log("!pp_inspiration_points failed: " .. tostring(err)) end
 end)
 
--- !pp_halsin [repair | haven]: report on, or repair, a Halsin an earlier Party Picker added before the story
--- made him recruitable (docs/PLAN_halsin_recruit_gate.md).
+-- !pp_halsin [repair | haven]: report on, or repair, a Halsin added before the story made him recruitable
+-- (docs/PLAN_halsin_recruit_gate.md; the Party tab button does the same repair from 1.0.9).
 Ext.RegisterConsoleCommand("pp_halsin", function(_, arg)
     local ok, err = pcall(HalsinRepair.Console, arg)
     if not ok then PP.Log("!pp_halsin failed: " .. tostring(err)) end

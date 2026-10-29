@@ -27,7 +27,7 @@ local function container()
 end
 
 local timers, subscribers, channels, required = {}, {}, {}, {}
-local rosterRequests = 0
+local rosterRequests, halsinRequests = 0, 0
 local reply = {}
 
 Ext = {
@@ -42,6 +42,9 @@ Ext = {
                 if name == "Roster" then
                     rosterRequests = rosterRequests + 1
                     cb(reply)
+                elseif name == "HalsinReset" then
+                    halsinRequests = halsinRequests + 1
+                    cb({ accepted = true, message = "Sending Halsin to camp..." })
                 end
             end
             channels[name] = ch
@@ -189,6 +192,36 @@ before = rosterRequests
 runTimers()
 check(rosterRequests == before and find(tab, "checkbox", "Wyll").Checked == false,
     "the redraw that was waiting is cancelled by opening the page")
+
+-- 8. "Put Halsin's quest back on track" (docs/PLAN_halsin_early_option.md): only when the server sends
+-- `halsin`; disabled with the reason; otherwise asks once, then one request.
+local BUTTON = "Put Halsin's quest back on track"
+local YES = "Yes, put it back on track"
+check(find(tab, "button", BUTTON) == nil, "no halsin in the reply: no section")
+reply.halsin = { inParty = true, why = "Available once your party has reached Last Light." }
+find(tab, "button", "Refresh").OnClick()
+check(find(tab, "button", BUTTON) and find(tab, "button", BUTTON).Disabled == true
+    and find(tab, "text", "Available once your party has reached Last Light."), "not yet: button disabled, reason shown")
+reply.halsin = { inParty = true }
+find(tab, "button", "Refresh").OnClick()
+check(find(tab, "button", BUTTON).Disabled == false, "available: button enabled")
+find(tab, "button", BUTTON).OnClick()
+check(find(tab, "button", YES) and find(tab, "button", "Cancel") and halsinRequests == 0, "first click asks; nothing sent")
+find(tab, "button", "Cancel").OnClick()
+check(find(tab, "button", BUTTON) and halsinRequests == 0, "Cancel: back to the button, nothing sent")
+find(tab, "button", BUTTON).OnClick()
+find(tab, "button", YES).OnClick()
+check(halsinRequests == 1, "Yes: one request")
+runTimers()
+check(find(tab, "button", YES) == nil, "after the request: no confirmation left")
+-- A confirmation does not come back by itself after the button was unavailable.
+find(tab, "button", BUTTON).OnClick()
+reply.halsin = { inParty = true, why = "a party change is still running. Wait a moment and try again." }
+find(tab, "button", "Refresh").OnClick()
+reply.halsin = { inParty = true }
+subscribers["MCM_Mod_Tab_Activated"]({ modUUID = ModuleUUID })
+check(find(tab, "button", YES) == nil and find(tab, "button", BUTTON), "page reopened: no stale confirmation")
+reply.halsin = nil
 
 print(string.format("client: %d passed, %d failed", passed, failed))
 if failed > 0 then error("client tests failed") end
