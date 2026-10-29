@@ -468,6 +468,10 @@ send-to-camp walk (658080 ff.) ended with `DB_InCamp` (662695) and a teleport to
 `S_Spawnpoint_Halsin_Fallback_Haven_A` (1231519, `PROC_CampSwap_UpdateAnubisCampPos`, 1232669). Those are his
 alternate camp spots, used when Halsin and Minthara are both in the team (`Act2_CAMP_HalsinMintharaCFM.txt`
 L5-12, L25-82), not his usual corner. So he is in camp, at the other spot. Not a Party Picker or repair fault.
+The author: "I found him", then: "OK I spoke to him and he went to the Last Light Inn. So the repair seems to have
+worked fine". **Confirmed in game: `!pp_halsin repair` plus the camp conversation sent Halsin to Last Light**
+(the TravelToHaven option appeared; `!pp_halsin haven` was not needed). Still to confirm: Art Cullagh's
+conversation brings Halsin in and starts the Thaniel quest.
 
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
