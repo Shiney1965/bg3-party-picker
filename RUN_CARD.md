@@ -13,7 +13,8 @@ until Thaniel is saved.
 3. The first time the party reaches Last Light with an early-joined Halsin, a message window says what to do.
 Tests: 292 server + 25 client checks pass. Plan reviewed (proceed with changes; the author then chose Act Two only
 and a button instead of an automatic reset) and code reviewed (ship with changes; all changes made). The pak
-contains no occurrence of the author's name. **Not installed yet; not tested in game.**
+contains no occurrence of the author's name. **Installed 2026-10-28 (game closed, hash checked); not tested in
+game yet.**
 
 **Pak:** `PartyPicker.pak` (62,451 bytes)
 SHA256 `87e30b987425b09a1e074ac5e382dd4d5e499900f5df61830036bd11d99e0459`
