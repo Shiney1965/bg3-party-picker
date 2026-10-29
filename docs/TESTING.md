@@ -449,6 +449,18 @@ AtHaven), the recruitable flag and first-recruit record came from Party Picker's
 asleep. The repair applies (InAct2 is an allowed state); the only check it would refuse today is "in party".
 Next: send him to camp with the Party tab, hard save, `!pp_halsin repair`.
 
+The author then sent him to camp and ran `!pp_halsin repair`; output:
+"[PartyPicker] !pp_halsin: done. Talk to Halsin in camp and let him go ahead to Last Light. If that conversation
+has no such option, run !pp_halsin haven. ... / state: SCL_LiftingTheCurse_State_HalsinInAct2 /
+in party no; in camp yes; team yes; dead no; knocked out no; perma-defeated no /
+flags: recruitable no; inAct2 yes; travelToHaven no; liftingCurse no; atHaven no; availableForFist no; goToLake no; artAwake no /
+dialog: CAMP_Halsin2_c0ab0f6f-3ffc-d06d-0d6d-d1aaef70dfe4 /
+first-recruit record (DB_OnlyOnce RecruitedFirstTime_Halsin): no / level: SCL_Main_A".
+The repair did all three things it is meant to (flag cleared, first-recruit record deleted, camp dialog set).
+State stays HalsinInAct2, as designed: the TravelToHaven reaction (`Act2_CAMP_LiftingTheCurse.txt` L56-63) moves
+him straight to HalsinAtHaven, and PROC_State_Progress allows that upward move. Not yet confirmed: that the camp
+conversation offers the Last Light option (fallback `!pp_halsin haven`), and that Art then brings Halsin in.
+
 Make a hard save first. All `[PartyPicker]` lines go to the Script Extender log
 (`Extender Runtime *.log`).
 
