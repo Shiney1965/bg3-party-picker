@@ -539,3 +539,16 @@ a9a3c7516024: redefines InspirationPoint under the vanilla UUID; same MaxValue 4
 different DisplayName/Description, adds ShowOnActionResourcePanel). Item and Spell Bug Fixes (010e73d5-..., owner of
 the *_ISBF goals) only toggles roll-bonus passives off at dialogue start. HitChanceToDieRoll, jaheira_dice,
 EasyCheat, Bard's Magical Inspiration, Honour Mode- cleared.
+Points mismatch, 2026-10-30, v1.0.9, Astarion game. The author: "I noticed that the number of IP in the Party
+Picker does not match the number if IP in the game menu.  I now I am in an Astarion game and I sent the command
+to set IP to 3, and the game still shows zero IP". `Extender Runtime 2026-10-30 22-21-35.log` L1949-1951:
+`Inspiration points 4 -> 3 asked (console)`, `Inspiration set to 3.`, `Inspiration points now 3`. So
+`PartyGetActionResourceValue(host, "InspirationPoint")` read 4 and then 3, while the game's own counter showed 0:
+Party Picker reads and writes a value the game's UI does not show (verified by the author's report + the log), and
+this most likely explains the missing reroll too (inferred). The game itself never grants Inspiration with
+PartyIncreaseActionResourceValue: it uses `GiveInspirationPoints((CHARACTER)_Char, 1.0, "", "")`
+(Shared `_Greevers_Little_Helpers.txt` L3553, flag GLO_Inspiration_Event_Add1; Gustav `DebugItem.txt` L876-894),
+which SE shows going through the server ActionResource system's own `IncreaseInspirationResource` queue
+(bg3se `GameDefinitions/Components/ActionResources.h` L21, L108). Console probes requested: GiveInspirationPoints
+on the host, then the game counter and `!pp_inspiration`; and a dump of every ActionResources entry for
+InspirationPoint.
