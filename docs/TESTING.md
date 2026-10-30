@@ -529,3 +529,13 @@ Test A (limit 4, points 3), 2026-10-30, v1.0.9. The author: "I set the limit to 
 server and client `MaxValue` 4.0. So Party Picker's raised limit is not the cause either; with the game's own limit
 the d20 menu still offers no "Roll Again" (bg3.wiki/wiki/Inspiration: offered for any failed roll through the d20
 roll menu). Next: find the mod that removes it (scan of active paks for roll-UI overrides running).
+Pak scan (subagent, 2026-10-30; all 2,669 paks' file tables against the 1,618 active modules in modsettings.lsx):
+no pak, active or not, replaces the roll screen (vanilla Game.pak `Mods/MainUI/GUI/Pages/ActiveRoll.xaml` /
+`ActiveRoll_c.xaml`). In vanilla ActiveRoll.xaml the reroll block `InspirationRerollHolder` / `RollAgainButton` is
+shown only while CanRespondToCommands is true and the roll's own `InspirationPoints` > 0 (L1800-1807), so the
+roll screen is most likely being told 0 points (inferred). Active mods touching `InspirationPoint`: Party Picker
+(runtime MaxValue + PartyIncreaseActionResourceValue) and Astarion's Book of Hungers (fb124d51-9136-9398-c8af-
+a9a3c7516024: redefines InspirationPoint under the vanilla UUID; same MaxValue 4 / party resource / ReplenishType,
+different DisplayName/Description, adds ShowOnActionResourcePanel). Item and Spell Bug Fixes (010e73d5-..., owner of
+the *_ISBF goals) only toggles roll-bonus passives off at dialogue start. HitChanceToDieRoll, jaheira_dice,
+EasyCheat, Bard's Magical Inspiration, Honour Mode- cleared.
