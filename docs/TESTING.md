@@ -522,3 +522,6 @@ logs cannot show why the dialogue offered no reroll. Leading suspect (inferred):
 game's own 4. Also seen: another mod hooks every dialogue start (`PROC_DisablePassiveCheck_ISBF`, 7662300; it
 checks LUCKY / TIDES_OF_CHAOS / *_INSPIRATION *_ON_ISBF statuses). Proposed A/B test: limit 4 with 3 points;
 limit 6 with 3 points; limit 6 with 6 points; each on a fresh failed active check.
+Test B (limit 6, points 3), 2026-10-29/30, v1.0.9. The author: "I set the number of IP to 3. I still did not get
+the chance to reroll on a fail." Console: server `MaxValue` 6.0, client (host) `MaxValue` 6.0. So holding more
+than 4 points is not the cause, and server and client agree on the limit. Next: test A (limit 4, points 3).
