@@ -525,3 +525,7 @@ limit 6 with 3 points; limit 6 with 6 points; each on a fresh failed active chec
 Test B (limit 6, points 3), 2026-10-29/30, v1.0.9. The author: "I set the number of IP to 3. I still did not get
 the chance to reroll on a fail." Console: server `MaxValue` 6.0, client (host) `MaxValue` 6.0. So holding more
 than 4 points is not the cause, and server and client agree on the limit. Next: test A (limit 4, points 3).
+Test A (limit 4, points 3), 2026-10-30, v1.0.9. The author: "I set the limit to 4 and still no reroll". Console:
+server and client `MaxValue` 4.0. So Party Picker's raised limit is not the cause either; with the game's own limit
+the d20 menu still offers no "Roll Again" (bg3.wiki/wiki/Inspiration: offered for any failed roll through the d20
+roll menu). Next: find the mod that removes it (scan of active paks for roll-UI overrides running).
