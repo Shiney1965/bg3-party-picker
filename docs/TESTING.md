@@ -565,3 +565,9 @@ value Party Picker reads (0 before in this load, by the author's report; 1 after
 member carries an InspirationPoint entry in ActionResources, which the counter and the roll screen probably read
 (inferred). Note: Astarion, sent to camp at SE L4473-4489, is not in the probe's list; the host character the
 grant went to is unknown. Full ActionResources dump requested again.
+Probe 2 result (ActionResources dump), 2026-10-31. The author's console output: `Entity (0200001c0002b24e) 1.0
+1.0` and `InspirationPoint entries: 1`. So exactly ONE entity in the game carries InspirationPoint (Amount 1,
+MaxAmount 1, though the definition's MaxValue is 4), and it has no Uuid component, so it is not a character
+(verified). Its Amount matches PartyGetActionResourceValue = 1. No party member carries the entry. Which entity it
+is (probably the party's own entity, inferred) and whether characters carry the entry in an unmodded game are open.
+Component-name probe requested.
