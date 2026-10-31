@@ -86,7 +86,10 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
   2026-10-31 (tag at 00314ba, asset `PartyPicker-1.1.0.zip` sha256 91dff50a…4b0d3a57); name scan of the repo,
   its history, the zip (docx/pdf metadata included) and the extracted pak was clean. Nexus page still to do.
   INSTALLED 2026-10-31 at the author's word (game closed, hash CEEABE02 checked; replaced 1.0.9 87E30B98);
-  load check per RUN_CARD pending.
+  load check per RUN_CARD pending. PUBLISHED on Nexus 2026-10-31 by the author: mod 26092 "Serpentine's Party
+  Picker" (https://www.nexusmods.com/baldursgate3/mods/26092), with the 1300x372 headers in release\nexus_images\.
+  Next (2026-10-31): Inspiration work resumes on branch `inspiration-feature`; research of the other Inspiration
+  mods is in docs/RESEARCH_inspiration_mods_2026-10-31.md on that branch.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).
