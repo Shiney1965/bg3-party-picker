@@ -596,10 +596,7 @@ end
 -- Why a character outside the party cannot join now, or nil. The status tables come first, so a
 -- message that was already shown stays the same.
 function Party.JoinBlockedReason(id, checkCombat)
-    local why = Party.BlockedReason(id, checkCombat)
-    if why then return why end
-    if inDb("DB_Camp_NightMode", 1) then return "cannot join during the camp night (DB_Camp_NightMode)" end
-    return extraReason(JOIN_DBS, id)
+    return Party.BlockedReason(id, checkCombat) or extraReason(JOIN_DBS, id)
 end
 
 -- Why a party member cannot be sent to camp now, or nil.
@@ -761,6 +758,11 @@ function Party.Apply(wanted, opts, done)
 
     local why = Party.BlockedReason(avatar, checkCombat)
     if why then return refuse("Party changes are blocked: your character " .. why .. ".") end
+    -- Camp night is one global row (GLO_Camp.txt L2709-2734), read once per request. The host's own
+    -- TRAVELBLOCK_CAMPNIGHTMODE status (above) normally says the same.
+    if inDb("DB_Camp_NightMode", 1) then
+        return refuse("Party changes are blocked during the camp night (DB_Camp_NightMode).")
+    end
     for _, e in ipairs(toRemove) do
         why = Party.LeaveBlockedReason(e.id, checkCombat)
         if why and e.offStage and string.find(why, "cannot travel", 1, true) then

@@ -174,7 +174,7 @@ Signatures are from [LaughingLeader's generated Osi.lua](https://github.com/Laug
 **Candidate tools**
 - **[rehan-remade/universal-modder](https://github.com/rehan-remade/universal-modder)** is the most
   likely match for "the GitHub tool for reverse engineering game binaries with AI".
-  - It is Claude Code skills plus tools for modding PC games: recon, Ghidra, IDA MCP, Cheat Engine,
+  - It is AI coding-assistant skills plus tools for modding PC games: recon, Ghidra, IDA MCP, Cheat Engine,
     Frida and more.
   - First commit 2026-09-29. About 6.1k stars on 2026-10-10.
   - A star-spike tracker recorded "+4.7k ⭐" in 7 days on 2026-10-07

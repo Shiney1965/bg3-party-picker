@@ -1342,7 +1342,9 @@ local party34 = {}
 for i, u in ipairs(made.party) do party34[i] = u end
 party34[#party34 + 1] = U(999) -- left the team since
 record(party34)
-local okF, msgF, nothingF = Restrictions.Restore()
+local okF, msgF, nothingF, skippedF = Restrictions.Restore()
+check(type(skippedF) == "table" and #skippedF == 2, "F: Restore returns the skipped list (got "
+    .. tostring(skippedF and #skippedF) .. ")")
 check(okF and nothingF and tostring(msgF):find("Nobody else could come back") and tostring(msgF):find("Laezel %(dead%)")
     and tostring(msgF):find("no longer with the party") and not tostring(msgF):find("Everyone is already back"),
     "F: nothing to do but someone missing: named, not 'everyone is back': " .. tostring(msgF))
@@ -1405,6 +1407,15 @@ M.db("DB_IsArrested"):Delete(nil, c.Karlach.id)
 M.db("DB_Camp_NightMode")(1)
 reply = tryJoin(c.Karlach)
 check(reply and not reply.accepted and reply.message:find("camp night"), "L: no joining during the camp night")
+-- Any change, not only a join: sending someone to camp is refused too (the row is read once per request).
+local nightReads = 0
+local realNightGet = M.db("DB_Camp_NightMode").Get
+M.db("DB_Camp_NightMode").Get = function(self, ...) nightReads = nightReads + 1; return realNightGet(self, ...) end
+reply = apply({ uuids = {} })
+check(reply and not reply.accepted and reply.message:find("camp night") and inParty(c.Shadowheart),
+    "L: no sending to camp during the camp night")
+check(nightReads == 1, "L: the camp-night row is read once per request (got " .. nightReads .. ")")
+M.db("DB_Camp_NightMode").Get = realNightGet
 M.db("DB_Camp_NightMode"):Delete(1)
 -- A blocked-zone row for a camp companion may be stale (not kept up to date outside DB_Players): ignored.
 M.db("DB_InBlockedWaypointZone")(c.Karlach.id, "S_Zone_" .. U(997))
@@ -1437,6 +1448,16 @@ c.Astarion.inCombat = nil
 -- An ordinary camp swap with none of these rows still works.
 reply = apply({ uuids = uuids({ c.Shadowheart, c.Gale }) })
 check(reply and reply.accepted and inParty(c.Gale), "L: ordinary swap still works")
+
+-- B. !pp_set naming a dead party member: accepted, the body stays (Party.Apply keeps him anyway).
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+c.Astarion.dead = true
+M.log = {}
+M.console.pp_set(nil, "Shadowheart,Astarion")
+M.runTimers()
+check(not logText():find("is dead") and inParty(c.Astarion) and not inParty(c.Gale)
+    and logText():find("Sent to camp: Gale"), "B: !pp_set with a dead party member: accepted, body stays: " .. logText())
+c.Astarion.dead = nil
 
 -- E. `done` is called once, even when it raises.
 setParty({ c.Shadowheart, c.Astarion })

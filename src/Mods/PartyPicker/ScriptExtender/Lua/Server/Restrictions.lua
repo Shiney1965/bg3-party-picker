@@ -125,7 +125,8 @@ end
 -- anyone to camp: whoever is in the party now stays, and returning members
 -- only fill free places up to the limit. Members who cannot come back at all (dead, locked, gone, no
 -- room) are named in the message; the record is still cleared, and the player adds them on the Party
--- tab once they can join (review 2026-10-31, point 4). Returns accepted, message, nothingToDo.
+-- tab once they can join (review 2026-10-31, point 4). Returns accepted, message, nothingToDo, skipped
+-- (the list of { name, why } of the nothing-to-do case; the result of a change carries its own).
 function Restrictions.Restore(done)
     local p = Restrictions.GetPending()
     if not p then
@@ -137,12 +138,13 @@ function Restrictions.Restore(done)
     end)
     if nothingToDo then
         setPending(nil)
-        if skipped and #skipped > 0 then
-            return true, "Nobody else could come back: " .. Party.SkippedText(skipped) .. ".", true
+        skipped = skipped or {}
+        if #skipped > 0 then
+            return true, "Nobody else could come back: " .. Party.SkippedText(skipped) .. ".", true, skipped
         end
-        return true, "Everyone is already back.", true
+        return true, "Everyone is already back.", true, skipped
     end
-    return accepted, message, false
+    return accepted, message, false, {}
 end
 
 local GIVE_UP_HINT = "Use Restore on the Party tab. Choosing the party by hand on the Party tab ends the wait."
@@ -170,7 +172,7 @@ local function autoRestore()
             return
         end
         tries = tries + 1
-        local accepted, message, nothingToDo = Restrictions.Restore(function(result)
+        local accepted, message, nothingToDo, skipped = Restrictions.Restore(function(result)
             if result.ok then
                 Restrictions.Notice(result.message, "info")
             elseif run ~= autoRun then
@@ -183,8 +185,8 @@ local function autoRestore()
             end
         end)
         if accepted then
-            -- "Nobody else could come back: ..." leaves someone out: a warning, not info.
-            if nothingToDo then Restrictions.Notice(message, string.find(message, "^Nobody else") and "warning" or "info") end
+            -- Someone left out (the skipped list): a warning, not info.
+            if nothingToDo then Restrictions.Notice(message, (skipped and #skipped > 0) and "warning" or "info") end
             return
         end
         if tries < RESTORE_TRIES then
