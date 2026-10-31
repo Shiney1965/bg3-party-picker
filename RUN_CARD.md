@@ -9,11 +9,13 @@ time" is refused while a trim runs; the restore names who could not come back; o
 retried when incomplete, with one notice; an MCM profile switch cancels a pending slider check and redraws the
 Party tab; the tab redraws when a change's outcome arrives; the game's own fast-travel restrictions are checked for
 companions joining from camp, and its dismiss lock (can't talk, dialog-suppression zone) for members leaving; the
-raft setting says spots already added stay. Tests: 280 server + 38 client checks and the blueprint check pass; the
+raft setting says spots already added stay. Tests: 284 server + 38 client checks and the blueprint check pass; the
 new checks fail on 1.1.0. The pak contains no occurrence of the author's name. **Not installed; not tested in game.**
 
-**Pak:** `PartyPicker.pak` (57,682 bytes), built from an LF export
-SHA256 `4193a858a3bf2fc07a89eb40dccffa3ad4c07777d692e885e8f7a874233ac2f3`
+**Pak:** `PartyPicker.pak` (57,747 bytes), built from an LF export
+SHA256 `e5c0e1ca09aa37b293d169faad2a074a62bf77fc7b0a49eacfe814c12f27c339`
+(Replaces the first 1.1.1 build, 57,682 bytes / 4193a858…, never installed: the goal verifier found that Restore did
+not return the skipped list and the camp-night check was per joiner; both fixed.)
 
 **Test card for v1.1.1:** `docs/TEST_CARD_1.1.1.md` (record results in docs/TESTING.md).
 
