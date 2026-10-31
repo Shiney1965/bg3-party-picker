@@ -17,3 +17,4 @@ until the release package is complete."
 
 | Cycle | Work done | Artifacts changed | Verifier verdict |
 |---|---|---|---|
+| 1 | Plan written and reviewed (proceed after 5 should-fixes, all taken in); Inspiration code, MCM section, tests and channels removed; CPL warning kept party-limit-only in LimitGuard; guard tests added (server section 33, client top, blueprint check in run_tests.py); diff reviewed (ship with changes: 3 doc fixes, made); pak 1.1.0 built from LF export (53,205 bytes, SHA-256 ceeabe02…49b67bc); RUN_CARD 1.1.0 card; dist_docs updated and rendered (docx/pdf, Nexus description, repo README); bundle + zip assembled (zip 736,603 bytes, SHA-256 91dff50a…4b0d3a57) | src, tests, dist_docs, RUN_CARD.md, CLAUDE.md, README.md, PartyPicker.pak, RELEASE_NOTES_v1.1.0.md, release\PartyPicker-1.1.0\, release\PartyPicker-1.1.0.zip | pending |

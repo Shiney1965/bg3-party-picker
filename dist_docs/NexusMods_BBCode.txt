@@ -76,7 +76,7 @@
 
 [size=4][b]NOT compatible — do not run these alongside Party Picker:[/b][/size]
 [list]
-[*][size=4][b]Party Limit Begone[/b] and any other mod that sets the party limit. Both set the same limit, and whichever applies it last wins. Pick one.[/size]
+[*][size=4][b]Party Limit Begone[/b] and any other mod that sets the party limit. Both set the same limit, and whichever applies it last wins. Pick one. If Configurable Party Limit is active, Party Picker writes a warning to the Script Extender log when a save loads.[/size]
 [*][size=4]Other Party Limit Mods: Could lead to odd results; use at your own risk.[/size]
 [/list]
 

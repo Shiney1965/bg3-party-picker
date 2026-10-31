@@ -84,7 +84,7 @@ and, once the save has loaded:
 ### Apply does nothing
 
 - Read the line under the buttons; it says why. Common reasons: someone joining or leaving is in combat (wait until combat ends, or switch off **No party changes in combat**); `cannot travel right now (...)`, meaning someone is in a danger zone, arrested, or the camp is in night mode (wait and try again); or a character is off stage. The same message is in the log after `request refused:`.
-- If **Apply** is greyed out, more people are ticked than the limit allows, or nobody is ticked.
+- If **Apply** is greyed out, nobody is ticked, or you are not the host in multiplayer. With more people ticked than the limit allows, Apply changes nothing and a message window says how many to untick.
 
 ### A hireling is greyed out with "not available: off stage"
 
@@ -104,7 +104,7 @@ and, once the save has loaded:
 
 ### Do not run Party Picker alongside another party-limit mod
 
-- Party Limit Begone and similar mods set the same party limit; whichever applies it last wins. Pick one.
+- Party Limit Begone and similar mods set the same party limit; whichever applies it last wins. Pick one. If Configurable Party Limit is active, Party Picker writes a warning to the Script Extender log when a save loads.
 
 ## Uninstalling
 

@@ -8,7 +8,7 @@ Dates are the day each build was completed.
 
 ## v1.1.0 — 2026-10-31 — first public release
 
-Everything in v1.0.1, plus the party, camp and Halsin changes from the test builds v1.0.2 to v1.0.9 (2026-10-23 to 2026-10-28, none released). Some settings tried in those test builds were left out of this release.
+Everything in v1.0.1, plus the party, camp and Halsin changes from the test builds v1.0.2 to v1.0.9 (completed by 2026-10-28, none released). Some settings tried in those test builds were left out of this release.
 
 **Party limit up to 30** (was 16). The raft gets landing spots for all of them. Parties above 16 have not been tested by the author.
 
@@ -16,7 +16,7 @@ Everything in v1.0.1, plus the party, camp and Halsin changes from the test buil
 
 **Ticking more than the limit** no longer greys out Apply: pressing it changes nothing and a message window says how many to untick.
 
-**Send everyone to camp:** a Party tab button that asks once, then sends everyone who can go; your own character always stays. If your character is then alone, a message window explains that the game hides the party portraits for a party of one (that is the game, not the mod). Tested in game with nine sent to camp.
+**Send everyone to camp:** a Party tab button that asks once, then sends everyone who can go; your own character always stays. Tested in game with nine sent to camp. If your character is then alone, a message window explains that the game hides the party portraits for a party of one (that is the game, not the mod).
 
 **Halsin is locked until the story lets him join.** In the base game Halsin can't be recruited in Act Two until Thaniel is saved. Earlier builds let you add him from camp before that, which stopped his quest at Last Light from starting. The Party tab now locks him until the game marks him recruitable, and does the same for Minthara and Minsc while the story keeps them from being recruited.
 
@@ -26,7 +26,7 @@ Everything in v1.0.1, plus the party, camp and Halsin changes from the test buil
 
 **The Party tab redraws by itself** when you change Maximum party size or Let Halsin join early; ticks you have not applied yet are kept.
 
-**Not yet tested in game:** the Halsin lock in a game where he was never added early (and its release once Thaniel is saved), Let Halsin join early with its button, the slider moving back, the over-the-limit message window, and parties above 16.
+**Not yet tested in game:** the Halsin lock in a game where he was never added early (and its release once Thaniel is saved), Let Halsin join early with its button, the slider moving back, the over-the-limit message window, the party-of-one message window, and parties above 16.
 
 ## v1.0.1 — 2026-10-22 — not released
 

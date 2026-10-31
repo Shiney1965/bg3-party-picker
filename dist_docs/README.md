@@ -114,7 +114,7 @@ What Party Picker keeps in your save: the record of who waited in camp during a 
 
 **Compatible:** companion mods and hireling mods that recruit through the game's normal party procedures, appearance mods, and mods that change what is in camp.
 
-**Do not combine with another party-limit mod** (Party Limit Begone and similar). Both set the party limit, and whichever applies it last wins. Pick one. Other Party Limit Mods: Could lead to odd results; use at your own risk.
+**Do not combine with another party-limit mod** (Party Limit Begone and similar). Both set the party limit, and whichever applies it last wins. Pick one. If Configurable Party Limit is active, Party Picker writes a warning to the Script Extender log when a save loads. Other Party Limit Mods: Could lead to odd results; use at your own risk.
 
 **Caveats:**
 

@@ -1,4 +1,32 @@
-# Party Picker: test run card (v1.0.9, test build)
+# Party Picker: test run card (v1.1.0, release build)
+
+**v1.1.0 (2026-10-31): the release build, without the Inspiration features.** The author: "I think for now let's
+fork the idea of adding inspiration control to the Party Picker, and create a version to ship with no Inspiration
+control." Why: in the author's games the game's own counter and the d20 roll screen never showed the points
+(docs/TESTING.md, 2026-10-28 to 2026-10-31); the cause is not settled. Removed: the MCM section Inspiration
+(Inspiration limit, Match the party limit, Show Inspiration point controls), the Party tab - / + buttons, and
+`!pp_inspiration` / `!pp_inspiration_points`. Party Picker no longer reads or changes Inspiration at all. All of it
+is kept on branch `inspiration-feature` (= 1.0.9). Everything else is 1.0.9 unchanged (`git diff
+inspiration-feature` on src shows only the removal), plus the Configurable Party Limit warning, now about the
+party limit only. Plan `docs/PLAN_ship_without_inspiration.md`; plan review (proceed after five should-fixes, all
+made) and code review (ship with changes: three doc fixes, all made). Tests: 244 server + 25 client checks and the
+blueprint check pass. The pak contains no occurrence of the author's name. **Not installed yet; not loaded in game
+yet.**
+
+**Pak:** `PartyPicker.pak` (53,205 bytes), built from an LF export
+SHA256 `ceeabe02d0e426153f45685374492aee03c3a205ec1d385637cacdd3349b67bc`
+
+**Test card for v1.1.0** (record results in docs/TESTING.md):
+1. Log: `[PartyPicker] server loaded (v1.1.0). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore
+   !pp_size  !pp_forget Name  !pp_halsin`.
+2. MCM, Party Picker, Settings: no Inspiration section; Party size, Where the game needs four, Story companions.
+   MCM's own log may show "Removing deprecated setting: inspiration_..." once: expected (MCM drops settings the
+   mod no longer has).
+3. Party tab: no Inspiration line or - / + buttons; Apply, Refresh, Send everyone to camp as before.
+4. The game's Inspiration counter behaves as without the mod (Party Picker does not touch it).
+5. Quick party change (tick one, Apply) and the Halsin steps of the v1.0.9 card below, when convenient.
+
+# v1.0.9 (kept for the record)
 
 **v1.0.9 (2026-10-28): "Let Halsin join early" and "Put Halsin's quest back on track"** (asked for by the author
 2026-10-28; plan docs/PLAN_halsin_early_option.md, "As built"). Default unchanged from 1.0.8: Halsin is locked

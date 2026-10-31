@@ -3,7 +3,7 @@
 Read this first, then docs/DEVELOPMENT.md (the developer notes; README.md is now the user README,
 generated from dist_docs/README.md by tools/make_docs.ps1), RUN_CARD.md, docs/RESEARCH.md and docs/TESTING.md. They hold the
 design, the source for every game procedure used, and every in-game report so far (quoted exactly).
-Last updated 2026-10-17 (release docs) by a session on the author's PC; first written 2026-10-12, continuing the cloud session
+Last updated 2026-10-31 (1.1.0 release build) by a session on the author's PC; first written 2026-10-12, continuing the cloud session
 https://claude.ai/code/session_01Mtwddt4A8ek5TsMuTXAzd5.
 
 ## What this is

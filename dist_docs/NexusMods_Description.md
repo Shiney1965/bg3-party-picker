@@ -4,7 +4,7 @@
 
 **Why this Mod: To choose the number and identity of your party members without spells, dialogues or using hotbar space.**
 
-Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 16. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.
+Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 30. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.
 
 Recruiting and dismissing companions normally means walking to each one and talking to them, one at a time. With a bigger party, the four-member parts of the game get in the way too: the camp has four beds, and the Underdark raft has four landing spots. Party Picker puts the whole roster on one screen and takes care of those two places.
 
@@ -15,9 +15,10 @@ Recruiting and dismissing companions normally means walking to each one and talk
 ## How to use — please read
 
 **PARTY PICKER REQUIRES MOD CONFIGURATION MENU (MCM). THE PARTY LIST AND EVERY SETTING ARE IN MCM. LOAD MCM ABOVE PARTY PICKER.**
-- **Set your party limit first.** Open MCM (INSERT, or from the ESC menu), find Party Picker, and on the **Settings** tab set *Maximum party size* (4 to 16, default 6). It counts your own character.
+- **Set your party limit first.** Open MCM (INSERT, or from the ESC menu), find Party Picker, and on the **Settings** tab set *Maximum party size* (4 to 30, default 6). It counts your own character. It can't be set below the number already in your party: send members to camp first.
 - **Pick your party on the Party tab.** Everyone you have recruited is listed with a checkbox. Tick who you want with you, untick who should go to camp, and press **Apply**. The line under the buttons says what happened, for example *Party updated. Joined: Karlach. Sent to camp: Gale.*
-- **Greyed-out names are locked, and the reason is shown next to them.** Your own character, the companion you are currently controlling, dead party members, and in multiplayer every character another player controls cannot be sent to camp. A character who is off stage (not present in the world at the moment) cannot be recruited.
+- **Greyed-out names are locked, and the reason is shown next to them.** Your own character, the companion you are currently controlling, dead party members, and in multiplayer every character another player controls cannot be sent to camp. A character who is off stage (not present in the world at the moment) cannot be recruited. Halsin is locked until the story lets him join (after Thaniel is saved, as in the game), and so are Minthara and Minsc while the story keeps them from being recruited.
+- **Send everyone to camp:** one button on the Party tab. It asks once, then sends everyone who can go. Your own character always stays.
 - **Long rest with more than four:** press End the Day as usual. Party Picker holds the rest and opens a small window: tick the four who stay with you tonight (your own character is always one of them) and press **Keep these 4**, then press End the Day again. The others wait in camp and rejoin a few seconds after you wake up. Or press **Keep everyone this time**, then End the Day again within two minutes: the game then rests as it does without the mod and puts only four to bed.
 - **The Grymforge raft:** nothing to do. Board with your whole party; everyone lands.
 - **The House of Hope:** nothing to do. When Hope hands out the Debtor's Attire, everyone in the party gets a set.
@@ -26,7 +27,9 @@ Recruiting and dismissing companions normally means walking to each one and talk
 
 - **One list for your whole roster** — player characters, origin companions, hirelings, and companions added by other mods. Withers, summons, familiars, followers and camp followers (Volo, Elminster, Scratch, Tara and the like) are never listed.
 - **Join and dismiss in one step.** Apply makes every change at once. New members are brought next to your character (switchable).
-- **Larger parties.** The limit goes from 4 to 16 and is re-applied each time a save loads.
+- **Larger parties.** The limit goes from 4 to 30 and is re-applied each time a save loads. It is never set below the party you already have: a save whose party is larger than your setting keeps everyone, and Party Picker tells you once. Parties above 16 have not been tested by the author.
+- **Send everyone to camp in one click.** The Party tab asks once, then sends everyone except your own character (and anyone else who can't be moved). Tick them again and press Apply to bring them back.
+- **Halsin joins when the story says so.** As in the game, Halsin can't join in Act Two until Thaniel is saved; the Party tab locks him until then. An optional setting, *Let Halsin join early*, lifts that lock in Act Two, with a Party tab button that puts his quest back on track before Last Light (see below).
 - **Long rests with a large party.** The camp has four beds and the game only puts four party members to bed. Party Picker asks which four to keep tonight; the others wait in camp and rejoin when you wake, as far as the limit allows. **Nobody is ever sent away to make room for them.** The record of who waited is saved with the game, so a save and load in between should not lose it (not yet tested in game).
 - **The Grymforge raft (Ebonlake, Act 1 Underdark).** The raft takes everyone aboard but has only four landing spots per dock, so members five and up would be left on board, hidden and unable to move. Party Picker adds landing spots so the whole party arrives.
 - **The House of Hope's Debtor's Attire (Act 3).** The game has only four sets of the disguise Hope hands out, so members five and up would get none. When Hope hands them out, Party Picker gives a set to every other party member inside the House and puts it on. The game treats the extra sets exactly like its own, including destroying them when the alarm is raised.
@@ -46,9 +49,9 @@ Recruiting and dismissing companions normally means walking to each one and talk
 ## Install / uninstall
 
 - Drop **PartyPicker.pak** into **%LocalAppData%\Larian Studios\Baldur's Gate 3\Mods**, activate it in BG3MM, put **Mod Configuration Menu above Party Picker**, save the load order, launch.
-- **Verify:** the Script Extender log shows **[PartyPicker] server loaded (v1.0.1)** and, once a save is loaded, **[PartyPicker] party size limit set to 6** (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v1.0.1 roster:**.
+- **Verify:** the Script Extender log shows **[PartyPicker] server loaded (v1.1.0)** and, once a save is loaded, **[PartyPicker] party size limit set to 6** (or your own limit); type **server** then **!pp_roster** in the console and the first line reads **Party Picker v1.1.0 roster:**.
 - **Mid-playthrough install is fine.** Your recruited companions are listed straight away.
-- **Uninstall:** cut your party back to four on the Party tab and save first (what happens to a larger party once Party Picker is gone has not been tested), then deactivate and delete the pak. Party Picker adds no spells or statuses; the only items it adds are the extra Debtor's Attire sets in the House of Hope.
+- **Uninstall:** cut your party back to four on the Party tab and save first (what happens to a larger party once Party Picker is gone has not been tested), then deactivate and delete the pak. **If Halsin joined early**, keep Party Picker until you have pressed *Put Halsin's quest back on track* at Last Light: without the mod that button is gone, and his quest won't start by itself. Party Picker adds no spells or statuses; the only items it adds are the extra Debtor's Attire sets in the House of Hope.
 - **Honour Mode keeps a single save.** Back up the save folder before trying any new mod there.
 
 Full instructions, a settings reference and a console reference are in the README and INSTALL files in the download (Markdown, Word and PDF).
@@ -57,9 +60,10 @@ Full instructions, a settings reference and a console reference are in the READM
 
 ## Configuration — the Settings and Party tabs
 
-- **Settings, Party size** — *Maximum party size* (4–16, default 6); *Bring new members to you* (on: a companion who joins from camp is moved next to your character); *No party changes in combat* (on).
+- **Settings, Party size** — *Maximum party size* (4–30, default 6; never below the party you have); *Bring new members to you* (on: a companion who joins from camp is moved next to your character); *No party changes in combat* (on).
 - **Settings, Where the game needs four** — *Ask before a long rest* (on); *Bring everyone back after the rest* (on; off: press Restore when you want them back); *Let the whole party ride the Grymforge raft* (on); *Debtor's Attire for the whole party (House of Hope)* (on).
-- **Party** — the roster with checkboxes and a *Selected N of limit* counter; **Apply** (all changes at once; if a check fails first, nothing changes and the reason is shown), **Refresh**, and **Restore**, which appears only while some of your party are still waiting in camp after a rest.
+- **Settings, Story companions** — *Let Halsin join early* (off). Ticked, Halsin can join in Act Two before Thaniel is saved, but only before his quest at Last Light begins. **Once he has joined early, his quest at Last Light won't start by itself, even after you send him back to camp:** once your party has reached Last Light, and **before you talk to Art Cullagh**, press *Put Halsin's quest back on track* on the Party tab (a message window reminds you when you first arrive). It sends him to camp and resets his quest; then talk to him in camp and let him go ahead. After that he can't join again until Thaniel is saved.
+- **Party** — the roster with checkboxes and a *Selected N of limit* counter; **Apply** (all changes at once; if a check fails first, nothing changes and the reason is shown), **Refresh**, **Send everyone to camp** (asks once first), **Restore**, which appears only while some of your party are still waiting in camp after a rest, and **Put Halsin's quest back on track**, which appears only for a Halsin who joined early. Ticking more than the limit and pressing Apply changes nothing and a message window says how many to untick.
 
 Every change applies straight away. Settings are kept **per MCM profile**, outside your save.
 
@@ -70,7 +74,7 @@ Every change applies straight away. Settings are kept **per MCM profile**, outsi
 **Compatible:** companion mods and hireling mods that recruit through the game's normal party procedures, appearance mods, and mods that change what is in camp.
 
 **NOT compatible — do not run these alongside Party Picker:**
-- **Party Limit Begone** and any other mod that sets the party limit. Both set the same limit, and whichever applies it last wins. Pick one.
+- **Party Limit Begone** and any other mod that sets the party limit. Both set the same limit, and whichever applies it last wins. Pick one. If Configurable Party Limit is active, Party Picker writes a warning to the Script Extender log when a save loads.
 - Other Party Limit Mods: Could lead to odd results; use at your own risk.
 
 **Caveats:**
@@ -94,7 +98,7 @@ Every change applies straight away. Settings are kept **per MCM profile**, outsi
 
 ## Console commands
 
-Script Extender console, type **server** first: **!pp_roster** (everyone, in party or in camp, why anyone is locked or not listed) **!pp_set Name1,Name2** (set the party to these; locked characters are kept) **!pp_restore** (bring back who waited in camp during a rest) **!pp_size** (re-apply the limit) **!pp_forget Name** (drop someone from the "seen in your party" record). In the client context (type **client**), **!pp** opens the Party list in its own window, without MCM. Full table in the README.
+Script Extender console, type **server** first: **!pp_roster** (everyone, in party or in camp, why anyone is locked or not listed) **!pp_set Name1,Name2** (set the party to these; locked characters are kept) **!pp_restore** (bring back who waited in camp during a rest) **!pp_size** (re-apply the limit) **!pp_forget Name** (drop someone from the "seen in your party" record) **!pp_halsin** (Halsin's quest state; **repair** and **haven** fix a Halsin who joined too early). In the client context (type **client**), **!pp** opens the Party list in its own window, without MCM. Full table in the README.
 
 ---
 
