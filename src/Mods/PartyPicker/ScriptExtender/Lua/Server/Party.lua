@@ -702,15 +702,20 @@ function Party.Apply(wanted, opts, done)
         if e and keep[u] then
             -- Already kept (locked, or in the party for addOnly): nothing to check.
         elseif opts.addOnly then
-            local why = e and (e.offStage and OFF_STAGE or Party.JoinBlockedReason(e.id, checkCombat))
+            -- Dead and locked come before the game's checks: the story puts every dead character in
+            -- DB_CantMove (__AAA_FirstGoal.txt L2236-2242, L2324-2330), and they must be skipped, not waited
+            -- for (diff review 2026-10-31). Off stage stays first, as in 1.1.0 (off-stage members are locked).
+            local why = e and not (e.offStage or e.dead or e.locked) and Party.JoinBlockedReason(e.id, checkCombat)
             if not e then
                 skipped[#skipped + 1] = { name = Party.DisplayName(u), why = "no longer with the party" }
-            elseif why then
-                waiting[#waiting + 1] = { e = e, why = why }
+            elseif e.offStage then
+                waiting[#waiting + 1] = { e = e, why = "off stage (not present in the world)" }
             elseif e.dead then
                 skipped[#skipped + 1] = { name = e.name, why = "dead" }
             elseif e.locked then
                 skipped[#skipped + 1] = { name = e.name, why = tostring(e.lockReason) }
+            elseif why then
+                waiting[#waiting + 1] = { e = e, why = why }
             elseif count >= limit then
                 skipped[#skipped + 1] = { name = e.name, why = "no room: party limit " .. limit }
             else

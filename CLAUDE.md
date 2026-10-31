@@ -90,6 +90,12 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
   Picker" (https://www.nexusmods.com/baldursgate3/mods/26092), with the 1300x372 headers in release\nexus_images\.
   Next (2026-10-31): Inspiration work resumes on branch `inspiration-feature`; research of the other Inspiration
   mods is in docs/RESEARCH_inspiration_mods_2026-10-31.md on that branch.
+- v1.1.1 (2026-10-31): TEST build with the fixes from an external review (evaluation
+  docs/REVIEW_external_2026-10-31.md; plan docs/PLAN_1.1.1_review_fixes.md with its plan review and diff review;
+  run log docs/GOAL_LOG_1.1.1.md; test card docs/TEST_CARD_1.1.1.md). The author accepted the recommendations and
+  chose to follow the game's own fast-travel restrictions without a dedicated game test. Not installed, not
+  released; release docs (dist_docs) wait for the test card. The `inspiration-feature` branch takes a version above
+  1.1.1 when main is merged into it (expect conflicts in PartyTab.lua, both bootstraps, the blueprint).
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).

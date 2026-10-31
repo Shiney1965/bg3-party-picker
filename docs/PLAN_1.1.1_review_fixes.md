@@ -237,6 +237,24 @@ check for no "could not draw" log; CLAUDE.md version history and docs/RESEARCH.m
 inspiration-feature takes a version above 1.1.1 when merged (expect conflicts in PartyTab.lua, both bootstraps, the
 blueprint). Not taken: a time-ordered timer queue (the G tests drive the triggers in a fixed order instead).
 
+## Diff review (adversarial subagent, 2026-10-31, commit 63d4806) - FIX FIRST, one should-fix; fixed
+1. **Fixed (should-fix):** in a restore, a dead camp member would wait forever instead of being skipped, because the
+   story puts every dead character in `DB_CantMove` (__AAA_FirstGoal.txt L2236-2242, L2324-2330) and the game's
+   check ran before the dead branch. Order now: not in the roster, off stage (waiting), dead, locked (skipped), the
+   game's checks (waiting), no room. The F test now gives the dead member the `DB_CantMove` row the game gives (it
+   fails on 63d4806, passes now).
+2. **Fixed (minor):** waiting text for off stage is "off stage (not present in the world)" (no doubled prefix).
+3. **Fixed (minor):** "Send everyone to camp" counts members the game holds separately ("who can't leave right now").
+4. **Noted (minor):** the morning retry window is 2 s + 4 x 3 s of game time; a companion in a long morning camp
+   scene may stay in camp and the run ends with the warning (use Restore). On the test card, step 4.
+5. **Fixed (minor):** the auto_restore=false reminder is shown once per trim, however far apart the two wake-up
+   triggers come (test added).
+6. **Fixed (minor):** "Nobody else could come back: ..." is a warning notice (test added).
+7. **Not changed (minor):** a member who left the team is named by uuid when the game no longer has a name for them.
+8. **Not changed (minor, tests):** triggers more than 2 s apart and rare redraw ordering can only be seen in game.
+Verified by the reviewer: non-addOnly paths equal 1.1.0 except Unit B; story table names and column counts;
+callers of the new return values; whole-table writes; version numbers.
+
 ## Order of work
 1. Adversarial review of this plan; fix blockers.
 2. Units A-K (tests first for each), then L.

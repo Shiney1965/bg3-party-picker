@@ -58,6 +58,9 @@ function Restrictions.ClearPending() setPending(nil) end
 -- "Keep everyone this time" skips the next hold of that kind.
 local bypassOnce = {}
 
+-- The auto_restore=false reminder was shown for the current trim (cleared when a trim starts).
+local reminded = false
+
 local BYPASS_EXPIRES_MS = 120000
 
 function Restrictions.BypassOnce(reason)
@@ -98,6 +101,7 @@ end
 -- the party as it was before this change.
 function Restrictions.MarkTrimming(reason, toRemove, activeBefore)
     if not toRemove or #toRemove == 0 then return end
+    reminded = false
     local p = Restrictions.GetPending()
     if p and p.trimmed then return end
     -- A new table: writes to sub-fields are not saved (API.md).
@@ -158,7 +162,11 @@ local function autoRestore()
         if not current or not current.trimmed then return end
         if run ~= autoRun then return end
         if PP.Setting("auto_restore", true) == false then
-            Restrictions.Notice("The rest of your party is waiting in camp. Use Restore on the Party tab to bring them back.")
+            -- Once per trim, however far apart the two wake-up triggers come (diff review 2026-10-31).
+            if not reminded then
+                reminded = true
+                Restrictions.Notice("The rest of your party is waiting in camp. Use Restore on the Party tab to bring them back.")
+            end
             return
         end
         tries = tries + 1
@@ -175,7 +183,8 @@ local function autoRestore()
             end
         end)
         if accepted then
-            if nothingToDo then Restrictions.Notice(message) end
+            -- "Nobody else could come back: ..." leaves someone out: a warning, not info.
+            if nothingToDo then Restrictions.Notice(message, string.find(message, "^Nobody else") and "warning" or "info") end
             return
         end
         if tries < RESTORE_TRIES then

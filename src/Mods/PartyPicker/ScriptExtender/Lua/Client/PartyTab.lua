@@ -110,9 +110,11 @@ local function render(slot, reply)
     -- is current and no button is destroyed while its own click is running.
     -- Members the game holds right now (`stuck`) are kept the same way.
     local movable, keepOffStage, staying, avatarName = 0, {}, 0, nil
+    local heldCount = 0
     for _, e in ipairs(entries) do
         if e.active and not e.locked then
             if e.offStage or e.stuck then keepOffStage[#keepOffStage + 1] = e.uuid else movable = movable + 1 end
+            if e.stuck and not e.offStage then heldCount = heldCount + 1 end
         end
         if e.active and e.locked then staying = staying + 1 end
         if e.active and e.avatar and not avatarName then avatarName = e.name end
@@ -120,8 +122,12 @@ local function render(slot, reply)
     staying = staying + #keepOffStage
     if slot.confirmCamp then
         local text = string.format("Send %d party member%s to camp?", movable, movable == 1 and "" or "s")
-        if #keepOffStage > 0 then
-            text = text .. string.format(" (%d off stage stay%s.)", #keepOffStage, #keepOffStage == 1 and "s" or "")
+        local offCount = #keepOffStage - heldCount
+        if offCount > 0 then
+            text = text .. string.format(" (%d off stage stay%s.)", offCount, offCount == 1 and "s" or "")
+        end
+        if heldCount > 0 then
+            text = text .. string.format(" (%d who can't leave right now stay%s.)", heldCount, heldCount == 1 and "s" or "")
         end
         root:AddText(text)
         local yes = root:AddButton("Yes, send them to camp")

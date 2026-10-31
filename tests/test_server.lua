@@ -1335,6 +1335,9 @@ check(made and made.trimmed and #made.party == 5, "C: missing record made again 
 
 -- F. Restore names who could not come back; the record is cleared.
 c.Laezel.dead = true
+-- The story puts every dead character in DB_CantMove (__AAA_FirstGoal.txt L2236-2242, L2324-2330): she must
+-- still be skipped as dead, not waited for (diff review 2026-10-31).
+M.db("DB_CantMove")(c.Laezel.id)
 local party34 = {}
 for i, u in ipairs(made.party) do party34[i] = u end
 party34[#party34 + 1] = U(999) -- left the team since
@@ -1344,7 +1347,17 @@ check(okF and nothingF and tostring(msgF):find("Nobody else could come back") an
     and tostring(msgF):find("no longer with the party") and not tostring(msgF):find("Everyone is already back"),
     "F: nothing to do but someone missing: named, not 'everyone is back': " .. tostring(msgF))
 check(Restrictions.GetPending() == nil, "F: record cleared")
+-- The same through the automatic restore: one warning, not info.
+record(party34)
+M.broadcasts = {}
+M.fire("LongRestFinished", 0, "after")
+M.runTimers()
+local nF = {}
+for _, b in ipairs(M.broadcasts) do if b.channel == "Notice" then nF[#nF + 1] = b.data end end
+check(#nF == 1 and nF[1].kind == "warning" and nF[1].text:find("Laezel %(dead%)") and Restrictions.GetPending() == nil,
+    "F: automatic restore with nobody able to come back: one warning naming her")
 c.Laezel.dead = nil
+M.db("DB_CantMove"):Delete(c.Laezel.id)
 -- F. One comes back, one cannot: the result names both.
 record(party34)
 local resultF
@@ -1485,6 +1498,11 @@ M.fire("DB_Camp_NightMode", 1, "afterDelete", 1)
 M.runTimers()
 n34 = notices()
 check(#n34 == 1 and n34[1].text:find("waiting in camp"), "G: auto_restore off: one reminder (got " .. #n34 .. ")")
+-- ... also when the second trigger comes after the first run is over.
+M.broadcasts = {}
+M.fire("DB_Camp_NightMode", 1, "afterDelete", 1)
+M.runTimers()
+check(#notices() == 0, "G: auto_restore off: no second reminder for the same trim")
 settings.auto_restore = nil
 Restrictions.ClearPending()
 

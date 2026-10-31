@@ -133,6 +133,21 @@ Signatures are from [LaughingLeader's generated Osi.lua](https://github.com/Laug
   `DB_FastTravelBlock_*_StatusSet` (BlockedZone, CantMove, Arrested, CampNightMode,
   FugitiveInPrison), combat, or is incapacitated.
 - Party Picker copies the DB and combat checks. It does not copy the incapacitated check.
+- From 1.1.1 (docs/PLAN_1.1.1_review_fixes.md, Unit L; the author: "We should track the fast travel restrictions
+  of the game"), from the game's own story files:
+  - The game turns its fast-travel restrictions into `TRAVELBLOCK_*` statuses only for members of `DB_Players`
+    (`_Waypoints.txt` L185-332). Sources: `DB_CantMove(char)`, `DB_IsArrested(_, char)`,
+    `DB_InBlockedWaypointZone(char, _)`, `DB_Camp_NightMode(1)`, and the escaped-prisoner chain.
+  - `DB_CantMove` holds anyone in an interactive conversation, knocked out, downed, petrified, banished,
+    iron-flasked, off stage or dead (`__AAA_FirstGoal.txt`, "High Level Object States - CantMove", ~L2228-2345).
+  - Joiners from camp are checked against `DB_CantMove`, `DB_IsArrested` (character in column 2) and
+    `DB_Camp_NightMode(1)`. `DB_InBlockedWaypointZone` is not read for them: its rows are kept up to date only
+    for `DB_Players` (`_Waypoints.txt` L41-61), so a camp companion's row may be stale.
+  - The game's dismiss lock (`DB_BlockDismissable`, `_GLO_Shared_PartyMembers.txt` L232-395) includes can't
+    talk and the dialog-suppression zone. Leavers are checked against `DB_CantTalk_IgnoreCombat(char)` (can't
+    talk for any reason except combat: conversations, statuses such as wild shape, the engine talk block, dead;
+    `__AAA_FirstGoal.txt` L1658-~2000) and `DB_PartyDialogSuppressed(char, zone)`
+    (`GLO_PartyDialogSuppressionZones.txt` L13-35). Combat stays the "Block party changes in combat" setting.
 
 ## 4. Script Extender and MCM
 
