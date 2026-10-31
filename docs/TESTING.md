@@ -557,3 +557,11 @@ at 0". (`Osi.GiveInspirationPoints(Osi.GetHostCharacter(), 1, "", "")` in the se
 `Extender Runtime 2026-10-31 00-20-48.log`; the console call itself is not logged. So even the game's own grant does
 not move the counter shown in the game: either the grant was capped or refused, or the counter itself is not
 showing the party's value (open). `!pp_inspiration` and the ActionResources dump requested.
+Probe 1 result, 2026-10-31. The author: "aprty picker is also zero inspiration", with the console output:
+`limit in the game's definition = 4`, `party total (PartyGetActionResourceValue) = 1`, and for Gale, Lae'zel,
+Shadowheart and Wyll `personal nil; component: no InspirationPoint entry`. So the game's own grant DID reach the
+value Party Picker reads (0 before in this load, by the author's report; 1 after), while the game's counter stayed at
+0. Party Picker's read and write are therefore not the cause (verified for the grant path). Open: why no party
+member carries an InspirationPoint entry in ActionResources, which the counter and the roll screen probably read
+(inferred). Note: Astarion, sent to camp at SE L4473-4489, is not in the probe's list; the host character the
+grant went to is unknown. Full ActionResources dump requested again.
