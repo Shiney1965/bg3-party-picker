@@ -571,3 +571,10 @@ MaxAmount 1, though the definition's MaxValue is 4), and it has no Uuid componen
 (verified). Its Amount matches PartyGetActionResourceValue = 1. No party member carries the entry. Which entity it
 is (probably the party's own entity, inferred) and whether characters carry the entry in an unmodded game are open.
 Component-name probe requested.
+Raphael report, 2026-10-31. The author: "For some reason when I use the command to add inspiration points they
+only appear on Raphael's inventory. Raphael is a party member created by a mod." (Raphael Joins the Party, the
+author's own mod; it recruits him through vanilla PROC_GLO_PartyMembers_CheckAdd, RJTP_Companion.txt, and defines
+only its own resource RJTP_InfernalCharge 459f529a-..., not InspirationPoint.) The component-name probe was run in
+the CLIENT console (`C >>`) and printed only `ecs::IsReplicationOwnedComponent`; it needs the server console.
+Leading hypothesis (inferred): Osi.GetHostCharacter() was Raphael when the grant ran, and the game gives the points
+to that character's own entry rather than sharing them with the rest of the party. Per-member probe requested.
