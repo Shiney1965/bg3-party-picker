@@ -552,3 +552,8 @@ which SE shows going through the server ActionResource system's own `IncreaseIns
 (bg3se `GameDefinitions/Components/ActionResources.h` L21, L108). Console probes requested: GiveInspirationPoints
 on the host, then the game counter and `!pp_inspiration`; and a dump of every ActionResources entry for
 InspirationPoint.
+Probe 1, 2026-10-31, v1.0.9, Astarion game. The author: "I ran the give inspiration command but the counter stayed
+at 0". (`Osi.GiveInspirationPoints(Osi.GetHostCharacter(), 1, "", "")` in the server console.) No error in
+`Extender Runtime 2026-10-31 00-20-48.log`; the console call itself is not logged. So even the game's own grant does
+not move the counter shown in the game: either the grant was capped or refused, or the counter itself is not
+showing the party's value (open). `!pp_inspiration` and the ActionResources dump requested.
