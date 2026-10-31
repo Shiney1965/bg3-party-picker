@@ -1,10 +1,10 @@
-# Party Picker — notes for Claude sessions
+# Party Picker — notes for AI coding sessions
 
 Read this first, then docs/DEVELOPMENT.md (the developer notes; README.md is now the user README,
 generated from dist_docs/README.md by tools/make_docs.ps1), RUN_CARD.md, docs/RESEARCH.md and docs/TESTING.md. They hold the
 design, the source for every game procedure used, and every in-game report so far (quoted exactly).
-Last updated 2026-10-31 (1.1.0 release build) by a session on the author's PC; first written 2026-10-12, continuing the cloud session
-https://claude.ai/code/session_01Mtwddt4A8ek5TsMuTXAzd5.
+Last updated 2026-10-31 (1.1.1 TEST build) by a session on the author's PC; first written 2026-10-12, continuing an
+earlier cloud session.
 
 ## What this is
 Baldur's Gate 3 mod (Script Extender Lua + Mod Configuration Menu). Party tab in MCM lists party
