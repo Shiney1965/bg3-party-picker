@@ -82,7 +82,9 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
 - v1.1.0 (2026-10-31): the release build. The author: "let's fork the idea of adding inspiration control to the
   Party Picker, and create a version to ship with no Inspiration control." All Inspiration features removed
   (plan `docs/PLAN_ship_without_inspiration.md`); they are kept on branch `inspiration-feature` (= 1.0.9).
-  Everything else is 1.0.9. Run log of the release: `docs/GOAL_LOG_1.1.0.md`.
+  Everything else is 1.0.9. Run log of the release: `docs/GOAL_LOG_1.1.0.md`. GitHub release `v1.1.0` posted
+  2026-10-31 (tag at 00314ba, asset `PartyPicker-1.1.0.zip` sha256 91dff50a…4b0d3a57); name scan of the repo,
+  its history, the zip (docx/pdf metadata included) and the extracted pak was clean. Nexus page still to do.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).
