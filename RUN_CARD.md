@@ -1,4 +1,23 @@
-# Party Picker: test run card (v1.1.0, release build)
+# Party Picker: test run card (v1.1.1, TEST build)
+
+**v1.1.1 (2026-10-31): TEST build with the fixes from an external review.** Evaluation
+`docs/REVIEW_external_2026-10-31.md`; plan `docs/PLAN_1.1.1_review_fixes.md` (plan review: approve with changes, all
+taken; diff review: fix first, one should-fix, fixed with a test); run log `docs/GOAL_LOG_1.1.1.md`. What changes:
+the long-rest picker counts dead and held party members towards the four; a dead party member no longer stops "Put
+Halsin's quest back on track"; the trim's restore record is marked before anyone is moved; "Keep everyone this
+time" is refused while a trim runs; the restore names who could not come back; one automatic restore per wake,
+retried when incomplete, with one notice; an MCM profile switch cancels a pending slider check and redraws the
+Party tab; the tab redraws when a change's outcome arrives; the game's own fast-travel restrictions are checked for
+companions joining from camp, and its dismiss lock (can't talk, dialog-suppression zone) for members leaving; the
+raft setting says spots already added stay. Tests: 280 server + 38 client checks and the blueprint check pass; the
+new checks fail on 1.1.0. The pak contains no occurrence of the author's name. **Not installed; not tested in game.**
+
+**Pak:** `PartyPicker.pak` (57,682 bytes), built from an LF export
+SHA256 `4193a858a3bf2fc07a89eb40dccffa3ad4c07777d692e885e8f7a874233ac2f3`
+
+**Test card for v1.1.1:** `docs/TEST_CARD_1.1.1.md` (record results in docs/TESTING.md).
+
+# v1.1.0 (kept for the record)
 
 **v1.1.0 (2026-10-31): the release build, without the Inspiration features.** The author: "I think for now let's
 fork the idea of adding inspiration control to the Party Picker, and create a version to ship with no Inspiration
