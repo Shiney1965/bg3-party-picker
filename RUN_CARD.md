@@ -10,7 +10,9 @@ retried when incomplete, with one notice; an MCM profile switch cancels a pendin
 Party tab; the tab redraws when a change's outcome arrives; the game's own fast-travel restrictions are checked for
 companions joining from camp, and its dismiss lock (can't talk, dialog-suppression zone) for members leaving; the
 raft setting says spots already added stay. Tests: 284 server + 38 client checks and the blueprint check pass; the
-new checks fail on 1.1.0. The pak contains no occurrence of the author's name. **Not installed; not tested in game.**
+new checks fail on 1.1.0. The pak contains no occurrence of the author's name. **INSTALLED 2026-10-31** at the
+author's word ("install 1.1.1, the game is closed"; no game process running; hash E5C0E1CA… checked after the copy;
+replaced 1.1.0 CEEABE02…). **Not tested in game yet; not released.**
 
 **Pak:** `PartyPicker.pak` (57,747 bytes), built from an LF export
 SHA256 `e5c0e1ca09aa37b293d169faad2a074a62bf77fc7b0a49eacfe814c12f27c339`

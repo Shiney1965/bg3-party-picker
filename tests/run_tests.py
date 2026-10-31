@@ -41,6 +41,11 @@ def check_blueprint():
     if ids != BLUEPRINT_IDS:
         print("BLUEPRINT: setting ids are", ids)
         return False
+    # 1.1.1 Unit K (docs/PLAN_1.1.1_review_fixes.md): the raft setting says what turning it off does.
+    raft = [s for tab in data["Tabs"] for sec in tab["Sections"] for s in sec["Settings"] if s["Id"] == "extend_raft"][0]
+    if "spots already added stay in this save" not in raft.get("Description", ""):
+        print("BLUEPRINT: extend_raft description does not say that spots already added stay")
+        return False
     return True
 
 
