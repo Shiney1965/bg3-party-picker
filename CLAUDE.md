@@ -8,8 +8,9 @@ https://claude.ai/code/session_01Mtwddt4A8ek5TsMuTXAzd5.
 
 ## What this is
 Baldur's Gate 3 mod (Script Extender Lua + Mod Configuration Menu). Party tab in MCM lists party
-members with checkboxes; Apply changes the party; raises the party limit (slider 4–16); holds End the
-Day above four and asks which four to keep; adds Ebonlake raft landing spots 5–16.
+members with checkboxes; Apply changes the party; raises the party limit (slider 4–30); holds End the
+Day above four and asks which four to keep; adds Ebonlake raft landing spots 5–30; House of Hope attire for
+everyone; Halsin locked until the story allows (optional early join in Act Two).
 
 ## Working rules (from the user, the author)
 - Work on the `main` branch of Shiney1965/bg3-party-picker only. Commit and push each change.
@@ -78,6 +79,10 @@ Day above four and asks which four to keep; adds Ebonlake raft landing spots 5�
 - v1.0.9 (2026-10-28): MCM "Let Halsin join early" (Act Two only, before his quest reaches Last Light) and a
   Party tab button "Put Halsin's quest back on track" (sends him to camp, then the !pp_halsin repair). Plan
   `docs/PLAN_halsin_early_option.md` ("As built"); test card in RUN_CARD.md.
+- v1.1.0 (2026-10-31): the release build. The author: "let's fork the idea of adding inspiration control to the
+  Party Picker, and create a version to ship with no Inspiration control." All Inspiration features removed
+  (plan `docs/PLAN_ship_without_inspiration.md`); they are kept on branch `inspiration-feature` (= 1.0.9).
+  Everything else is 1.0.9. Run log of the release: `docs/GOAL_LOG_1.1.0.md`.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).

@@ -21,7 +21,9 @@ and Part E (message window) ship, as before.
    Inspiration); `Inspiration.Apply` / `SyncSlider` in LevelGameplayStarted, MCM_Setting_Saved and
    MCM_Profile_Activated (the party-limit calls in those stay); the `pp_inspiration` and
    `pp_inspiration_points` console commands; both names in the "server loaded" line.
-3. `Server/LimitGuard.lua`: the two `Inspiration.*` calls after `MCM.Set` and its Require if any.
+3. `Server/LimitGuard.lua`: the two `Inspiration.*` calls after `MCM.Set` and its Require (L20).
+   Kept (review 2026-10-31, should-fix 1): the Configurable Party Limit warning that ran from
+   Inspiration.WarnOtherMods on SessionLoaded, now about the party limit only, in LimitGuard.
 4. `Shared/Common.lua`: `PP.INSPIRATION_UUID`; the `Inspiration` and `InspirationPoints` channels.
 5. `BootstrapClient.lua`: the three `inspiration_*` entries in `tabSettings`; the `PP.Net.Inspiration` handler.
 6. `Client/PartyTab.lua`: the Inspiration block in `render`; the comment on `SettingChanged` (no longer about
@@ -37,14 +39,20 @@ lock / early option / repair all stay as in 1.0.9.
   to static data (`Ext.StaticData`), which is not saved. With 1.1.0 the definition keeps the game's own 4.
 - A save made with 1.0.5-1.0.9 and points above 4: the game may cut them to 4 on load. Only the author ran those
   test builds (never released). Accepted.
-- MCM keeps the old three values in its own settings file; MCM ignores settings the blueprint no longer has
-  (to be checked in the review against BG3-MCM's loader, not assumed).
-- A Party tab from 1.0.9 talking to a 1.1.0 server cannot happen (both sides are in one pak).
+- MCM deletes the three old values from settings.json on first load (BG3-MCM 1.41
+  Shared/Helpers/Preprocessing/LoadedSettingsRepair.lua L105-122, RemoveDeprecatedKeys, with the log line
+  "Removing deprecated setting: ..."; profiles too, ProfileManager.lua L109). Harmless; the RUN_CARD says so.
+- Points the 1.0.6-1.0.9 test builds changed with PartyIncreaseActionResourceValue are in the author's own test
+  saves and stay there; 1.1.0 cannot undo them. Only the author's saves are affected.
+- Mixed versions in multiplayer: each player has their own pak; 1.0.9 was never released, so moot.
 
 ## Tests
 - `tests/test_server.lua`: remove sections 25, 28, 29, 30 (Inspiration only). Keep section 27 (Part D). Add one
-  check: after level start, setting saves of every remaining setting and the profile event, the definition's
-  MaxValue in the mock is still 4.0, and the mock's point functions were never called (they already raise).
+  guard section: no SessionLoading / UserConnected subscriber, no pp_inspiration* commands, no Inspiration
+  channels or PP.INSPIRATION_UUID, no `inspiration` in the roster reply, `#M.pointChanges == 0` and MaxValue
+  still 4.0 after a level start, every remaining setting saved and a profile event, no Ext.StaticData.Get call,
+  no MCM read of an `inspiration_*` id, the load line as INSTALL.md shows it, and the party-limit-only warning.
+- `tests/run_tests.py`: parse MCM_blueprint.json and check its setting ids are exactly the eight kept ones.
 - `tests/mock_game.lua`: keep the static-data entry and the raising point functions as a guard.
 - `tests/test_client.lua`: the redraw tests use `inspiration_*` settings as triggers; switch them to
   `max_party_size` / `halsin_early`; remove `reply.inspiration` and the "-"/"+" and "Inspiration: 2 of 4"
@@ -55,6 +63,9 @@ lock / early option / repair all stay as in 1.0.9.
   attire as before; the game's Inspiration counter behaves as without the mod).
 - CLAUDE.md: history line. TESTING.md: the decision. dist_docs (README, CHANGELOG, release notes, BBCode) are
   updated in the release-docs step after the in-game check, and must not mention Inspiration.
+
+## Plan review (2026-10-31)
+Subagent verdict: proceed after should-fixes 1-5, no blockers. All five are taken in above.
 
 ## Order
 Plan review -> code -> tests pass -> diff review -> LF-export build -> RUN_CARD -> commit + push -> install only

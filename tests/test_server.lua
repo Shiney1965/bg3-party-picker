@@ -844,289 +844,6 @@ settings.max_party_size = 6
 Party.ApplyMaxSize()
 M.runTimers()
 
--- 25. The Inspiration probe, !pp_inspiration (docs/PLAN_inspiration_and_30.md, step 0).
-local INSP = M.staticData["a9c98304-08e7-44b5-aaf9-da2ef5a50672"]
-M.host.actionResources = { Resources = { ["a9c98304-08e7-44b5-aaf9-da2ef5a50672"] = { { Amount = 2.0, MaxAmount = 4.0 } } } }
-M.log = {}
-M.console["pp_inspiration"]("pp_inspiration")
-check(logText():find("limit in the game's definition = 4 ") and logText():find("Tav%s+personal"), "probe shows the limit and each member")
-check(logText():find("Tav[^\n]*Amount 2 / MaxAmount 4"), "probe reads the character's ActionResources entry")
-M.log = {}
-M.console["pp_inspiration"]("pp_inspiration", "3")
-check(INSP.MaxValue == 4 and logText():find("usage"), "a limit below 4 is refused")
-M.console["pp_inspiration"]("pp_inspiration", "8")
-check(INSP.MaxValue == 8 and logText():find("Inspiration limit set to 8"), "probe sets a test limit")
-M.log = {}
-M.console["pp_inspiration"]("pp_inspiration", "99")
-check(INSP.MaxValue == 8 and logText():find("usage"), "out-of-range value refused")
-M.console["pp_inspiration"]("pp_inspiration", "reset")
-check(INSP.MaxValue == 4, "reset applies the setting again (default 4)")
-check(M.partyInspiration == 0, "the probe never changes points")
-
--- 28. The Inspiration settings (plan Part B). BootstrapServer was loaded at the start, so its
---     subscribers are in place; the bank value is the mock's static entry.
-local IB = M.staticData["a9c98304-08e7-44b5-aaf9-da2ef5a50672"]
-local function inspirationBroadcasts()
-    local out = {}
-    for _, b in ipairs(M.broadcasts) do if b.channel == "Inspiration" then out[#out + 1] = b.data.limit end end
-    return out
-end
--- The slider: 8.
-M.broadcasts, M.log = {}, {}
-settings.inspiration_limit = 8
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 8 })
-check(IB.MaxValue == 8 and logText():find("Inspiration limit set to 8"), "slider 8 sets the limit to 8")
-check(inspirationBroadcasts()[1] == 8, "non-host clients are told the limit")
--- While a save loads the limit is held wide open (30), so nothing the save holds is capped; the level
--- start then sets the real value from the points held.
-IB.MaxValue = 4.0
-M.events["SessionLoading"]()
-check(IB.MaxValue == 30, "save starting to load: limit held open at 30")
-M.events["SessionLoaded"]()
-check(IB.MaxValue == 30, "save loaded: still open until the level starts")
-M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
-M.runTimers()
-check(IB.MaxValue == 8, "level start: the setting (8) applied")
--- A player who joins later is sent the limit.
-M.broadcasts = {}
-M.fire("UserConnected", 3, "after", 2, "Friend", "friend")
-check(inspirationBroadcasts()[1] == 8, "a player who joins later is sent the limit")
-IB.MaxValue = 4.0
-M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
-M.runTimers()
-check(IB.MaxValue == 8, "level loaded: limit applied")
--- Out of range is clamped to 4-30.
-settings.inspiration_limit = 2
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 2 })
-check(IB.MaxValue == 4, "below 4: the game's 4")
-settings.inspiration_limit = 99
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 99 })
-check(IB.MaxValue == 30, "above 30: 30")
--- Match the party limit: follows the Maximum party size setting, not the head count.
-settings.inspiration_limit = 5
-settings.inspiration_match_party = true
-settings.max_party_size = 12
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_match_party", value = true })
-check(IB.MaxValue == 12, "match the party limit: 12 with a party-size setting of 12")
-local beforeTrim = IB.MaxValue
-for _, ch in ipairs({ c.Gale, c.Karlach }) do M.db("DB_Players"):Delete(ch.id) end
-M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
-M.runTimers()
-check(IB.MaxValue == beforeTrim, "fewer people in the party: the Inspiration limit does not change")
-settings.max_party_size = 9
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "max_party_size", value = 9 })
-M.runTimers()
-check(IB.MaxValue == 9, "party-size setting changed: the matched Inspiration limit follows")
-settings.inspiration_match_party = false
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_match_party", value = false })
--- While matched, the slider was held at the party limit (9), so unticking leaves 9 until it is moved.
-check(IB.MaxValue == 9 and settings.inspiration_limit == 9, "match off: the slider, left at the matched 9")
--- Never below the points the party holds: with 6 points, a limit of 4 stays at 6.
-M.partyInspiration = 6
-M.log = {}
-settings.inspiration_limit = 4
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 4 })
-check(IB.MaxValue == 6 and logText():find("kept at 6"), "limit kept at the 6 points the party holds")
-M.partyInspiration = 0
--- The party-size guard's write-back (no MCM event) refreshes a matched Inspiration limit.
-for _, ch in ipairs({ c.Gale, c.Karlach }) do M.db("DB_Players")(ch.id) end
-settings.inspiration_match_party = true
-settings.max_party_size = 4
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "max_party_size", value = 4 })
-M.runTimers()
-check(settings.max_party_size == Party.ActiveCount() and IB.MaxValue == Party.ActiveCount(),
-    "after the write-back the matched Inspiration limit follows: " .. tostring(IB.MaxValue))
-settings.inspiration_match_party = false
--- Back to the default, and points were never touched (the mock fails the test on any point change).
-settings.inspiration_limit = 4
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 4 })
-check(IB.MaxValue == 4 and M.partyInspiration == 0, "default 4 restored; points never changed")
-settings.max_party_size = 6
-Party.ApplyMaxSize()
-M.runTimers()
-
--- 29. Changing the Inspiration points on request (plan Part F).
-check(#M.pointChanges == 0, "no path so far changed any Inspiration points: " .. #M.pointChanges)
-M.partyInspiration = 3.0
-settings.inspiration_limit = 8
-settings.inspiration_match_party = false
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 8 })
-local Insp = Ext.Require("Server/Inspiration.lua")
--- Controls off (the default): refused, nothing changed.
-local okC, msgC = Insp.ChangePoints({ step = 1 })
-check(not okC and msgC:find("Show Inspiration point controls") and #M.pointChanges == 0, "controls off: refused")
-settings.inspiration_point_controls = true
--- From here the game applies a change a moment later, as it does in game (2026-10-27).
-M.delayPoints = true
--- The tab: a step from the points held now (stale tab safe).
-M.log = {}
-M.broadcasts = {}
-local reply = PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-check(reply.accepted and M.partyInspiration == 3 and reply.message:find("set to 4"), "+ from the tab: asked 4")
-M.runTimers()
-check(M.partyInspiration == 4 and logText():find("Inspiration points now 4") and not logText():find("The game kept")
-    and #M.messages() == 0, "+ from the tab: 3 -> 4, confirmed half a second later, no false 'kept'")
-M.partyInspiration = 6.0 -- the game awarded two meanwhile; the tab still shows 4
-reply = PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-M.runTimers()
-check(M.partyInspiration == 7, "a step counts from the points held now (6 -> 7), not from the tab's 4")
-reply = PP.Net.InspirationPoints.requestHandler({ step = -1 }, M.hostPeer)
-M.runTimers()
-check(M.partyInspiration == 6, "- : 7 -> 6")
--- Capped at the setting going up; down is always allowed.
-M.partyInspiration = 8.0
-reply = PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-check(not reply.accepted and reply.message:find("limit is 8") and M.partyInspiration == 8, "+ at the limit refused")
-settings.inspiration_limit = 4
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 4 })
-check(M.staticData[PP.INSPIRATION_UUID].MaxValue == 8, "setting 4 while holding 8: limit kept at 8")
-reply = PP.Net.InspirationPoints.requestHandler({ step = -1 }, M.hostPeer)
-check(M.staticData[PP.INSPIRATION_UUID].MaxValue == 8, "the limit is not lowered before the change lands")
-M.runTimers()
-check(reply.accepted and M.partyInspiration == 7 and M.staticData[PP.INSPIRATION_UUID].MaxValue == 7,
-    "- above the setting: 8 -> 7 and the limit follows the points down")
-local r = nil
-PP.Net.Roster:RequestToServer({}, function(x) r = x end)
-check(r and r.inspiration and r.inspiration.controls and r.inspiration.points == 7 and r.inspiration.limit == 4,
-    "roster reply carries points 7 and the setting's limit 4")
--- The console: a number; whole numbers only; never below 0.
-M.log = {}
-M.console["pp_inspiration_points"]("pp_inspiration_points", "2")
-M.runTimers()
-check(M.partyInspiration == 2 and logText():find("Inspiration points 7 %-> 2 asked")
-    and logText():find("Inspiration points now 2"), "console sets 2")
-for _, bad in ipairs({ "5.5", "abc" }) do
-    M.console["pp_inspiration_points"]("pp_inspiration_points", bad)
-    check(M.partyInspiration == 2, "console rejects " .. bad)
-end
-local okNeg = Insp.ChangePoints({ target = -1 })
-check(not okNeg and M.partyInspiration == 2, "below 0 refused")
-M.console["pp_inspiration_points"]("pp_inspiration_points", "6")
-check(M.partyInspiration == 2, "console above the setting (4) refused")
--- Raising first makes room: bank 4, setting 8, points 4, the game caps at the bank's MaxValue.
-settings.inspiration_limit = 8
-M.partyInspiration = 4.0
-M.staticData[PP.INSPIRATION_UUID].MaxValue = 4.0
-M.capAtLimit = true
-reply = PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-M.runTimers()
-check(reply.accepted and M.partyInspiration == 5, "the limit is raised before the increase, so the game keeps 5")
-M.capAtLimit = false
--- The game keeps another number: said at once, and only once.
-M.keepPoints = 5.0
-M.log = {}
-M.broadcasts = {}
-reply = PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-M.runTimers()
-check(#M.messages() == 1 and M.messages()[1]:find("The game kept 5")
-    and select(2, logText():gsub("The game kept", "")) == 1,
-    "the game kept another number: one message window and one log line")
--- Two quick clicks: only the last is checked.
-M.keepPoints = nil
-M.partyInspiration = 5.0
-M.broadcasts = {}
-M.log = {}
-PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-M.runTimers()
-check(#M.messages() == 0 and select(2, logText():gsub("Inspiration points now", "")) == 1,
-    "two quick clicks: one check, no false message")
--- A level loads before the check runs (its timer is lost): the next request counts from the points held.
-M.partyInspiration = 3.0
-PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-M.timers = {}
-M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
-M.runTimers()
-M.log = {}
-PP.Net.InspirationPoints.requestHandler({ step = 1 }, M.hostPeer)
-M.runTimers()
-check(M.partyInspiration == 4 and logText():find("Inspiration points 3 %-> 4 asked"),
-    "after a level load the pending change is forgotten: 3 -> 4")
-M.keepPoints = nil
--- The definition cannot be read: refused, nothing changed.
-local savedDef = M.staticData[PP.INSPIRATION_UUID]
-M.staticData[PP.INSPIRATION_UUID] = nil
-local before = #M.pointChanges
-reply = PP.Net.InspirationPoints.requestHandler({ step = -1 }, M.hostPeer)
-check(not reply.accepted and #M.pointChanges == before, "no definition: refused")
-M.staticData[PP.INSPIRATION_UUID] = savedDef
--- Load: bank 8, setting 4, points 2 -> held open while loading, 4 at the level start.
-settings.inspiration_limit = 4
-M.partyInspiration = 2.0
-M.staticData[PP.INSPIRATION_UUID].MaxValue = 8.0
-M.events["SessionLoading"]()
-check(M.staticData[PP.INSPIRATION_UUID].MaxValue == 30, "loading: held open")
-M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
-M.runTimers()
-check(M.staticData[PP.INSPIRATION_UUID].MaxValue == 4, "level start with 2 points and setting 4: limit 4")
--- Points cannot be read (no host): the limit is not lowered.
-M.staticData[PP.INSPIRATION_UUID].MaxValue = 9.0
-local savedHost = Osi.GetHostCharacter
-Osi.GetHostCharacter = function() return nil end
-Insp.Apply("setting")
-Osi.GetHostCharacter = savedHost
-check(M.staticData[PP.INSPIRATION_UUID].MaxValue == 9, "points unreadable: the limit is not lowered")
--- Non-host refused.
-reply = PP.Net.InspirationPoints.requestHandler({ step = 1 }, 999999)
-check(not reply.accepted and reply.message:find("Only the host"), "non-host refused")
-local changesSoFar = #M.pointChanges
-settings.inspiration_point_controls = false
-M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
-M.runTimers()
-check(#M.pointChanges == changesSoFar, "other paths still never change points")
-settings.inspiration_limit = 4
-M.partyInspiration = 0.0
-
--- 30. "Match the party limit" holds the Inspiration slider at the party limit (reported in game 2026-10-27:
--- the slider stayed where it was, and could be moved above the party limit).
-M.runTimers()
-local savedSize = settings.max_party_size
-settings.max_party_size = 9
-settings.inspiration_limit = 5
-settings.inspiration_match_party = true
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_match_party", value = true })
-check(settings.inspiration_limit == 9, "ticking Match moves the slider to the party limit")
-check(mcmSets[#mcmSets].id == "inspiration_limit" and mcmSets[#mcmSets].emit == nil,
-    "written without an MCM_Setting_Saved event (no loop)")
-local setsBefore = #mcmSets
-for _, v in ipairs({ 10, 12, 15 }) do
-    settings.inspiration_limit = v
-    M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = v })
-end
-check(settings.inspiration_limit == 15 and #mcmSets == setsBefore, "not moved back during the drag")
-M.runTimers()
-check(settings.inspiration_limit == 9 and #mcmSets == setsBefore + 1, "moved back once, after the drag")
-settings.max_party_size = 12
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "max_party_size", value = 12 })
-M.runTimers()
-check(settings.inspiration_limit == 12, "the slider follows the party limit")
-check(M.staticData[PP.INSPIRATION_UUID].MaxValue == 12, "and the limit in use is the party limit")
-settings.inspiration_limit = 4
-M.mcmEvent("MCM_Profile_Activated", {})
-M.runTimers()
-check(settings.inspiration_limit == 12, "a profile switch moves it too")
-setsBefore = #mcmSets
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_match_party", value = true })
-check(#mcmSets == setsBefore, "already in place: nothing written")
--- Unticked: the slider is the player's again.
-settings.inspiration_match_party = false
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_match_party", value = false })
-settings.inspiration_limit = 20
-M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "inspiration_limit", value = 20 })
-M.runTimers()
-check(settings.inspiration_limit == 20 and M.staticData[PP.INSPIRATION_UUID].MaxValue == 20,
-    "unticked: the slider stays where it is put and sets the limit")
--- A refused write changes nothing and raises nothing.
-settings.inspiration_match_party = true
-mcmSetFails = true
-local okSync, wrote = pcall(Insp.SyncSlider)
-check(okSync and wrote == false and settings.inspiration_limit == 20, "refused write: reported false, no error")
-mcmSetFails = false
-settings.inspiration_match_party = false
-settings.max_party_size = savedSize
-settings.inspiration_limit = 4
-M.runTimers()
-
 -- 31. Halsin's recruit gate and !pp_halsin (reported in game 2026-10-27; docs/PLAN_halsin_recruit_gate.md).
 -- The story keeps him in camp before he is recruitable; an earlier Party Picker added him from there.
 local NULLU = "00000000-0000-0000-0000-000000000000"
@@ -1472,6 +1189,59 @@ Osi.PROC_State_Progress, Osi.PROC_RemoveDialog, Osi.SetHasDialog, Osi.PROC_Globa
 M.chars[halsin.uuid] = nil
 settings.max_party_size = savedMax
 M.runTimers()
+
+-- 33. 1.1.0 ships without the Inspiration features (docs/PLAN_ship_without_inspiration.md): nothing of them
+-- is registered, nothing reads or writes the game's Inspiration, and the party-limit warning about
+-- Configurable Party Limit is kept (plan review should-fix 1).
+check(M.events.SessionLoading == nil, "no SessionLoading subscriber")
+check(M.listeners["UserConnected/3/after"] == nil, "no UserConnected listener")
+check(M.console.pp_inspiration == nil and M.console.pp_inspiration_points == nil, "no Inspiration console commands")
+check(PP.Net.Inspiration == nil and PP.Net.InspirationPoints == nil and PP.INSPIRATION_UUID == nil,
+    "no Inspiration channels or resource id")
+local staticReads, mcmIds = 0, {}
+local realStatic, realGet = Ext.StaticData.Get, MCM.Get
+Ext.StaticData.Get = function(...) staticReads = staticReads + 1 return realStatic(...) end
+MCM.Get = function(id, ...) mcmIds[#mcmIds + 1] = id return realGet(id, ...) end
+local pointsBefore = #M.pointChanges
+M.broadcasts = {}
+M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
+M.runTimers()
+for _, id in ipairs({ "max_party_size", "teleport_joiners", "block_in_combat", "prompt_long_rest", "auto_restore",
+    "extend_raft", "hope_attire_everyone", "halsin_early", "inspiration_limit", "inspiration_match_party",
+    "inspiration_point_controls" }) do
+    M.mcmSubscribers["MCM_Setting_Saved"]({ modUUID = ModuleUUID, settingId = id, value = settings[id] })
+end
+M.mcmSubscribers["MCM_Profile_Activated"]({})
+M.runTimers()
+local reply33
+PP.Net.Roster:RequestToServer({}, function(x) reply33 = x end)
+M.runTimers()
+local readsInspiration = false
+for _, id in ipairs(mcmIds) do if tostring(id):find("^inspiration_") then readsInspiration = true end end
+local inspBroadcast = false
+for _, b in ipairs(M.broadcasts) do if b.channel == "Inspiration" then inspBroadcast = true end end
+check(#M.pointChanges == pointsBefore and M.partyInspiration == 0, "Inspiration points never changed")
+check(M.staticData["a9c98304-08e7-44b5-aaf9-da2ef5a50672"].MaxValue == 4.0 and staticReads == 0,
+    "the game's Inspiration definition is never read or changed")
+check(not readsInspiration and not inspBroadcast, "no Inspiration setting read, nothing sent on an Inspiration channel")
+check(reply33 and reply33.entries and reply33.inspiration == nil, "the Party tab reply carries no Inspiration")
+Ext.StaticData.Get, MCM.Get = realStatic, realGet
+-- The load line, as INSTALL.md shows it.
+local fh = assert(io.open(LUA_ROOT .. "/BootstrapServer.lua", "r"))
+local src = fh:read("a")
+fh:close()
+check(src:find('"server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  '
+    .. '!pp_restore  !pp_size  !pp_forget Name  !pp_halsin")', 1, true) ~= nil, "load line lists the commands as INSTALL.md does")
+M.log = {}
+Ext.Mod = { IsModLoaded = function(uuid) return uuid == "16b5fbb6-72fe-4a08-814a-87a9fc0b14bc" end }
+M.events.SessionLoaded()
+check(logText():find("WARNING: Configurable Party Limit is also active") and not logText():find("Inspiration"),
+    "the other party-limit mod is still named, without Inspiration")
+Ext.Mod = { IsModLoaded = function() return false end }
+M.log = {}
+M.events.SessionLoaded()
+check(not logText():find("WARNING"), "no warning without that mod")
+Ext.Mod = nil
 
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end

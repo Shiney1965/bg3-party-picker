@@ -178,41 +178,6 @@ local function render(slot, reply)
         end
     end
 
-    -- Inspiration points (plan Part F), only with "Show Inspiration point controls" on. The buttons send a
-    -- step, not a number: the server counts from the points the party holds now.
-    local insp = reply.inspiration
-    if insp and insp.controls and insp.points ~= nil then
-        root:AddSeparator()
-        local text = string.format("Inspiration: %d of %d", insp.points, insp.limit)
-        if insp.points > insp.limit then
-            text = text .. string.format(" (above your setting of %d: lower it with - or spend points)", insp.limit)
-        end
-        root:AddText(text)
-        local minus = root:AddButton("-")
-        minus.IDContext = "PartyPicker_InspMinus"
-        minus.Disabled = (not isHost) or insp.points <= 0
-        local plus = root:AddButton("+")
-        plus.IDContext = "PartyPicker_InspPlus"
-        plus.SameLine = true
-        plus.Disabled = (not isHost) or insp.points >= insp.limit
-        local function change(step)
-            minus.Disabled = true
-            plus.Disabled = true
-            PP.Net.InspirationPoints:RequestToServer({ step = step }, function(resp)
-                setStatus(resp and resp.message or "No reply.")
-                -- The game applies the change a moment later (the server checks it after half a second):
-                -- redraw after that, or the count shows the old number (in game 2026-10-27).
-                if resp and resp.accepted then
-                    Ext.Timer.WaitForRealtime(1000, PartyTab.Refresh)
-                else
-                    PartyTab.Refresh()
-                end
-            end)
-        end
-        minus.OnClick = function() change(-1) end
-        plus.OnClick = function() change(1) end
-    end
-
     if reply.pending and reply.pending.trimmed then
         root:AddSeparator()
         root:AddText("Some of your party are waiting in camp after a long rest.")
@@ -293,9 +258,9 @@ end
 function PartyTab.SetStatus(text) setStatus(text) end
 
 -- A setting the tab shows was changed in Settings (or written back by the limit guard): redraw, so
--- the Inspiration buttons and the limit line appear without pressing Refresh (reported in game
--- 2026-10-27). A slider sends a change for every step, so only the last one in half a second
--- redraws. Ticks not yet applied are kept.
+-- the limit line and the locks follow without pressing Refresh (reported in game 2026-10-27). A slider
+-- sends a change for every step, so only the last one in half a second redraws. Ticks not yet applied
+-- are kept.
 local settingSeq = 0
 function PartyTab.SettingChanged()
     settingSeq = settingSeq + 1

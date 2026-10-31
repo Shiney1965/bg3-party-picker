@@ -20,9 +20,6 @@ end)
 -- A setting the Party tab shows was changed: redraw it. MCM saves the value on the server first and
 -- then passes the event on to the clients (BG3-MCM Server/MCMServer.lua, SetSettingValue).
 local tabSettings = {
-    inspiration_point_controls = true,
-    inspiration_limit = true,
-    inspiration_match_party = true,
     max_party_size = true,
     halsin_early = true, -- locks or unlocks Halsin on the tab
 }
@@ -31,18 +28,6 @@ pcall(function()
         if payload and payload.modUUID == ModuleUUID and tabSettings[payload.settingId] then
             pcall(PartyTab.SettingChanged)
         end
-    end)
-end)
-
--- The Inspiration limit for a client that is not the host (multiplayer; untested). The host's own
--- client shares the server's static data, so it needs nothing.
-PP.Net.Inspiration:SetHandler(function(data)
-    pcall(function()
-        if Ext.Net.IsHost() then return end
-        local limit = data and tonumber(data.limit)
-        if not limit then return end
-        local d = Ext.StaticData.Get(PP.INSPIRATION_UUID, "ActionResource")
-        if d then d.MaxValue = limit end
     end)
 end)
 

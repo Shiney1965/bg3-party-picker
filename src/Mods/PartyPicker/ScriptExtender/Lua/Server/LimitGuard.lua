@@ -17,7 +17,6 @@
 -- during one drag.
 
 local Party = Ext.Require("Server/Party.lua")
-local Inspiration = Ext.Require("Server/Inspiration.lua")
 
 local LimitGuard = {}
 
@@ -66,9 +65,6 @@ function LimitGuard.OnSettingChanged()
             end
             local okSet, written = pcall(MCM.Set, SETTING, party)
             Party.ApplyMaxSize()
-            -- MCM.Set sends no event, so a matched Inspiration limit is refreshed here.
-            pcall(Inspiration.Apply, "guard")
-            pcall(Inspiration.SyncSlider)
             if okSet and written == true then
                 message(string.format("The party limit can't be lower than %s. It has been set to %d. "
                     .. "To lower it, %s", who, party, how))
@@ -97,6 +93,17 @@ function LimitGuard.CheckLoadedParty()
         end)
         if not ok then PP.Log("party limit check failed: " .. tostring(err)) end
     end)
+end
+
+-- Another mod that sets the same limit (compatibility only; the author: other party mods, use at your own risk).
+-- Configurable Party Limit (Nexus 11172, meta.lsx UUID 16b5fbb6-...) sets the party limit too (its
+-- Server/_Init.lua, read 2026-10-24 for compatibility only).
+function LimitGuard.WarnOtherMods()
+    local ok, loaded = pcall(Ext.Mod.IsModLoaded, "16b5fbb6-72fe-4a08-814a-87a9fc0b14bc")
+    if ok and loaded then
+        PP.Log("WARNING: Configurable Party Limit is also active. It sets the same party-size limit as Party "
+            .. "Picker; the two will overwrite each other. Use at your own risk.")
+    end
 end
 
 return LimitGuard

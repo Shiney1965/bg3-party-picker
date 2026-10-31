@@ -3,7 +3,6 @@ Ext.Require("Shared/Common.lua")
 local Party = Ext.Require("Server/Party.lua")
 local Restrictions = Ext.Require("Server/Restrictions.lua")
 local HouseOfHope = Ext.Require("Server/HouseOfHope.lua")
-local Inspiration = Ext.Require("Server/Inspiration.lua")
 local LimitGuard = Ext.Require("Server/LimitGuard.lua")
 local HalsinRepair = Ext.Require("Server/HalsinRepair.lua")
 
@@ -22,10 +21,6 @@ local function rosterReply()
         entries = entries,
         maxSize = Party.EffectiveMaxSize(),
         setting = Party.MaxSize(),
-        inspiration = (function()
-            local ok, info = pcall(Inspiration.TabInfo)
-            return ok and info or nil
-        end)(),
         pending = pending and { reason = pending.reason, trimmed = pending.trimmed == true } or nil,
         -- "Put Halsin's quest back on track" (nil: nothing to put back)
         halsin = (function()
@@ -103,20 +98,6 @@ PP.Net.Restore:SetRequestHandler(safeHandler(function(_, user)
     return { accepted = accepted, message = message }
 end))
 
--- Change the party's Inspiration points by one (Party tab, plan Part F). Host only.
-PP.Net.InspirationPoints:SetRequestHandler(safeHandler(function(data, peer)
-    if not isHostUser(peer) then
-        return { accepted = false, message = "Only the host can change Inspiration." }
-    end
-    local step = data and math.tointeger(data.step)
-    if step ~= 1 and step ~= -1 then return { accepted = false, message = "Bad request." } end
-    -- Checked half a second later; a different result is told to the host in a message window.
-    local accepted, message = Inspiration.ChangePoints({ step = step }, function(text)
-        pcall(function() PP.Net.Message:Broadcast({ text = text }) end)
-    end)
-    return { accepted = accepted, message = message }
-end))
-
 local function messageWindow(text)
     pcall(function() PP.Net.Message:Broadcast({ text = text }) end)
 end
@@ -147,19 +128,10 @@ pcall(function()
     end)
 end)
 
--- The Inspiration limit: when a save starts loading (before its values are read; StatsLoaded does not
--- fire on the server, bg3se ScriptExtender.cpp OnStatsLoadGuarded), again when it has loaded, on every
--- level load, on setting changes, and for a player who joins later.
-pcall(function() Ext.Events.SessionLoading:Subscribe(function() pcall(Inspiration.Apply, "loading") end) end)
-pcall(function() Ext.Events.SessionLoaded:Subscribe(function()
-    pcall(Inspiration.Apply, "session")
-    pcall(Inspiration.WarnOtherMods)
-end) end)
-pcall(function() Ext.Osiris.RegisterListener("UserConnected", 3, "after", function() pcall(Inspiration.Resend) end) end)
+-- Another party-limit mod in the load order: say so once a save has loaded.
+pcall(function() Ext.Events.SessionLoaded:Subscribe(function() pcall(LimitGuard.WarnOtherMods) end) end)
 
 Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", function()
-    pcall(Inspiration.Apply, "level")
-    pcall(Inspiration.SyncSlider) -- settings saved before 1.0.7 may hold an unmatched slider
     pcall(Party.ApplyMaxSize)
     pcall(Restrictions.ExtendRaft)
     pcall(LimitGuard.CheckLoadedParty)
@@ -182,23 +154,11 @@ pcall(function()
             pcall(LimitGuard.OnSettingChanged)
         end
         if payload.settingId == "extend_raft" then Restrictions.ExtendRaft() end
-        if payload.settingId == "inspiration_limit" or payload.settingId == "inspiration_match_party"
-            or payload.settingId == "max_party_size" then
-            pcall(Inspiration.Apply, "setting")
-        end
-        -- "Match the party limit": the Inspiration slider follows the party limit.
-        if payload.settingId == "inspiration_match_party" then
-            pcall(Inspiration.SyncSlider)
-        elseif payload.settingId == "inspiration_limit" or payload.settingId == "max_party_size" then
-            pcall(Inspiration.SyncSliderLater)
-        end
     end)
 end)
 -- Another MCM profile may hold another limit.
 pcall(function()
     Ext.ModEvents.BG3MCM["MCM_Profile_Activated"]:Subscribe(function()
-        pcall(Inspiration.Apply, "profile")
-        pcall(Inspiration.SyncSlider)
         pcall(Party.ApplyMaxSize)
         pcall(LimitGuard.CheckLoadedParty)
     end)
@@ -246,23 +206,11 @@ Ext.RegisterConsoleCommand("pp_forget", function(_, ...)
         or ("nobody named " .. name .. " in the seen record (see !pp_roster)"))
 end)
 
--- !pp_inspiration_points [n]: show or set the party's Inspiration points (plan Part F).
-Ext.RegisterConsoleCommand("pp_inspiration_points", function(_, arg)
-    local ok, err = pcall(Inspiration.PointsConsole, arg)
-    if not ok then PP.Log("!pp_inspiration_points failed: " .. tostring(err)) end
-end)
-
 -- !pp_halsin [repair | haven]: report on, or repair, a Halsin added before the story made him recruitable
 -- (docs/PLAN_halsin_recruit_gate.md; the Party tab button does the same repair from 1.0.9).
 Ext.RegisterConsoleCommand("pp_halsin", function(_, arg)
     local ok, err = pcall(HalsinRepair.Console, arg)
     if not ok then PP.Log("!pp_halsin failed: " .. tostring(err)) end
-end)
-
--- !pp_inspiration [4-30 | reset]: the Inspiration probe (docs/PLAN_inspiration_and_30.md, step 0).
-Ext.RegisterConsoleCommand("pp_inspiration", function(_, arg)
-    local ok, err = pcall(Inspiration.Console, arg)
-    if not ok then PP.Log("!pp_inspiration failed: " .. tostring(err)) end
 end)
 
 Ext.RegisterConsoleCommand("pp_size", function()
@@ -294,4 +242,4 @@ Ext.RegisterConsoleCommand("pp_set", function(_, ...)
     PP.Log(message)
 end)
 
-PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name  !pp_inspiration  !pp_inspiration_points  !pp_halsin")
+PP.Log("server loaded (v" .. PP.VERSION .. "). Console (server context): !pp_roster  !pp_set Name1,Name2  !pp_restore  !pp_size  !pp_forget Name  !pp_halsin")

@@ -6,6 +6,7 @@ the same major Lua version Script Extender's own scripts are written for.
     python3 tests/run_tests.py
 """
 import glob
+import json
 import os
 import sys
 
@@ -26,7 +27,27 @@ def compile_all(lua):
     return ok
 
 
+# The MCM blueprint: valid JSON (MCM drops a mod's settings whose blueprint does not parse) with exactly
+# these settings (1.1.0 ships without the Inspiration section; docs/PLAN_ship_without_inspiration.md).
+BLUEPRINT_IDS = ["max_party_size", "teleport_joiners", "block_in_combat", "prompt_long_rest", "auto_restore",
+                 "extend_raft", "hope_attire_everyone", "halsin_early"]
+
+
+def check_blueprint():
+    path = os.path.join(HERE, "..", "src", "Mods", "PartyPicker", "MCM_blueprint.json")
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    ids = [s["Id"] for tab in data["Tabs"] for sec in tab["Sections"] for s in sec["Settings"]]
+    if ids != BLUEPRINT_IDS:
+        print("BLUEPRINT: setting ids are", ids)
+        return False
+    return True
+
+
 def main():
+    if not check_blueprint():
+        return 1
+    print("blueprint: %d settings" % len(BLUEPRINT_IDS))
     lua = lua54.LuaRuntime()
     if not compile_all(lua):
         return 1

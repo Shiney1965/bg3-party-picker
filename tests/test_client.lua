@@ -106,40 +106,48 @@ reply = {
         { uuid = "b", name = "Gale", active = true },
         { uuid = "c", name = "Wyll", active = false },
     },
-    inspiration = { controls = false, points = 2, limit = 4 },
+    -- A stray field from an older server draws nothing (1.1.0 has no Inspiration features).
+    inspiration = { controls = true, points = 2, limit = 4 },
 }
 local tab = container()
 tabCallback(tab)
-check(find(tab, "button", "+") == nil, "controls off: no + button")
+local function noInspiration(root)
+    for _, w in ipairs(root.Children) do
+        if w.Label == "-" or w.Label == "+" or tostring(w.Label or ""):find("Inspiration") then return false end
+    end
+    return true
+end
+check(noInspiration(tab), "no - / + buttons and no Inspiration line")
+check(channels.Inspiration == nil and channels.InspirationPoints == nil, "no Inspiration channels")
 
 -- Ticks not yet applied: Wyll ticked, Gale unticked.
 find(tab, "checkbox", "Wyll").OnChange(nil, true)
 find(tab, "checkbox", "Gale").OnChange(nil, false)
 
--- 1. "Show Inspiration point controls" ticked in Settings: the tab redraws by itself (reported in game
--- 2026-10-27: the buttons only appeared after Refresh), and the ticks survive the redraw.
-reply.inspiration.controls = true
+-- 1. Maximum party size changed in Settings: the tab redraws by itself (reported in game 2026-10-27:
+-- changes only appeared after Refresh), and the ticks survive the redraw.
 local before = rosterRequests
-settingSaved("inspiration_point_controls")
+settingSaved("max_party_size")
 check(rosterRequests == before, "redraw waits for the slider to settle")
 runTimers()
 check(rosterRequests == before + 1, "one redraw")
-check(find(tab, "button", "+") ~= nil and find(tab, "button", "-") ~= nil, "the - and + buttons appear")
-check(find(tab, "text", "Inspiration: 2 of 4") ~= nil, "the Inspiration line appears")
+check(noInspiration(tab), "still no Inspiration after the redraw")
 check(find(tab, "checkbox", "Wyll").Checked == true and find(tab, "checkbox", "Gale").Checked == false,
     "ticks not yet applied are kept")
 check(find(tab, "checkbox", "Tav  (you)").Checked == true, "locked member unchanged")
 
 -- 2. A slider drag sends many changes: one redraw.
 before = rosterRequests
-for _ = 1, 5 do settingSaved("inspiration_limit") end
+for _ = 1, 5 do settingSaved("max_party_size") end
 runTimers()
 check(rosterRequests == before + 1, "a drag redraws once")
 
 -- 3. Other settings and other mods' settings do not redraw.
 before = rosterRequests
 settingSaved("extend_raft")
-settingSaved("inspiration_point_controls", "00000000-0000-0000-0000-000000000000")
+settingSaved("max_party_size", "00000000-0000-0000-0000-000000000000")
+settingSaved("inspiration_point_controls")
+settingSaved("inspiration_limit")
 runTimers()
 check(rosterRequests == before, "unrelated changes ignored")
 
@@ -163,12 +171,12 @@ local function withKarlach(active)
     reply.entries = list
 end
 withKarlach(false)
-settingSaved("inspiration_limit")
+settingSaved("halsin_early")
 runTimers()
 check(find(tab, "checkbox", "Karlach").Checked == false and find(tab, "checkbox", "Wyll").Checked == true
     and find(tab, "checkbox", "Gale").Checked == false, "game-side change shown; the player's changes kept")
 withKarlach(true)
-settingSaved("inspiration_limit")
+settingSaved("halsin_early")
 runTimers()
 check(find(tab, "checkbox", "Karlach").Checked == true, "and again when the game brings her back")
 
@@ -185,7 +193,7 @@ check(find(tab, "checkbox", "Wyll").Checked == false and find(tab, "checkbox", "
 
 -- 7. Opening the page again starts from the party, even with a redraw still waiting.
 find(tab, "checkbox", "Wyll").OnChange(nil, true)
-settingSaved("inspiration_limit")
+settingSaved("halsin_early")
 subscribers["MCM_Mod_Tab_Activated"]({ modUUID = ModuleUUID })
 check(find(tab, "checkbox", "Wyll").Checked == false, "page opened: from the party")
 before = rosterRequests

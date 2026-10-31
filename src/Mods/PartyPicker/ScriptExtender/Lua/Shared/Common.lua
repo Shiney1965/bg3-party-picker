@@ -6,7 +6,7 @@ PP = PP or {}
 PP.MOD = "PartyPicker"
 -- Keep in step with Version64 in meta.lsx; printed at load so logs show
 -- which build was running.
-PP.VERSION = "1.0.9"
+PP.VERSION = "1.1.0"
 -- The four-member situations are hard limits in the game's own scripts
 -- (four beds in camp, four raft seats), so this is not a setting.
 PP.RESTRICTED_SIZE = 4
@@ -14,8 +14,6 @@ PP.RESTRICTED_SIZE = 4
 -- origin companions, three hireling slots: SharedDev Hirelings.txt L100-120), about 17 with four
 -- players; companion mods add more. Above 16 is untested.
 PP.MAX_PARTY_SIZE = 30
--- The game's Inspiration action resource (Shared ActionResourceDefinitions.lsx, InspirationPoint).
-PP.INSPIRATION_UUID = "a9c98304-08e7-44b5-aaf9-da2ef5a50672"
 
 function PP.Log(msg)
     Ext.Utils.Print("[" .. PP.MOD .. "] " .. tostring(msg))
@@ -50,10 +48,6 @@ PP.Net = PP.Net or {
     Notice = Ext.Net.CreateChannel(ModuleUUID, "Notice"),
     -- server -> clients message: a message window for the host (Client/MessageWindow.lua)
     Message = Ext.Net.CreateChannel(ModuleUUID, "Message"),
-    -- server -> clients message: the Inspiration limit, for clients that are not the host (multiplayer)
-    Inspiration = Ext.Net.CreateChannel(ModuleUUID, "Inspiration"),
-    -- client -> server request: change the party's Inspiration points by one (plan Part F)
-    InspirationPoints = Ext.Net.CreateChannel(ModuleUUID, "InspirationPoints"),
     -- client -> server request: put Halsin's quest back on track (docs/PLAN_halsin_early_option.md)
     HalsinReset = Ext.Net.CreateChannel(ModuleUUID, "HalsinReset"),
 }
