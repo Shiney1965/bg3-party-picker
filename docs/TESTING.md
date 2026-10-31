@@ -578,3 +578,11 @@ only its own resource RJTP_InfernalCharge 459f529a-..., not InspirationPoint.) T
 the CLIENT console (`C >>`) and printed only `ecs::IsReplicationOwnedComponent`; it needs the server console.
 Leading hypothesis (inferred): Osi.GetHostCharacter() was Raphael when the grant ran, and the game gives the points
 to that character's own entry rather than sharing them with the rest of the party. Per-member probe requested.
+Further report and decision, 2026-10-31. The author: "I don't know if Raphael was selected when I ran it. But even
+after I dismissed Raphael and ran the command with Gale selected, no I{P were given. So somehow they only could go
+to Raphael", then "Seems like an incompatbility with that mod, and possibly others, but we can't be sure without
+testing without that mod." Decision: "I think for now let's fork the idea of adding inspiration control to the
+Party Picker, and create a version to ship with no Inspiration control.  OK?" Scope chosen: all of it (limit
+slider, Match the party limit, point controls, both console commands). The Inspiration work is kept on branch
+`inspiration-feature` (main at 667c4b8, v1.0.9); plan docs/PLAN_ship_without_inspiration.md. The cause of the
+missing reroll is not settled (open; a test without Raphael Joins the Party was not run).
