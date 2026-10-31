@@ -61,7 +61,7 @@
                             "Name": "Let the whole party ride the Grymforge raft",
                             "Type": "checkbox",
                             "Default": true,
-                            "Description": "The Ebonlake raft takes everyone aboard but only has four landing spots, so members five and up are left behind. This adds landing spots so everyone arrives."
+                            "Description": "The Ebonlake raft takes everyone aboard but only has four landing spots, so members five and up are left behind. This adds landing spots so everyone arrives. Turning this off later stops adding landing spots; spots already added stay in this save."
                         },
                         {
                             "Id": "hope_attire_everyone",

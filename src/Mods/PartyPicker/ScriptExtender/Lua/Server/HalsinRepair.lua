@@ -281,7 +281,7 @@ function HalsinRepair.TabReset(tell)
     end
     local why = repairRefusal(true)
     if why then return false, "Halsin's quest was not changed: " .. why end
-    -- Party.Apply's error path can call its callback a second time; repair at most once.
+    -- Party.Apply calls its callback once (from 1.1.1); this guard stays as a second line of defence.
     local ran = false
     local function finish()
         if ran then return false end

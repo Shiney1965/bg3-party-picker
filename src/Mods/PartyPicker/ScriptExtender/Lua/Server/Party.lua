@@ -561,6 +561,59 @@ function Party.BlockedReason(id, checkCombat)
     return nil
 end
 
+-- The game turns its fast-travel restrictions into TRAVELBLOCK statuses (the tables above) only for
+-- members of DB_Players (_Waypoints.txt L185-332), so for a character in camp the source conditions are
+-- read instead. DB_InBlockedWaypointZone is not: its rows are only kept up to date for DB_Players
+-- (_Waypoints.txt L41-61), so for a camp companion a row may be stale (plan review 2026-10-31).
+-- Each spec: table, column count, column holding the character, reason.
+local JOIN_DBS = {
+    { "DB_CantMove", 1, 1, "can't move right now (in a conversation, knocked out, or similar)" },
+    { "DB_IsArrested", 2, 2, "is under arrest" },
+}
+-- The game locks dismissal for a party member who can't talk or is in a dialog-suppression zone
+-- (DB_BlockDismissable, _GLO_Shared_PartyMembers.txt L232-395). The IgnoreCombat table (can't talk for
+-- any reason except combat, __AAA_FirstGoal.txt L1658-2000) leaves combat to the block_in_combat setting.
+local LEAVE_DBS = {
+    { "DB_CantTalk_IgnoreCombat", 1, 1, "can't talk right now (in a conversation, wild shape, or similar)" },
+    { "DB_PartyDialogSuppressed", 2, 1, "is in an area where companions can't be dismissed" },
+}
+
+local function extraReason(specs, id)
+    for _, spec in ipairs(specs) do
+        local name, arity, col, why = spec[1], spec[2], spec[3], spec[4]
+        local ok, rows = pcall(function()
+            if arity == 1 then return Osi[name]:Get(id) end
+            if col == 2 then return Osi[name]:Get(nil, id) end
+            return Osi[name]:Get(id, nil)
+        end)
+        if ok and type(rows) == "table" and next(rows) ~= nil then
+            return why .. " (" .. name .. ")"
+        end
+    end
+    return nil
+end
+
+-- Why a character outside the party cannot join now, or nil. The status tables come first, so a
+-- message that was already shown stays the same.
+function Party.JoinBlockedReason(id, checkCombat)
+    local why = Party.BlockedReason(id, checkCombat)
+    if why then return why end
+    if inDb("DB_Camp_NightMode", 1) then return "cannot join during the camp night (DB_Camp_NightMode)" end
+    return extraReason(JOIN_DBS, id)
+end
+
+-- Why a party member cannot be sent to camp now, or nil.
+function Party.LeaveBlockedReason(id, checkCombat)
+    return Party.BlockedReason(id, checkCombat) or extraReason(LEAVE_DBS, id)
+end
+
+-- "Could not bring back" text for a list of { name, why }.
+function Party.SkippedText(skipped)
+    local parts = {}
+    for _, s in ipairs(skipped or {}) do parts[#parts + 1] = s.name .. " (" .. tostring(s.why) .. ")" end
+    return table.concat(parts, "; ")
+end
+
 local function sendToCamp(e, avatar)
     if e.hireling then
         local ok, err = pcall(Osi.PROC_GLO_PartyMembers_Remove, e.id, avatar, 0)
@@ -601,9 +654,14 @@ end
 --   opts.limit:     max total size (default: configured maximum)
 --   opts.addOnly:   never send anyone to camp; add `wanted` members who are
 --                   not in the party, as far as the limit allows
---   done(result):   called once verified; result = { ok, message, changed }
--- Returns accepted, message. When accepted is false nothing was changed;
--- `nothingToDo` is true when the party already matched.
+--   opts.beforeChange(toAdd, toRemove, activeBefore): called once, after every
+--                   check has passed and just before the first member is moved
+--                   (same Lua call, so no save can fall in between)
+--   done(result):   called once, when verified; result = { ok, message, changed,
+--                   skipped }
+-- Returns accepted, message, nothingToDo, skipped. When accepted is false
+-- nothing was changed; `nothingToDo` is true when the party already matched.
+-- `skipped` (addOnly) lists { name, why } for wanted members not brought back.
 function Party.Apply(wanted, opts, done)
     opts = opts or {}
     done = done or function() end
@@ -618,16 +676,22 @@ function Party.Apply(wanted, opts, done)
     local avatar = Party.HostAvatar()
     if not avatar then return refuse("No host character found.") end
     local limit = opts.limit or Party.EffectiveMaxSize()
+    local checkCombat = PP.Setting("block_in_combat", true) ~= false
 
     local roster = Party.Roster()
     local byUuid = {}
-    for _, e in ipairs(roster) do byUuid[e.uuid] = e end
+    local activeBefore = {}
+    for _, e in ipairs(roster) do
+        byUuid[e.uuid] = e
+        if e.active then activeBefore[#activeBefore + 1] = e.uuid end
+    end
 
-    -- addOnly: wanted members who are off stage right now. They are not
-    -- added (see OFF_STAGE) but the request must not count as complete, or a
-    -- restore would forget them (the camp hides benched companions at night,
-    -- GLO_Camp.txt L1630-1649).
-    local waiting = {}
+    -- addOnly: wanted members who cannot join right now (off stage, or held by
+    -- the game: see Party.JoinBlockedReason) are not added, but the request must
+    -- not count as complete, or a restore would forget them (the camp hides
+    -- benched companions at night, GLO_Camp.txt L1630-1649). They never take a
+    -- slot. Members who will not come back at all are `skipped`.
+    local waiting, skipped = {}, {}
     local keep, count = {}, 0
     for _, e in ipairs(roster) do
         if e.locked and e.active then keep[e.uuid] = true; count = count + 1 end
@@ -635,19 +699,33 @@ function Party.Apply(wanted, opts, done)
     end
     for _, u in ipairs(wanted or {}) do
         local e = byUuid[u]
-        if e and not keep[u] and not e.dead and not (e.locked and not e.active) then
-            if opts.addOnly and count >= limit then break end
-            keep[u] = true; count = count + 1
-        elseif not e and not opts.addOnly then
+        if e and keep[u] then
+            -- Already kept (locked, or in the party for addOnly): nothing to check.
+        elseif opts.addOnly then
+            local why = e and (e.offStage and OFF_STAGE or Party.JoinBlockedReason(e.id, checkCombat))
+            if not e then
+                skipped[#skipped + 1] = { name = Party.DisplayName(u), why = "no longer with the party" }
+            elseif why then
+                waiting[#waiting + 1] = { e = e, why = why }
+            elseif e.dead then
+                skipped[#skipped + 1] = { name = e.name, why = "dead" }
+            elseif e.locked then
+                skipped[#skipped + 1] = { name = e.name, why = tostring(e.lockReason) }
+            elseif count >= limit then
+                skipped[#skipped + 1] = { name = e.name, why = "no room: party limit " .. limit }
+            else
+                keep[u] = true; count = count + 1
+            end
+        elseif not e then
             return refuse("Unknown character " .. tostring(u) .. ".")
-        elseif e and e.dead and not opts.addOnly then
+        elseif e.dead then
             return refuse(e.name .. " is dead.")
-        elseif e and e.locked and not e.active and not opts.addOnly then
+        elseif e.locked and not e.active then
             -- The tab never sends a locked character; this is a list drawn
             -- before they became unavailable, or !pp_set.
             return refuse(e.name .. " cannot join: " .. tostring(e.lockReason) .. ". Press Refresh.")
-        elseif e and e.offStage and not e.active and opts.addOnly then
-            waiting[#waiting + 1] = e
+        else
+            keep[u] = true; count = count + 1
         end
     end
     if count > limit and not opts.addOnly then
@@ -660,27 +738,41 @@ function Party.Apply(wanted, opts, done)
         if e.active and not keep[e.uuid] then toRemove[#toRemove + 1] = e end
         if keep[e.uuid] and not e.active then toAdd[#toAdd + 1] = e end
     end
+    local function waitingText(sep)
+        local parts = {}
+        for _, w in ipairs(waiting) do parts[#parts + 1] = w.e.name .. " " .. sep .. ": " .. tostring(w.why) end
+        return table.concat(parts, "; ")
+    end
+    local function skippedSuffix()
+        if #skipped == 0 then return "" end
+        return " Could not bring back: " .. Party.SkippedText(skipped) .. "."
+    end
     if #toRemove == 0 and #toAdd == 0 then
         if #waiting > 0 then
-            return refuse(names(waiting) .. " cannot rejoin yet: off stage (not present in the world).")
+            return refuse(waitingText("cannot rejoin yet") .. "." .. skippedSuffix())
         end
-        return false, "The party is already like that.", true
+        return false, "The party is already like that." .. skippedSuffix(), true, skipped
     end
 
-    local checkCombat = PP.Setting("block_in_combat", true) ~= false
     local why = Party.BlockedReason(avatar, checkCombat)
     if why then return refuse("Party changes are blocked: your character " .. why .. ".") end
-    for _, list in ipairs({ toRemove, toAdd }) do
-        for _, e in ipairs(list) do
-            why = Party.BlockedReason(e.id, checkCombat)
-            if why and e.offStage and string.find(why, "cannot travel", 1, true) then
-                why = why .. ": they are off stage (not present in the world)"
-            end
-            if why then return refuse(e.name .. " " .. why .. ".") end
+    for _, e in ipairs(toRemove) do
+        why = Party.LeaveBlockedReason(e.id, checkCombat)
+        if why and e.offStage and string.find(why, "cannot travel", 1, true) then
+            why = why .. ": they are off stage (not present in the world)"
         end
+        if why then return refuse(e.name .. " " .. why .. ".") end
+    end
+    for _, e in ipairs(toAdd) do
+        why = Party.JoinBlockedReason(e.id, checkCombat)
+        if why then return refuse(e.name .. " " .. why .. ".") end
     end
 
     PP.Log(string.format("request: join [%s]; send to camp [%s]", names(toAdd), names(toRemove)))
+    if opts.beforeChange then
+        local okHook, errHook = pcall(opts.beforeChange, toAdd, toRemove, activeBefore)
+        if not okHook then PP.Log("party change hook failed: " .. tostring(errHook)) end
+    end
     busy = true
     -- Room for the new members before anyone is added: CheckAdd does nothing
     -- while the story's party-full flag is set.
@@ -689,6 +781,16 @@ function Party.Apply(wanted, opts, done)
     for _, e in ipairs(toRemove) do sendToCamp(e, avatar) end
     pcall(Osi.PROC_CheckPartyFull)
 
+    -- `done` is called exactly once, outside the guarded steps, so an error in
+    -- the callback is not reported as a failed party change (review 2026-10-31).
+    local delivered = false
+    local function deliver(result)
+        if delivered then return end
+        delivered = true
+        result.skipped = skipped
+        local okCb, errCb = pcall(done, result)
+        if not okCb then PP.Log("party change callback failed: " .. tostring(errCb)) end
+    end
     -- Any error in the delayed steps must still release `busy` and report.
     local function guarded(fn)
         return function()
@@ -697,7 +799,7 @@ function Party.Apply(wanted, opts, done)
                 busy = false
                 pcall(Party.ApplyMaxSize)
                 PP.Log("party change failed: " .. tostring(err))
-                done({ ok = false, changed = true, message = "Party change failed: " .. tostring(err) })
+                deliver({ ok = false, changed = true, message = "Party change failed: " .. tostring(err) })
             end
         end
     end
@@ -725,21 +827,21 @@ function Party.Apply(wanted, opts, done)
                     failed[#failed + 1] = e.name .. " did not leave"
                 end
             end
-            for _, e in ipairs(waiting) do
-                failed[#failed + 1] = e.name .. " is off stage and could not rejoin yet"
-            end
+            if #waiting > 0 then failed[#failed + 1] = waitingText("could not rejoin yet") end
             busy = false
             pcall(Party.ApplyMaxSize)
+            local result
             if #failed == 0 then
                 -- Names, not counts, so it is plain who moved.
                 local parts = { "Party updated." }
                 if #toAdd > 0 then parts[#parts + 1] = "Joined: " .. names(toAdd) .. "." end
                 if #toRemove > 0 then parts[#parts + 1] = "Sent to camp: " .. names(toRemove) .. "." end
-                done({ ok = true, changed = true, message = table.concat(parts, " ") })
+                result = { ok = true, changed = true, message = table.concat(parts, " ") .. skippedSuffix() }
             else
-                done({ ok = false, changed = true,
-                    message = "Party partly updated. " .. table.concat(failed, "; ") .. "." })
+                result = { ok = false, changed = true,
+                    message = "Party partly updated. " .. table.concat(failed, "; ") .. "." .. skippedSuffix() }
             end
+            deliver(result)
         end))
     end))
     return true, "Changing the party..."

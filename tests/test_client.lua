@@ -29,9 +29,12 @@ end
 local timers, subscribers, channels, required = {}, {}, {}, {}
 local rosterRequests, halsinRequests = 0, 0
 local reply = {}
+-- Apply: requests are kept; the reply is `applyReply`, or held back while it is "pending".
+local applyRequests, applyReply, applyCallback = {}, { accepted = true, message = "Changing the party..." }, nil
+local clientLog = {}
 
 Ext = {
-    Utils = { Print = function() end },
+    Utils = { Print = function(s) clientLog[#clientLog + 1] = tostring(s) end },
     Net = {
         IsHost = function() return true end,
         CreateChannel = function(_, name)
@@ -45,6 +48,9 @@ Ext = {
                 elseif name == "HalsinReset" then
                     halsinRequests = halsinRequests + 1
                     cb({ accepted = true, message = "Sending Halsin to camp..." })
+                elseif name == "Apply" then
+                    applyRequests[#applyRequests + 1] = data
+                    if applyReply == "pending" then applyCallback = cb else cb(applyReply) end
                 end
             end
             channels[name] = ch
@@ -230,6 +236,89 @@ reply.halsin = { inParty = true }
 subscribers["MCM_Mod_Tab_Activated"]({ modUUID = ModuleUUID })
 check(find(tab, "button", YES) == nil and find(tab, "button", BUTTON), "page reopened: no stale confirmation")
 reply.halsin = nil
+
+-- 9. 1.1.1 (docs/PLAN_1.1.1_review_fixes.md).
+-- I. An MCM profile switch redraws the tab (MCM sends no per-setting event then), keeping the ticks.
+check(subscribers["MCM_Profile_Activated"] ~= nil, "I: profile event subscribed")
+find(tab, "checkbox", "Wyll").OnChange(nil, true)
+local before9 = rosterRequests
+subscribers["MCM_Profile_Activated"]({ profileName = "Other" })
+subscribers["MCM_Profile_Activated"]({ fromProfile = "Default", toProfile = "Other" }) -- MCM emits twice
+runTimers()
+check(rosterRequests == before9 + 1 and find(tab, "checkbox", "Wyll").Checked == true,
+    "I: one redraw for a profile switch, ticks kept")
+-- J. The outcome of a change redraws the tab once it has happened.
+before9 = rosterRequests
+channels["Notice"].handler({ text = "Party updated. Joined: Wyll." })
+runTimers()
+check(rosterRequests == before9 + 1 and find(tab, "text", "Party updated. Joined: Wyll."), "J: a notice redraws the tab")
+
+-- The pick-four window.
+local windows = {}
+Ext.IMGUI.NewWindow = function()
+    local w = container()
+    windows[#windows + 1] = w
+    return w
+end
+local function picker(entries)
+    reply = { entries = entries }
+    channels["PickFour"].handler({ reason = "rest", size = 4 })
+    return windows[1]
+end
+local function ticked(w, label) return find(w, "checkbox", label) and find(w, "checkbox", label).Checked end
+local DEAD = { dead = true, active = true, locked = true, lockReason = "dead" }
+local function dead(uuid, name)
+    local e = { uuid = uuid, name = name }
+    for k, v in pairs(DEAD) do e[k] = v end
+    return e
+end
+local TAV = { uuid = "a", name = "Tav", active = true, locked = true, avatar = true }
+
+-- A. Dead party members count towards the four: you + 2 dead + 2 alive asks for 4.
+local w = picker({ TAV, dead("d1", "Gale"), dead("d2", "Wyll"),
+    { uuid = "x", name = "Karlach", active = true }, { uuid = "y", name = "Laezel", active = true } })
+local keep4 = find(w, "button", "Keep these 4")
+check(keep4 and keep4.Disabled == false and find(w, "text", "Selected 4 of 4"), "A: 2 dead + 2 alive: asks for 4, can confirm")
+check(ticked(w, "Karlach") == true and ticked(w, "Laezel") == false, "A: one living companion preselected")
+keep4.OnClick()
+local last = applyRequests[#applyRequests]
+check(last and last.reason == "rest" and #last.uuids == 1 and last.uuids[1] == "x", "A: sends the one living companion kept")
+-- you + 3 dead + 1 alive: nothing to choose, still confirmable.
+w = picker({ TAV, dead("d1", "Gale"), dead("d2", "Wyll"), dead("d3", "Astarion"),
+    { uuid = "x", name = "Karlach", active = true } })
+keep4 = find(w, "button", "Keep these 4")
+check(keep4 and keep4.Disabled == false and find(w, "text", "Nobody else can be chosen tonight."),
+    "A: 3 dead + 1 alive: asks for 4, confirmable, says nobody else can be chosen")
+-- Stuck party members (the server's own check) are kept and always sent.
+w = picker({ TAV, { uuid = "s", name = "Shadowheart", active = true, stuck = "can't talk right now (DB_CantTalk_IgnoreCombat)" },
+    { uuid = "x", name = "Karlach", active = true }, { uuid = "y", name = "Laezel", active = true },
+    { uuid = "z", name = "Gale", active = true } })
+local shLabel = nil
+for _, k in ipairs(w.Children) do
+    if k.kind == "checkbox" and tostring(k.Label):find("^Shadowheart") then shLabel = k end
+end
+check(shLabel and shLabel.Checked == true and shLabel.Disabled == true and tostring(shLabel.Label):find("can't leave now"),
+    "A: a stuck member is shown kept, with the reason")
+find(w, "button", "Keep these 4").OnClick()
+last = applyRequests[#applyRequests]
+local sent = {}
+for _, u in ipairs(last.uuids) do sent[u] = true end
+check(#last.uuids == 3 and sent.s and sent.x and sent.y, "A: the stuck member is sent with the two chosen")
+
+-- D. One request at a time: both buttons are disabled until the answer; a refusal enables them again.
+w = picker({ TAV, { uuid = "x", name = "Karlach", active = true }, { uuid = "y", name = "Laezel", active = true },
+    { uuid = "z", name = "Gale", active = true }, { uuid = "q", name = "Wyll", active = true } })
+applyReply = "pending"
+find(w, "button", "Keep these 4").OnClick()
+check(find(w, "button", "Keep these 4").Disabled == true and find(w, "button", "Keep everyone this time").Disabled == true,
+    "D: both buttons disabled while the trim request runs")
+local n9 = #applyRequests
+applyCallback({ accepted = false, message = "A party change is already in progress." })
+check(find(w, "button", "Keep these 4").Disabled == false and find(w, "button", "Keep everyone this time").Disabled == false,
+    "D: a refusal enables them again")
+applyReply = { accepted = true, message = "Changing the party..." }
+check(n9 >= 1, "D: the trim request was sent")
+check(not table.concat(clientLog, "\n"):find("could not draw"), "the picker drew without errors")
 
 print(string.format("client: %d passed, %d failed", passed, failed))
 if failed > 0 then error("client tests failed") end

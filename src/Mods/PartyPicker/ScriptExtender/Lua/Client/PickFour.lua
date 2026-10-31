@@ -52,13 +52,34 @@ local function render(reason, size, reply)
     end
     w:AddSeparator()
 
+    -- Party members the game will not let go right now (`stuck`, the server's own check) are drawn
+    -- locked and always sent, as the server would refuse the whole change without them.
+    local entries, stuck = {}, {}
+    for i, e in ipairs(reply.entries or {}) do
+        if e.active and not e.locked and e.stuck then
+            local copy = {}
+            for k, v in pairs(e) do copy[k] = v end
+            copy.locked, copy.lockReason = true, "can't leave now: " .. tostring(e.stuck)
+            entries[i] = copy
+            stuck[#stuck + 1] = e.uuid
+        else
+            entries[i] = e
+        end
+    end
+
+    -- Mandatory: party members this mod keeps whatever is ticked (players' characters, the dead, the
+    -- stuck). They count towards the four (the server keeps them: Server/Party.lua Apply), so the dead
+    -- are counted too (review 2026-10-31, point 7). Optional: anyone else alive, in the party or in camp.
+    local mandatory, optional = 0, 0
+    for _, e in ipairs(entries) do
+        if e.locked and e.active then mandatory = mandatory + 1
+        elseif not e.locked and not e.dead then optional = optional + 1 end
+    end
+    local need = math.min(size, mandatory + optional)
+
     -- Start from the members already in the party, in roster order
     -- (your own character first), up to the size.
-    local entries = reply.entries or {}
-    local taken = 0
-    for _, e in ipairs(entries) do
-        if e.locked and e.active then taken = taken + 1 end
-    end
+    local taken = mandatory
     local pre = {}
     for _, e in ipairs(entries) do
         if e.active and not e.locked and not e.dead and taken < size then
@@ -67,26 +88,20 @@ local function render(reason, size, reply)
         end
     end
 
-    -- Only party members (and camp companions, in case someone swapped) can be chosen.
-    local available = 0
-    for _, e in ipairs(entries) do
-        if not e.dead and (e.active or not e.locked) then available = available + 1 end
-    end
-    local need = math.min(size, available)
-    local lockedCount = 0
-    for _, e in ipairs(entries) do
-        if e.locked and e.active then lockedCount = lockedCount + 1 end
-    end
-    if lockedCount > size then
-        -- Several players' characters: this mod never moves those.
-        w:AddText(string.format("%d characters belong to players and cannot be sent to camp,", lockedCount))
+    if mandatory > size then
+        -- Several players' characters (or members the game holds): this mod never moves those.
+        w:AddText(string.format("%d party members cannot be sent to camp right now,", mandatory))
         w:AddText("so the party cannot be trimmed to four here.")
+    elseif optional == 0 or mandatory == need then
+        w:AddText("Nobody else can be chosen tonight.")
     end
+    local lockedCount = mandatory
 
     local countText, confirm
+    local requestRunning = false
     local function onChange(n)
         if countText then countText.Label = string.format("Selected %d of %d", n, need) end
-        if confirm then confirm.Disabled = (n ~= need) or lockedCount > size end
+        if confirm then confirm.Disabled = requestRunning or (n ~= need) or lockedCount > size end
     end
 
     local list = RosterList.Draw(w, entries, {
@@ -98,25 +113,44 @@ local function render(reason, size, reply)
     countText = w:AddText("")
     local status = w:AddText("")
 
+    -- One request at a time: the first click on either button disables both until the server has
+    -- answered; a refusal enables them again (review 2026-10-31, point 2).
+    local keepAll
+    local function setBusy(on)
+        requestRunning = on
+        onChange(list:Count())
+        if keepAll then keepAll.Disabled = on end
+    end
+
     confirm = w:AddButton("Keep these " .. need)
     confirm.OnClick = function()
+        setBusy(true)
         status.Label = "Changing the party..."
-        PP.Net.Apply:RequestToServer({ uuids = list:Selected(), reason = reason }, function(resp)
+        local uuids = list:Selected()
+        for _, u in ipairs(stuck) do uuids[#uuids + 1] = u end
+        PP.Net.Apply:RequestToServer({ uuids = uuids, reason = reason }, function(resp)
             if resp and resp.accepted then
                 -- The server sends a Notice with the outcome; it replaces this window.
                 status.Label = resp.message or ""
             else
                 status.Label = (resp and resp.message) or "No reply."
+                setBusy(false)
             end
         end)
     end
 
-    local keepAll = w:AddButton("Keep everyone this time")
+    keepAll = w:AddButton("Keep everyone this time")
     keepAll.SameLine = true
     keepAll.OnClick = function()
+        setBusy(true)
         PP.Net.Apply:RequestToServer({ reason = reason, keepAll = true }, function(resp)
-            RosterList.Clear(w)
-            showMessage((resp and resp.message) or "No reply.")
+            if resp and resp.accepted then
+                RosterList.Clear(w)
+                showMessage(resp.message or "")
+            else
+                status.Label = (resp and resp.message) or "No reply."
+                setBusy(false)
+            end
         end)
     end
 

@@ -18,6 +18,8 @@ local function label(e)
     if not e.active and e.inCamp then tags[#tags + 1] = "in camp" end
     -- An off-stage member already in the party: the game will not move them.
     if e.active and e.offStage then tags[#tags + 1] = "off stage" end
+    -- A party member the game holds right now (the server's check): it will refuse sending them to camp.
+    if e.active and e.stuck and not e.locked then tags[#tags + 1] = "can't leave now" end
     if e.locked and e.lockReason and not e.avatar then tags[#tags + 1] = e.lockReason end
     if #tags == 0 then return e.name end
     return e.name .. "  (" .. table.concat(tags, ", ") .. ")"

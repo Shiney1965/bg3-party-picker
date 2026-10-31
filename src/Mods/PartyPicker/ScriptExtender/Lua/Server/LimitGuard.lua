@@ -77,6 +77,11 @@ function LimitGuard.OnSettingChanged()
     end)
 end
 
+-- The MCM profile changed: a slider check still waiting would read and write the new profile.
+function LimitGuard.Cancel()
+    generation = generation + 1
+end
+
 -- A save has loaded or the MCM profile changed: tell the host if this game's party is bigger than the
 -- setting. The setting is left alone (it is shared by every save).
 function LimitGuard.CheckLoadedParty()

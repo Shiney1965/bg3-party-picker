@@ -1128,6 +1128,14 @@ rr = tabReset()
 check(rr and not rr.accepted and rr.message:find("host") and globalFlag(RECRUITABLE), "another player: refused")
 M.hostPeer = 65536
 -- The reset from the tab while he is in the party: sent to camp, then repaired.
+-- 1.1.1 (review point 8): with a dead party member, too; Party.Apply skips the members it keeps anyway.
+local deadOne
+for _, u in ipairs(activeUuids()) do
+    local ch = M.chars[u]
+    if ch and u ~= halsin.uuid and ch ~= M.host and not deadOne then deadOne = ch end
+end
+check(deadOne ~= nil, "a party member to play dead")
+deadOne.dead = true
 M.broadcasts = {}
 rr = tabReset()
 check(rr and rr.accepted and rr.message:find("Sending Halsin to camp"), "reset: accepted, sending him to camp")
@@ -1139,6 +1147,8 @@ check(#dlg32 == 1 and dlg32[1][2]:find("^CAMP_Halsin2_c0ab0f6f"), "reset: camp d
 msgs = M.messages()
 check(#msgs == 1 and msgs[1]:find("back on track"), "reset: the outcome in a message window")
 check(Ext.Vars.GetModVariables(ModuleUUID).Halsin.reset == true, "reset: recorded")
+check(#M.db("DB_Players"):Get(deadOne.id) == 1, "reset with a dead party member: done, the body stays in the party")
+deadOne.dead = false
 -- After the reset, join early no longer unlocks him; the section is gone.
 check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "after the reset: locked even with join early on")
 check(roster32().halsin == nil, "after the reset: no Halsin section")
@@ -1242,6 +1252,257 @@ M.log = {}
 M.events.SessionLoaded()
 check(not logText():find("WARNING"), "no warning without that mod")
 Ext.Mod = nil
+
+-- 34. 1.1.1: fixes from the external review (docs/PLAN_1.1.1_review_fixes.md, units C-H and L; A, D, I,
+-- J in tests/test_client.lua; B in scenario 32).
+settings.max_party_size = 8
+settings.prompt_long_rest, settings.auto_restore, settings.block_in_combat = nil, nil, nil
+Party.ApplyMaxSize()
+M.runTimers()
+M.runLongTimers()
+Restrictions.ClearPending()
+local ORIG = { c.Shadowheart, c.Astarion, c.Gale, c.Laezel, c.Karlach, c.Wyll }
+-- Tav plus `members` in the party; every other listed companion in camp, alive and on stage.
+local function setParty(members)
+    local want = {}
+    for _, ch in ipairs(members) do want[ch.uuid] = true end
+    for _, e in ipairs(Party.Roster()) do
+        if e.active and not e.avatar and not want[e.uuid] then
+            M.db("DB_Players"):Delete(e.id)
+            M.db("DB_PartyMembers"):Delete(e.id)
+            M.db("DB_InCamp")(e.id)
+        end
+    end
+    for _, ch in ipairs(ORIG) do
+        ch.dead, ch.inCombat = nil, nil
+        M.setOnStage(ch, true)
+        if want[ch.uuid] then
+            M.db("DB_Players")(ch.id)
+            M.db("DB_PartyMembers")(ch.id)
+            M.db("DB_InCamp"):Delete(ch.id)
+            M.db("DB_GLO_PartyMembers_DefaultFaction"):Delete(ch.id, nil)
+        else
+            M.db("DB_GLO_PartyMembers_DefaultFaction")(ch.id, "PlayerFaction")
+        end
+    end
+end
+local function inParty(ch) return #M.db("DB_Players"):Get(ch.id) == 1 end
+local function notices()
+    local out = {}
+    for _, b in ipairs(M.broadcasts) do
+        if b.channel == "Notice" then out[#out + 1] = b.data end
+    end
+    return out
+end
+local function record(party)
+    Ext.Vars.GetModVariables(ModuleUUID).Pending = { reason = "rest", party = party, trimmed = true }
+end
+local function uuids(list)
+    local out = {}
+    for _, ch in ipairs(list) do out[#out + 1] = ch.uuid end
+    return out
+end
+
+-- C. The trim marks its record before anyone is sent to camp: a save made while it runs keeps it.
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
+M.fire("PROC_Camp_TryEnterNightModeFailed", 2, "after", M.host.id, "PartyPicker_PartyLargerThanFour")
+check(Restrictions.GetPending() and Restrictions.GetPending().trimmed == false, "C: record made when the rest is held")
+local replyC
+PP.Net.Apply:RequestToServer({ uuids = uuids({ c.Shadowheart, c.Astarion, c.Gale }), reason = "rest" },
+    function(r) replyC = r end)
+local savedNow = Restrictions.GetPending() -- a save at this moment, before any timer
+check(replyC and replyC.accepted and savedNow and savedNow.trimmed == true and #savedNow.party == 5
+    and not inParty(c.Laezel), "C: record marked trimmed before the timers run (Laezel already in camp)")
+-- D. "Keep everyone this time" while the trim runs is refused and the record stays.
+local rD = PP.Net.Apply.requestHandler({ reason = "rest", keepAll = true }, M.hostPeer)
+check(rD and not rD.accepted and tostring(rD.message):find("in progress")
+    and Restrictions.GetPending() and Restrictions.GetPending().trimmed, "D: keep-all refused during the trim; record kept")
+M.runTimers()
+check(Restrictions.GetPending() and Restrictions.GetPending().trimmed and #Restrictions.GetPending().party == 5,
+    "C: record still trimmed after the trim finished")
+-- C. A refused trim leaves the record unmarked.
+Ext.Vars.GetModVariables(ModuleUUID).Pending = { reason = "rest", party = uuids({ M.host }), trimmed = false }
+replyC = nil
+PP.Net.Apply:RequestToServer({ uuids = uuids({ c.Shadowheart, c.Astarion, c.Gale, c.Karlach, c.Wyll }), reason = "rest" },
+    function(r) replyC = r end)
+check(replyC and not replyC.accepted and Restrictions.GetPending().trimmed == false, "C: a refused trim leaves it unmarked")
+-- C. No record when the trim starts (a hand change cleared it): made from the party before the change.
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
+Restrictions.ClearPending()
+apply({ uuids = uuids({ c.Shadowheart, c.Astarion, c.Gale }), reason = "rest" })
+local made = Restrictions.GetPending()
+check(made and made.trimmed and #made.party == 5, "C: missing record made again from the party before the trim")
+
+-- F. Restore names who could not come back; the record is cleared.
+c.Laezel.dead = true
+local party34 = {}
+for i, u in ipairs(made.party) do party34[i] = u end
+party34[#party34 + 1] = U(999) -- left the team since
+record(party34)
+local okF, msgF, nothingF = Restrictions.Restore()
+check(okF and nothingF and tostring(msgF):find("Nobody else could come back") and tostring(msgF):find("Laezel %(dead%)")
+    and tostring(msgF):find("no longer with the party") and not tostring(msgF):find("Everyone is already back"),
+    "F: nothing to do but someone missing: named, not 'everyone is back': " .. tostring(msgF))
+check(Restrictions.GetPending() == nil, "F: record cleared")
+c.Laezel.dead = nil
+-- F. One comes back, one cannot: the result names both.
+record(party34)
+local resultF
+Restrictions.Restore(function(r) resultF = r end)
+M.runTimers()
+check(inParty(c.Laezel) and resultF and resultF.ok and resultF.message:find("Joined: Laezel")
+    and resultF.message:find("Could not bring back: .*no longer with the party") and Restrictions.GetPending() == nil,
+    "F: restored with the missing one named: " .. tostring(resultF and resultF.message))
+-- F/L. A joiner who must wait never takes a slot; with no room left the next one is named.
+settings.max_party_size = 4
+setParty({ c.Shadowheart, c.Wyll })                               -- Wyll joined since the trim
+record(uuids({ M.host, c.Shadowheart, c.Astarion, c.Gale }))       -- limit 4 (the record)
+M.db("DB_CantMove")(c.Astarion.id)                                 -- in a camp scene
+Restrictions.Restore(function(r) resultF = r end)
+M.runTimers()
+check(inParty(c.Gale) and not inParty(c.Astarion), "L: the held joiner waits, the next one gets the slot")
+check(resultF and not resultF.ok and resultF.message:find("Astarion could not rejoin yet: can't move")
+    and Restrictions.GetPending() ~= nil, "L: the waiting one is named and the record kept: " .. tostring(resultF and resultF.message))
+M.db("DB_CantMove"):Delete(c.Astarion.id)
+setParty({ c.Shadowheart, c.Wyll })
+record(uuids({ M.host, c.Shadowheart, c.Astarion, c.Gale }))
+Restrictions.Restore(function(r) resultF = r end)
+M.runTimers()
+check(inParty(c.Astarion) and not inParty(c.Gale) and resultF.ok
+    and resultF.message:find("Gale %(no room: party limit 4%)"), "F: over the limit is named: " .. tostring(resultF.message))
+settings.max_party_size = 8
+Restrictions.ClearPending()
+
+-- L. The game's own restrictions.
+setParty({ c.Shadowheart })
+local function tryJoin(ch)
+    M.log = {}
+    return apply({ uuids = uuids({ c.Shadowheart, ch }) })
+end
+M.db("DB_CantMove")(c.Karlach.id)
+reply = tryJoin(c.Karlach)
+check(reply and not reply.accepted and reply.message:find("Karlach can't move right now")
+    and reply.message:find("DB_CantMove") and not inParty(c.Karlach), "L: joiner in a conversation refused: " .. tostring(reply.message))
+check(logText():find("request refused[^\n]*Karlach"), "L: the refusal is logged")
+M.db("DB_CantMove"):Delete(c.Karlach.id)
+M.db("DB_IsArrested")("S_Guard_" .. U(998), c.Karlach.id)
+reply = tryJoin(c.Karlach)
+check(reply and not reply.accepted and reply.message:find("under arrest"), "L: arrested joiner refused")
+M.db("DB_IsArrested"):Delete(nil, c.Karlach.id)
+M.db("DB_Camp_NightMode")(1)
+reply = tryJoin(c.Karlach)
+check(reply and not reply.accepted and reply.message:find("camp night"), "L: no joining during the camp night")
+M.db("DB_Camp_NightMode"):Delete(1)
+-- A blocked-zone row for a camp companion may be stale (not kept up to date outside DB_Players): ignored.
+M.db("DB_InBlockedWaypointZone")(c.Karlach.id, "S_Zone_" .. U(997))
+reply = tryJoin(c.Karlach)
+check(reply and reply.accepted and inParty(c.Karlach), "L: a camp companion's blocked-zone row does not block joining")
+M.db("DB_InBlockedWaypointZone"):Delete(c.Karlach.id, nil)
+-- Leavers: can't talk (except combat) and the dialog-suppression zone.
+setParty({ c.Shadowheart, c.Astarion })
+M.db("DB_CantTalk_IgnoreCombat")(c.Astarion.id)
+local entryL
+for _, e in ipairs(PP.Net.Roster.requestHandler({}, M.hostPeer).entries) do
+    if e.uuid == c.Astarion.uuid then entryL = e end
+end
+check(entryL and tostring(entryL.stuck):find("can't talk"), "L: the roster marks him as unable to leave now")
+reply = apply({ uuids = uuids({ c.Shadowheart }) })
+check(reply and not reply.accepted and reply.message:find("Astarion can't talk right now")
+    and reply.message:find("DB_CantTalk_IgnoreCombat") and inParty(c.Astarion), "L: leaver who can't talk refused")
+M.db("DB_CantTalk_IgnoreCombat"):Delete(c.Astarion.id)
+M.db("DB_PartyDialogSuppressed")(c.Astarion.id, "S_Zone_" .. U(996))
+reply = apply({ uuids = uuids({ c.Shadowheart }) })
+check(reply and not reply.accepted and reply.message:find("can't be dismissed"), "L: leaver in a dialog-suppression zone refused")
+M.db("DB_PartyDialogSuppressed"):Delete(c.Astarion.id, nil)
+-- Combat stays the setting's decision.
+settings.block_in_combat = false
+c.Astarion.inCombat = true
+reply = apply({ uuids = uuids({ c.Shadowheart }) })
+check(reply and reply.accepted and not inParty(c.Astarion), "L: block_in_combat off: a member in combat still leaves")
+settings.block_in_combat = nil
+c.Astarion.inCombat = nil
+-- An ordinary camp swap with none of these rows still works.
+reply = apply({ uuids = uuids({ c.Shadowheart, c.Gale }) })
+check(reply and reply.accepted and inParty(c.Gale), "L: ordinary swap still works")
+
+-- E. `done` is called once, even when it raises.
+setParty({ c.Shadowheart, c.Astarion })
+M.log = {}
+local calls = 0
+local accE = Party.Apply(uuids({ c.Shadowheart }), nil, function() calls = calls + 1; error("boom") end)
+M.runTimers()
+check(accE and calls == 1 and logText():find("party change callback failed:[^\n]*boom")
+    and not logText():find("party change failed"), "E: a raising callback runs once and is not a failed change")
+check(not Party.IsBusy(), "E: busy released")
+
+-- G. Auto-restore: one run for both wake-up triggers, retries a completed-but-incomplete restore,
+-- and shows only the final outcome.
+local realCheckAdd = Osi.PROC_GLO_PartyMembers_CheckAdd
+local failAdds = 0
+Osi.PROC_GLO_PartyMembers_CheckAdd = function(...)
+    if failAdds > 0 then failAdds = failAdds - 1; return end
+    return realCheckAdd(...)
+end
+setParty({ c.Shadowheart })
+record(uuids({ M.host, c.Shadowheart, c.Gale }))
+failAdds = 1
+M.broadcasts, M.log = {}, {}
+M.fire("LongRestFinished", 0, "after")
+M.fire("DB_Camp_NightMode", 1, "afterDelete", 1)
+M.runTimers()
+local n34 = notices()
+check(inParty(c.Gale) and Restrictions.GetPending() == nil, "G: restored on the second attempt")
+check(#n34 == 1 and n34[1].kind == "info" and n34[1].text:find("Joined: Gale"),
+    "G: one notice, the final success (got " .. #n34 .. ")")
+check(logText():find("restore incomplete, trying again"), "G: the incomplete first attempt is only logged")
+-- Every attempt fails: one warning at the end, with the way out.
+setParty({ c.Shadowheart })
+record(uuids({ M.host, c.Shadowheart, c.Gale }))
+failAdds = 100
+M.broadcasts = {}
+M.fire("LongRestFinished", 0, "after")
+M.runTimers()
+n34 = notices()
+check(#n34 == 1 and n34[1].kind == "warning" and n34[1].text:find("Choosing the party by hand"),
+    "G: one final warning (got " .. #n34 .. ")")
+failAdds = 0
+Osi.PROC_GLO_PartyMembers_CheckAdd = realCheckAdd
+-- Nothing to do: the notice still comes, once for both triggers.
+setParty({ c.Shadowheart, c.Gale })
+record(uuids({ M.host, c.Shadowheart, c.Gale }))
+M.broadcasts = {}
+M.fire("LongRestFinished", 0, "after")
+M.fire("DB_Camp_NightMode", 1, "afterDelete", 1)
+M.runTimers()
+n34 = notices()
+check(#n34 == 1 and n34[1].text == "Everyone is already back.", "G: nothing to do: one notice (got " .. #n34 .. ")")
+-- auto_restore off: one reminder for both triggers.
+record(uuids({ M.host, c.Shadowheart, c.Gale, c.Wyll }))
+settings.auto_restore = false
+M.broadcasts = {}
+M.fire("LongRestFinished", 0, "after")
+M.fire("DB_Camp_NightMode", 1, "afterDelete", 1)
+M.runTimers()
+n34 = notices()
+check(#n34 == 1 and n34[1].text:find("waiting in camp"), "G: auto_restore off: one reminder (got " .. #n34 .. ")")
+settings.auto_restore = nil
+Restrictions.ClearPending()
+
+-- H. A profile switch cancels a slider check still waiting (it would write the new profile).
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel, c.Karlach })
+settings.max_party_size = 4
+mcmSets = {}
+M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "max_party_size", value = 4 })
+M.mcmEvent("MCM_Profile_Activated", {})
+M.runTimers()
+check(#mcmSets == 0 and settings.max_party_size == 4, "H: no write into the new profile")
+-- Without a switch the slider check still writes back (unchanged).
+M.mcmEvent("MCM_Setting_Saved", { modUUID = ModuleUUID, settingId = "max_party_size", value = 4 })
+M.runTimers()
+check(#mcmSets == 1 and settings.max_party_size == 6, "H: the slider check itself still works")
+settings.max_party_size = savedMax
+Party.ApplyMaxSize()
+M.runTimers()
 
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end

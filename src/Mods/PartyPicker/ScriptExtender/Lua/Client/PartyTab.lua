@@ -108,10 +108,11 @@ local function render(slot, reply)
     -- would refuse the whole request. It asks once first; every redraw goes
     -- through PartyTab.Refresh, which fetches the party again, so the count
     -- is current and no button is destroyed while its own click is running.
+    -- Members the game holds right now (`stuck`) are kept the same way.
     local movable, keepOffStage, staying, avatarName = 0, {}, 0, nil
     for _, e in ipairs(entries) do
         if e.active and not e.locked then
-            if e.offStage then keepOffStage[#keepOffStage + 1] = e.uuid else movable = movable + 1 end
+            if e.offStage or e.stuck then keepOffStage[#keepOffStage + 1] = e.uuid else movable = movable + 1 end
         end
         if e.active and e.locked then staying = staying + 1 end
         if e.active and e.avatar and not avatarName then avatarName = e.name end

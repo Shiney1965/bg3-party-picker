@@ -8,12 +8,21 @@ local HalsinRepair = Ext.Require("Server/HalsinRepair.lua")
 
 local function rosterReply()
     local entries = {}
+    local checkCombat = PP.Setting("block_in_combat", true) ~= false
     for _, e in ipairs(Party.Roster()) do
+        -- stuck: a party member the game will not let go right now (the server's own check), so the
+        -- pick-four window keeps them and "Send everyone to camp" leaves them (plan review 2026-10-31, 5).
+        local stuck = nil
+        if e.active and not e.locked then
+            local ok, why = pcall(Party.LeaveBlockedReason, e.id, checkCombat)
+            if ok then stuck = why end
+        end
         entries[#entries + 1] = {
             uuid = e.uuid, name = e.name, active = e.active, inCamp = e.inCamp,
             avatar = e.avatar, hireling = e.hireling, dead = e.dead,
             offStage = e.offStage == true,
             locked = e.locked == true, lockReason = e.lockReason,
+            stuck = stuck,
         }
     end
     local pending = Restrictions.GetPending()
@@ -71,11 +80,21 @@ PP.Net.Apply:SetRequestHandler(safeHandler(function(data, user)
     end
     data = data or {}
     if data.keepAll and data.reason then
+        -- A trim still running must keep its record (review 2026-10-31, point 2).
+        if Party.IsBusy() then
+            PP.Log("request refused: A party change is already in progress.")
+            return { accepted = false, message = "A party change is already in progress." }
+        end
         Restrictions.BypassOnce(data.reason)
         return { accepted = true, message = "Keeping everyone this time. Press End the Day again." }
     end
     local opts = {}
-    if data.reason then opts.limit = PP.RESTRICTED_SIZE end
+    if data.reason then
+        opts.limit = PP.RESTRICTED_SIZE
+        opts.beforeChange = function(_, toRemove, activeBefore)
+            Restrictions.MarkTrimming(data.reason, toRemove, activeBefore)
+        end
+    end
     local accepted, message = Party.Apply(data.uuids or {}, opts, function(result)
         Restrictions.Notice(result.message, result.ok and "info" or "warning")
         if data.reason then
@@ -159,6 +178,8 @@ end)
 -- Another MCM profile may hold another limit.
 pcall(function()
     Ext.ModEvents.BG3MCM["MCM_Profile_Activated"]:Subscribe(function()
+        -- A slider check still waiting belongs to the old profile (review 2026-10-31, point 6).
+        pcall(LimitGuard.Cancel)
         pcall(Party.ApplyMaxSize)
         pcall(LimitGuard.CheckLoadedParty)
     end)

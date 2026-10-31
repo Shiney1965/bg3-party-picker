@@ -92,6 +92,18 @@ local function ask(reason)
     PP.Net.PickFour:Broadcast({ reason = reason, size = PP.RESTRICTED_SIZE })
 end
 
+-- Called by Party.Apply just before the picker's choice sends anyone to camp, in the same Lua call, so a
+-- save made while the trim runs already has the record marked (review 2026-10-31, point 1). If the record
+-- is gone (a hand change on the Party tab cleared it while the picker was open), it is made again from
+-- the party as it was before this change.
+function Restrictions.MarkTrimming(reason, toRemove, activeBefore)
+    if not toRemove or #toRemove == 0 then return end
+    local p = Restrictions.GetPending()
+    if p and p.trimmed then return end
+    -- A new table: writes to sub-fields are not saved (API.md).
+    setPending({ reason = reason, party = (p and p.party) or activeBefore or {}, trimmed = true })
+end
+
 -- Called after the picker's choice was carried out (fully or partly).
 function Restrictions.OnTrimmed(reason, result)
     local p = Restrictions.GetPending()
@@ -107,50 +119,74 @@ end
 
 -- Bring back the members who were sent to camp by a trim. Never sends
 -- anyone to camp: whoever is in the party now stays, and returning members
--- only fill free places up to the limit.
+-- only fill free places up to the limit. Members who cannot come back at all (dead, locked, gone, no
+-- room) are named in the message; the record is still cleared, and the player adds them on the Party
+-- tab once they can join (review 2026-10-31, point 4). Returns accepted, message, nothingToDo.
 function Restrictions.Restore(done)
     local p = Restrictions.GetPending()
     if not p then
         return false, "There is no trimmed party to restore."
     end
-    local accepted, message, nothingToDo = Party.Apply(p.party, { addOnly = true }, function(result)
+    local accepted, message, nothingToDo, skipped = Party.Apply(p.party, { addOnly = true }, function(result)
         if result.ok then setPending(nil) end
         if done then done(result) end
     end)
     if nothingToDo then
         setPending(nil)
-        return true, "Everyone is already back."
+        if skipped and #skipped > 0 then
+            return true, "Nobody else could come back: " .. Party.SkippedText(skipped) .. ".", true
+        end
+        return true, "Everyone is already back.", true
     end
-    return accepted, message
+    return accepted, message, false
 end
 
+local GIVE_UP_HINT = "Use Restore on the Party tab. Choosing the party by hand on the Party tab ends the wait."
+
+-- Waking up fires two triggers (LongRestFinished and the end of camp night). Each call starts a new run;
+-- an older run stops scheduling attempts, but a success it reports is always shown.
+local autoRun = 0
 local function autoRestore()
     local p = Restrictions.GetPending()
     if not p or not p.trimmed then return end
-    if PP.Setting("auto_restore", true) == false then
-        Restrictions.Notice("The rest of your party is waiting in camp. Use Restore on the Party tab to bring them back.")
-        return
-    end
+    autoRun = autoRun + 1
+    local run = autoRun
     local tries = 0
     local function attempt()
         -- Another trigger (or the player) may have finished the job already.
         local current = Restrictions.GetPending()
         if not current or not current.trimmed then return end
+        if run ~= autoRun then return end
+        if PP.Setting("auto_restore", true) == false then
+            Restrictions.Notice("The rest of your party is waiting in camp. Use Restore on the Party tab to bring them back.")
+            return
+        end
         tries = tries + 1
-        local accepted, message = Restrictions.Restore(function(result)
-            Restrictions.Notice(result.message, result.ok and "info" or "warning")
+        local accepted, message, nothingToDo = Restrictions.Restore(function(result)
+            if result.ok then
+                Restrictions.Notice(result.message, "info")
+            elseif run ~= autoRun then
+                PP.Log("restore incomplete (a newer attempt follows): " .. tostring(result.message))
+            elseif tries < RESTORE_TRIES then
+                PP.Log("restore incomplete, trying again: " .. tostring(result.message))
+                Ext.Timer.WaitFor(RESTORE_RETRY_MS, attempt)
+            else
+                Restrictions.Notice(tostring(result.message) .. " " .. GIVE_UP_HINT, "warning")
+            end
         end)
         if accepted then
-            if message == "Everyone is already back." then Restrictions.Notice(message) end
+            if nothingToDo then Restrictions.Notice(message) end
             return
         end
         if tries < RESTORE_TRIES then
+            PP.Log("restore refused, trying again: " .. tostring(message))
             Ext.Timer.WaitFor(RESTORE_RETRY_MS, attempt)
         else
-            Restrictions.Notice("Could not bring the party back yet (" .. tostring(message)
-                .. "). Use Restore on the Party tab.", "warning")
+            Restrictions.Notice("Could not bring the party back yet (" .. tostring(message) .. "). " .. GIVE_UP_HINT,
+                "warning")
         end
     end
+    -- The delay also merges the two wake-up triggers into one run.
     Ext.Timer.WaitFor(RESTORE_DELAY_MS, attempt)
 end
 

@@ -30,12 +30,22 @@ pcall(function()
         end
     end)
 end)
+-- Another MCM profile holds other settings and sends no MCM_Setting_Saved for them; MCM passes this
+-- event to the clients too (BG3-MCM ModEventManager:Emit). Review 2026-10-31, point 9.
+pcall(function()
+    Ext.ModEvents.BG3MCM["MCM_Profile_Activated"]:Subscribe(function()
+        pcall(PartyTab.SettingChanged)
+    end)
+end)
 
 PP.Net.Notice:SetHandler(function(data)
     local text = data and data.text or ""
     PP.Log(text)
     PickFour.Notice(text)
     PartyTab.SetStatus(text)
+    -- A notice is the outcome of a party change: redraw once it has happened rather than after a fixed
+    -- delay, keeping ticks not yet applied (review 2026-10-31).
+    pcall(PartyTab.SettingChanged)
 end)
 
 -- The Party tab inside MCM. MCM 1.38+ accepts a table of named arguments

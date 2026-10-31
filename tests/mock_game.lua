@@ -70,8 +70,19 @@ local function newDb(name)
     return db
 end
 
+-- Column counts of story tables that may be read while still empty (a wrong-count read must fail even
+-- then). From the story files: __AAA_FirstGoal.txt, _Waypoints.txt, GLO_PartyDialogSuppressionZones.txt,
+-- GLO_Camp.txt.
+local ARITY = {
+    DB_CantMove = 1, DB_CantTalk_IgnoreCombat = 1, DB_PartyDialogSuppressed = 2, DB_IsArrested = 2,
+    DB_InBlockedWaypointZone = 2, DB_Camp_NightMode = 1, DB_InDangerZone = 2,
+}
+
 function M.db(name)
-    if not dbs[name] then dbs[name] = newDb(name) end
+    if not dbs[name] then
+        dbs[name] = newDb(name)
+        dbs[name].arity = ARITY[name]
+    end
     return dbs[name]
 end
 
