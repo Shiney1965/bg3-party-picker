@@ -1,4 +1,22 @@
-# Party Picker: test run card (v1.1.1, TEST build)
+# Party Picker: test run card (v1.1.2, TEST build)
+
+**v1.1.2 (2026-10-31): TEST build: the Party tab follows deaths, revivals and downed members.** Plan
+`docs/PLAN_1.1.2_live_roster.md` (plan review: approve with changes, all taken; diff review: ship with notes, the
+should-fixes fixed). What changes: the server listens to the game's own Died, Resurrected, DownedChanged and
+LeftCombat events for anyone on the tab (or in the party or team) and, 1.5 s after the last of a burst, tells the
+clients to redraw; the tab also redraws when the MCM window opens and after a refused change; ticks not yet applied
+are kept for each redraw's own reply; a refusal for someone no longer listed names them. Nothing runs between
+events. Tests: 295 server + 51 client checks and the blueprint check pass; 9 server and 8 client new checks fail on
+1.1.1. The pak contains no occurrence of the author's name. **Built; NOT installed; not released.** (1.1.1
+E5C0E1CA… is what is installed.)
+
+**Pak:** `PartyPicker.pak` (60,398 bytes), built from an LF export (0 CR bytes)
+SHA256 `22034d1a4a6326e6bb42ad89400a386a1877900e541d06a71b6259d02494526b`
+
+**Test card for v1.1.2:** `docs/TEST_CARD_1.1.2.md` (record results in docs/TESTING.md); the 1.1.1 card's steps
+2-7 still apply.
+
+# v1.1.1 (kept for the record)
 
 **v1.1.1 (2026-10-31): TEST build with the fixes from an external review.** Evaluation
 `docs/REVIEW_external_2026-10-31.md`; plan `docs/PLAN_1.1.1_review_fixes.md` (plan review: approve with changes, all
