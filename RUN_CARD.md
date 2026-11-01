@@ -9,7 +9,9 @@ ticks; the trim stops if its record can't be saved; a rested, waiting party is r
 twice, a failed roster read and the auto-restore-off text in the long-rest window; the combat setting redraws the tab.
 The test mock now derives DB_CantMove from death and keeps every listener. Tests: 325 server + 103 client checks and
 the blueprint check pass; of the new checks 10 server and 12 client fail on 1.1.3. The pak contains no occurrence of the
-author's name. **Built; NOT installed; not released.** (1.1.2 22034D1A… is what is installed.)
+author's name. **INSTALLED 2026-11-01** at the author's word ("install 1.1.4, the game is closed"; no game process
+running; replaced 1.1.2 22034D1A…, 60,398 bytes; hash 9E06B3F3… checked after the copy). Not released; load check and
+the test cards pending.
 
 **Pak:** `PartyPicker.pak` (68,143 bytes), built from an LF export (0 CR bytes)
 SHA-256 `9e06b3f36268b64246128923483a2592d63e6d6f2d50996bfd0b995ac5a4d18e`. Checked by unpacking it with Divine.exe:
