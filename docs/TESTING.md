@@ -586,3 +586,10 @@ Party Picker, and create a version to ship with no Inspiration control.  OK?" Sc
 slider, Match the party limit, point controls, both console commands). The Inspiration work is kept on branch
 `inspiration-feature` (main at 667c4b8, v1.0.9); plan docs/PLAN_ship_without_inspiration.md. The cause of the
 missing reroll is not settled (open; a test without Raphael Joins the Party was not run).
+1.1.1 report, 2026-10-31 (Party tab after a death). The author: "When a party member dies they are not
+automatically removed from the list.  You have to hit refresh.  If possible when a party member dies the list
+should automatically reset to exclude that member." Then: "Is that feasible without adding constant checks to the
+game". Cause (verified in code): the tab redraws only when it is drawn, when our MCM page is activated
+(MCM_Mod_Tab_Activated), on a setting or profile change, on a notice, or on Refresh (Client/PartyTab.lua,
+BootstrapClient.lua); nothing listens for a death. The game raises one-off events for this (story_header.div
+L311-313 Dying/Died/Resurrected, L391 DownedChanged) and MCM emits MCM_Window_Opened (BG3-MCM EventChannels.lua).
