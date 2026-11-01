@@ -529,6 +529,165 @@ shown13 = #shown
 subscribers["MCM_Setting_Saved"]({ modUUID = ModuleUUID, settingId = "halsin_early", value = true })
 runTimers()
 check(#shown == shown13, "13: no message when it applies")
+
+-- 14. 1.1.4 (docs/PLAN_1.1.4_final_review_fixes.md).
+local DEAD_PC = "Your character (Tav) is dead. Party Picker can't change the party until they are revived (a "
+    .. "scroll, a spell, or Withers once he is at your camp)."
+local function tabTexts()
+    local t = {}
+    for _, k in ipairs(tab.Children) do if k.kind == "text" then t[#t + 1] = tostring(k.Label) end end
+    return table.concat(t, " ")
+end
+reply = {
+    maxSize = 6, setting = 6, hostDead = DEAD_PC,
+    entries = {
+        { uuid = "a", name = "Tav", active = true, locked = true, avatar = true, dead = true, lockReason = "player character" },
+        { uuid = "b", name = "Gale", active = true },
+        { uuid = "c", name = "Wyll", active = false, inCamp = true },
+        { uuid = "d", name = "Minsc", active = false, inCamp = true,
+          joinBlocked = "can't move right now (in a conversation, knocked out, or similar) (DB_CantMove)" },
+    },
+}
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+check(tabTexts():find("is dead. Party Picker can't change the party", 1, true), "14A: the tab says your character is dead")
+-- A refusal for death opens the message window.
+applyReply = { accepted = false, message = DEAD_PC, hostDead = true }
+local shown14 = #shown
+find(tab, "checkbox", "Gale").OnChange(nil, false)
+find(tab, "button", "Apply").OnClick()
+check(#shown == shown14 + 1 and shown[#shown] == DEAD_PC, "14A: the refusal comes in the message window")
+applyReply = { accepted = true, message = "Changing the party..." }
+runTimers()
+reply.hostDead = nil
+reply.entries[1] = { uuid = "a", name = "Tav", active = true, locked = true, avatar = true, lockReason = "player character" }
+-- C. A camp member the game holds: fixed unticked, a click says why, Apply never sends them.
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+local minsc = find(tab, "checkbox", "Minsc  (in camp, can't join now)")
+check(minsc and minsc.Checked == false and minsc.Disabled ~= true, "14C: a held camp member: unticked, clickable")
+if minsc then minsc.Checked = true; minsc.OnChange(nil, true) end
+check(minsc and minsc.Checked == false and shown[#shown] == "Minsc can't move right now (in a conversation, knocked "
+    .. "out, or similar), so they can't join the party right now. Press Refresh once that has changed.",
+    "14C: clicking keeps it unticked and says why")
+runTimers()
+find(tab, "button", "Apply").OnClick()
+local sentMinsc = false
+for _, u in ipairs((applyRequests[#applyRequests] or {}).uuids or {}) do if u == "d" then sentMinsc = true end end
+check(not sentMinsc, "14C: Apply does not send them")
+runTimers()
+-- D. The combat setting redraws the tab.
+local beforeD = rosterRequests
+settingSaved("block_in_combat")
+runTimers()
+check(rosterRequests > beforeD, "14D: block_in_combat redraws the tab")
+-- E. A tick made after an accepted Apply survives the redraw after it; the change itself shows as it is.
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+find(tab, "checkbox", "Gale").OnChange(nil, false)
+find(tab, "button", "Apply").OnClick()             -- accepted: Gale goes to camp
+find(tab, "checkbox", "Wyll  (in camp)").OnChange(nil, true) -- ticked after the press
+reply.entries[2] = { uuid = "b", name = "Gale", active = false, inCamp = true }
+runTimers()
+check(find(tab, "checkbox", "Wyll  (in camp)") and find(tab, "checkbox", "Wyll  (in camp)").Checked == true,
+    "14E: a tick made after the press survives the redraw")
+check(find(tab, "checkbox", "Gale  (in camp)") and find(tab, "checkbox", "Gale  (in camp)").Checked == false,
+    "14E: the change shows as it is")
+-- E. While the change runs (busy), the ticks it sent are shown, not the party as it was.
+reply.entries[2] = { uuid = "b", name = "Gale", active = true }
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+find(tab, "checkbox", "Gale").OnChange(nil, false)
+find(tab, "button", "Apply").OnClick()
+reply.busy = true
+runTimers()
+check(find(tab, "checkbox", "Gale") and find(tab, "checkbox", "Gale").Checked == false,
+    "14E: while the change runs, Gale shows as sent (unticked)")
+reply.busy = nil
+reply.entries[2] = { uuid = "b", name = "Gale", active = false, inCamp = true }
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+-- E. Cancel on "Send everyone to camp" keeps the ticks not yet applied.
+reply.entries[2] = { uuid = "b", name = "Gale", active = true }
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+find(tab, "checkbox", "Wyll  (in camp)").OnChange(nil, true)
+find(tab, "button", "Send everyone to camp").OnClick()
+runTimers()
+find(tab, "button", "Cancel").OnClick()
+runTimers()
+check(find(tab, "checkbox", "Wyll  (in camp)") and find(tab, "checkbox", "Wyll  (in camp)").Checked == true,
+    "14E: Cancel keeps the ticks not yet applied")
+-- E. "Send everyone to camp" > Yes: those sent to camp are not shown ticked afterwards (diff review 2026-11-01).
+reply.entries[2] = { uuid = "b", name = "Gale", active = true }
+reply.entries[3] = { uuid = "c", name = "Wyll", active = true }
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+find(tab, "button", "Send everyone to camp").OnClick()
+runTimers()
+find(tab, "button", "Yes, send them to camp").OnClick()
+reply.entries[2] = { uuid = "b", name = "Gale", active = false, inCamp = true }
+reply.entries[3] = { uuid = "c", name = "Wyll", active = false, inCamp = true }
+runTimers()
+check(find(tab, "checkbox", "Gale  (in camp)") and find(tab, "checkbox", "Gale  (in camp)").Checked == false
+    and find(tab, "checkbox", "Wyll  (in camp)").Checked == false, "14E: after Send everyone to camp, they show unticked")
+subscribers["MCM_Window_Opened"]({})
+runTimers()
+check(find(tab, "checkbox", "Gale  (in camp)").Checked == false and find(tab, "checkbox", "Wyll  (in camp)").Checked == false,
+    "14E: ... and stay unticked on the next redraw")
+reply.entries[3] = { uuid = "c", name = "Wyll", active = false, inCamp = true }
+-- E. "Send everyone to camp" with a redraw while it still runs, then the game leaves Gale in the party: he shows
+-- ticked again (re-review 2026-11-01: the baseline is what the list was drawn from).
+reply.entries[2] = { uuid = "b", name = "Gale", active = true }
+reply.entries[3] = { uuid = "c", name = "Wyll", active = true }
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+find(tab, "button", "Send everyone to camp").OnClick()
+runTimers()
+find(tab, "button", "Yes, send them to camp").OnClick()
+reply.busy = true
+runTimers()                                   -- the 1.5 s redraw comes while the change runs
+reply.busy = nil                              -- done: Wyll went, Gale "did not leave"
+reply.entries[3] = { uuid = "c", name = "Wyll", active = false, inCamp = true }
+subscribers["MCM_Window_Opened"]({})
+runTimers()
+check(find(tab, "checkbox", "Gale") and find(tab, "checkbox", "Gale").Checked == true
+    and find(tab, "checkbox", "Wyll  (in camp)") and find(tab, "checkbox", "Wyll  (in camp)").Checked == false,
+    "14E: a change that left someone in the party shows them ticked again")
+-- A. A notice about the host's own character is not shown to other players.
+Ext.Net.IsHost = function() return false end
+local statusBefore = find(tab, "text", "HOSTONLY")
+channels["Notice"].handler({ text = "HOSTONLY", kind = "warning", hostOnly = true })
+check(statusBefore == nil and find(tab, "text", "HOSTONLY") == nil, "14A: a host-only notice: not in other players' status line")
+Ext.Net.IsHost = isHostOrig
+-- A. Another player (not the host) does not see the host's "your character is dead" line.
+reply.hostDead = DEAD_PC
+Ext.Net.IsHost = function() return false end
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+check(not tabTexts():find("is dead. Party Picker", 1, true), "14A: not shown to other players")
+Ext.Net.IsHost = isHostOrig
+reply.hostDead = nil
+-- Pick-four window: a failed roster read, your character dead, a held camp member, auto-restore off.
+local w14 = picker({ TAV, { uuid = "x", name = "Karlach", active = true }, { uuid = "y", name = "Laezel", active = true },
+    { uuid = "z", name = "Gale", active = true }, { uuid = "q", name = "Wyll", active = true },
+    { uuid = "m", name = "Minsc", inCamp = true, joinBlocked = "can't move right now (in a conversation) (DB_CantMove)" } })
+local mins4 = find(w14, "checkbox", "Minsc  (in camp, can't join now: can't move right now (in a conversation))")
+check(mins4 and mins4.Disabled == true and find(w14, "text", "Selected 4 of 4"), "14C: pick-four: held camp member locked, not optional")
+reply = { error = "boom", entries = {} }
+channels["PickFour"].handler({ reason = "rest", size = 4 })
+local wErr = windows[1]
+check(find(wErr, "text", "Could not read the party: boom") and find(wErr, "button", "Keep these 0")
+    and find(wErr, "button", "Keep these 0").Disabled == true, "14I: pick-four: a failed read says so, no trim")
+reply = { hostDead = DEAD_PC, entries = { TAV } }
+channels["PickFour"].handler({ reason = "rest", size = 4 })
+check(find(windows[1], "text", DEAD_PC), "14A: pick-four: says your character is dead")
+MCM.Get = function(id) if id == "auto_restore" then return false end end
+reply = { entries = { TAV } }
+channels["PickFour"].handler({ reason = "rest", size = 4 })
+check(find(windows[1], "text", "until you press Restore on the Party tab after the rest."), "14J: auto-restore off: the text says so")
+MCM.Get = nil
+check(not table.concat(clientLog, "\n"):find("could not"), "14: no drawing errors")
 MW.Show = showOrig
 
 print(string.format("client: %d passed, %d failed", passed, failed))

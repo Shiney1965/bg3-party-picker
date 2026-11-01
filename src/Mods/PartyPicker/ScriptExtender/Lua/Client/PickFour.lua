@@ -7,13 +7,21 @@ local PickFour = {}
 
 local window = nil
 
-local INTRO = {
-    rest = {
+-- With "Bring the party back after the rest" off, the others only get a reminder in the morning
+-- (Server/Restrictions.lua autoRestore), so the text says so (final review 2026-11-01, finding 12).
+local function intro(reason)
+    if reason ~= "rest" then return nil end
+    local lines = {
         "The camp has four beds, and the game only puts four party members to bed.",
         "Choose who stays with you tonight. The others wait in camp",
-        "and rejoin when you wake up.",
-    },
-}
+    }
+    if PP.Setting("auto_restore", true) == false then
+        lines[#lines + 1] = "until you press Restore on the Party tab after the rest."
+    else
+        lines[#lines + 1] = "and rejoin when you wake up."
+    end
+    return lines
+end
 
 local function ensureWindow()
     if window then
@@ -47,9 +55,13 @@ end
 
 local function render(reason, size, reply)
     local w = ensureWindow()
-    for _, line in ipairs(INTRO[reason] or { "Choose " .. size .. " party members." }) do
+    for _, line in ipairs(intro(reason) or { "Choose " .. size .. " party members." }) do
         w:AddText(line)
     end
+    -- A failed roster read: no list to choose from; only "Keep everyone this time" (finding 11).
+    if reply.error then w:AddText("Could not read the party: " .. tostring(reply.error)) end
+    -- Your own character is dead: the server refuses the trim (plan 1.1.4 unit A).
+    if reply.hostDead then w:AddText(tostring(reply.hostDead)) end
     w:AddSeparator()
 
     -- Party members the game will not let go right now (`stuck`, the server's own check) are drawn
@@ -64,6 +76,14 @@ local function render(reason, size, reply)
                 "can't leave now: " .. (string.gsub(tostring(e.stuck), " %([%u_][%w_]*%)", ""))
             entries[i] = copy
             stuck[#stuck + 1] = e.uuid
+        elseif not e.active and not e.locked and not e.dead and e.joinBlocked then
+            -- A camp member the game holds: the server would refuse them, so they are locked here and not
+            -- counted as optional (final review 2026-11-01, finding 3).
+            local copy = {}
+            for k, v in pairs(e) do copy[k] = v end
+            copy.locked, copy.lockReason = true,
+                "can't join now: " .. (string.gsub(tostring(e.joinBlocked), " %([%u_][%w_]*%)", ""))
+            entries[i] = copy
         else
             entries[i] = e
         end
@@ -103,7 +123,9 @@ local function render(reason, size, reply)
     local requestRunning = false
     local function onChange(n)
         if countText then countText.Label = string.format("Selected %d of %d", n, need) end
-        if confirm then confirm.Disabled = requestRunning or (n ~= need) or lockedCount > size end
+        if confirm then
+            confirm.Disabled = requestRunning or (n ~= need) or lockedCount > size or reply.error ~= nil
+        end
     end
 
     local list = RosterList.Draw(w, entries, {

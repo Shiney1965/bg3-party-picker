@@ -227,12 +227,12 @@ check(#M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason").rows == 1, "
 M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason"):Delete(nil)
 
 -- 14. A dead party member is never sent to camp by an Apply.
-c.Gale.dead = true
+M.setDead(c.Gale, true)
 Osi.PROC_GLO_PartyMembers_Remove(c.Wyll.id, M.host.id, 1)
 Osi.PROC_GLO_PartyMembers_CheckAdd(c.Gale.id, M.host.id)
 reply = apply({ uuids = { ids.Shadowheart, ids.Astarion, ids.Laezel, ids.Karlach } })
 check(#M.db("DB_Players"):Get(c.Gale.id) == 1, "dead member kept in the party")
-c.Gale.dead = false
+M.setDead(c.Gale, false)
 
 -- 15. Restore with the party already over a lowered limit: nothing to do.
 settings.max_party_size = 4
@@ -606,7 +606,7 @@ M.db("DB_LOW_HouseOfHope_AlarmIsReady"):Delete(1)
 -- Karlach is not in the House of Hope; Laezel is dead; one of the four originals is still landing
 -- (its owner is set but she does not yet show it by template).
 M.inTrigger[PP.BareUuid(HOH_SUB) .. "|" .. c.Karlach.uuid] = nil
-c.Laezel.dead = true
+M.setDead(c.Laezel, true)
 M.log = {}
 originals[4].template = "STILL_LANDING" -- Gale's set: owner known, not yet findable by template
 M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", "bb82e10f-9c0f-5c16-9f1d-e482d9074ca8") -- bare flag form
@@ -630,7 +630,7 @@ M.log = {}
 M.fire("PROC_GlobalFlagReactionAfterDialog", 1, "after", GRANT)
 M.runTimers()
 check(#M.queuedItems == 0 and not logText():find("giving the Debtor"), "everyone served: nothing more")
-c.Laezel.dead = nil
+M.setDead(c.Laezel, false)
 
 -- An item of another template arriving for a pending member is ignored; the alarm between the
 -- add and the arrival means it is not worn; the timeout reports what never arrived.
@@ -944,10 +944,10 @@ M.db("DB_KnockedOut")(H31)
 rep = halsinConsole("repair")
 check(rep:find("not repaired") and rep:find("knocked out") and globalFlag(RECRUITABLE), "repair refused while knocked out")
 M.db("DB_KnockedOut"):Delete(H31)
-halsin.dead = true
+M.setDead(halsin, true)
 rep = halsinConsole("repair")
 check(rep:find("not repaired") and rep:find("is dead"), "repair refused while dead")
-halsin.dead = nil
+M.setDead(halsin, false)
 setGlobal("SCL_AncientFist_State_HasWokenUpFist_45cddb53-edf5-4a9e-9943-898f55b29af3", true)
 rep = halsinConsole("repair")
 check(rep:find("not repaired") and rep:find("already awake"), "repair refused once Art is awake")
@@ -1148,7 +1148,7 @@ for _, u in ipairs(activeUuids()) do
     if ch and u ~= halsin.uuid and ch ~= M.host and not deadOne then deadOne = ch end
 end
 check(deadOne ~= nil, "a party member to play dead")
-deadOne.dead = true
+M.setDead(deadOne, true)
 M.broadcasts = {}
 rr = tabReset()
 check(rr and rr.accepted and rr.message:find("Sending Halsin to camp"), "reset: accepted, sending him to camp")
@@ -1161,15 +1161,15 @@ msgs = M.messages()
 check(#msgs == 1 and msgs[1]:find("back on track"), "reset: the outcome in a message window")
 check(Ext.Vars.GetModVariables(ModuleUUID).Halsin.reset == true, "reset: recorded")
 check(#M.db("DB_Players"):Get(deadOne.id) == 1, "reset with a dead party member: done, the body stays in the party")
-deadOne.dead = false
+M.setDead(deadOne, false)
 -- After the reset, join early no longer unlocks him; the section is gone.
 check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "after the reset: locked even with join early on")
 check(roster32().halsin == nil, "after the reset: no Halsin section")
 local idleReset = roster32().halsinEarlyIdle
 check(idleReset and idleReset:find("his quest was put back on track", 1, true), "join early idle: after the reset, says so")
-halsin.dead = true
+M.setDead(halsin, true)
 check(roster32().halsinEarlyIdle == nil, "join early idle: nothing while Halsin is dead")
-halsin.dead = nil
+M.setDead(halsin, false)
 rr = tabReset()
 check(rr and not rr.accepted and rr.message:find("nothing to undo"), "a second reset is refused")
 -- Thaniel saved: the story makes him recruitable and the lock goes.
@@ -1352,7 +1352,7 @@ local made = Restrictions.GetPending()
 check(made and made.trimmed and #made.party == 5, "C: missing record made again from the party before the trim")
 
 -- F. Restore names who could not come back; the record is cleared.
-c.Laezel.dead = true
+M.setDead(c.Laezel, true)
 -- The story puts every dead character in DB_CantMove (__AAA_FirstGoal.txt L2236-2242, L2324-2330): she must
 -- still be skipped as dead, not waited for (diff review 2026-10-31).
 M.db("DB_CantMove")(c.Laezel.id)
@@ -1376,7 +1376,7 @@ local nF = {}
 for _, b in ipairs(M.broadcasts) do if b.channel == "Notice" then nF[#nF + 1] = b.data end end
 check(#nF == 1 and nF[1].kind == "warning" and nF[1].text:find("Laezel %(dead%)") and Restrictions.GetPending() == nil,
     "F: automatic restore with nobody able to come back: one warning naming her")
-c.Laezel.dead = nil
+M.setDead(c.Laezel, false)
 M.db("DB_CantMove"):Delete(c.Laezel.id)
 -- F. One comes back, one cannot: the result names both.
 record(party34)
@@ -1469,13 +1469,13 @@ check(reply and reply.accepted and inParty(c.Gale), "L: ordinary swap still work
 
 -- B. !pp_set naming a dead party member: accepted, the body stays (Party.Apply keeps him anyway).
 setParty({ c.Shadowheart, c.Astarion, c.Gale })
-c.Astarion.dead = true
+M.setDead(c.Astarion, true)
 M.log = {}
 M.console.pp_set(nil, "Shadowheart,Astarion")
 M.runTimers()
 check(not logText():find("is dead") and inParty(c.Astarion) and not inParty(c.Gale)
     and logText():find("Sent to camp: Gale"), "B: !pp_set with a dead party member: accepted, body stays: " .. logText())
-c.Astarion.dead = nil
+M.setDead(c.Astarion, false)
 
 -- E. `done` is called once, even when it raises.
 setParty({ c.Shadowheart, c.Astarion })
@@ -1663,6 +1663,144 @@ PP.Net.Roster:RequestToServer({}, function(r)
 end)
 check(downedBy[c.Gale.uuid] == true and downedBy[c.Astarion.uuid] == false, "36: downed is sent for a downed member only")
 M.db("DB_Downed"):Delete(c.Gale.id)
+M.broadcasts = {}
+
+-- 37. 1.1.4 (docs/PLAN_1.1.4_final_review_fixes.md): the fixes from the 1.1.3 final review.
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+Restrictions.ClearPending()
+-- A. Your own character dead: every change refused, naming death (not a story table); the roster says so.
+M.setDead(M.host, true)
+M.broadcasts = {}
+local r37 = PP.Net.Apply.requestHandler({ uuids = uuids({ c.Shadowheart, c.Astarion }) }, M.hostPeer)
+M.runTimers()
+check(r37 and not r37.accepted and tostring(r37.message):find("^Your character %(Tav%) is dead")
+    and r37.hostDead == true and inParty(c.Gale), "37A: refused, naming death (got " .. tostring(r37 and r37.message) .. ")")
+local rr37 = PP.Net.Roster.requestHandler({}, M.hostPeer)
+check(rr37.hostDead and rr37.hostDead:find("is dead", 1, true), "37A: the roster reply says so")
+-- ... a restore with nothing to do still clears its record (the check comes after that return).
+record(uuids({ M.host, c.Shadowheart, c.Astarion, c.Gale }))
+local okR = Restrictions.Restore()
+check(okR and Restrictions.GetPending() == nil, "37A: a restore with nothing to do clears the record even then")
+-- ... the automatic restore stops at once and warns once in the message window; no retries.
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+record(uuids({ M.host, c.Shadowheart, c.Astarion, c.Gale, c.Laezel }))
+M.broadcasts = {}
+local logBefore = #M.log
+M.fire("LongRestFinished", 0, "after")
+M.runTimers()
+local tried = false
+for i = logBefore + 1, #M.log do if tostring(M.log[i]):find("trying again", 1, true) then tried = true end end
+local m37 = M.messages()
+check(#m37 == 1 and m37[1]:find("is dead", 1, true) and not tried and not inParty(c.Laezel)
+    and Restrictions.GetPending() ~= nil, "37A: automatic restore: one warning, no retries, record kept")
+-- ... and starts again when your character is revived.
+M.setDead(M.host, false)
+M.fire("Resurrected", 1, "after", M.host.id)
+M.runTimers()
+check(inParty(c.Laezel) and Restrictions.GetPending() == nil, "37A: revived: the waiting member comes back")
+-- ... a refusal for another reason while your character is dead carries no death flag.
+M.setDead(M.host, true)
+local rOther = PP.Net.Apply.requestHandler({ uuids = uuids({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel }) }, M.hostPeer)
+check(rOther and not rOther.accepted and rOther.hostDead == nil, "37A: another refusal: no death flag ("
+    .. tostring(rOther and rOther.message) .. ")")
+M.setDead(M.host, false)
+-- ... a second, living host avatar does not block.
+local tav2 = M.addChar("Tav2", U(77))
+M.db("DB_Avatars")(tav2.id)
+M.db("DB_Players")(tav2.id)
+M.setDead(M.host, true)
+check(Party.HostDeadText() == nil, "37A: a second living avatar of the host: no block")
+M.db("DB_Players"):Delete(tav2.id)
+M.db("DB_Avatars"):Delete(tav2.id)
+M.setDead(M.host, false)
+-- A downed host character: "is downed", not a story table.
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+M.db("DB_Downed")(M.host.id)
+M.db("DB_CantMove")(M.host.id)
+M.storyRules(M.host.id)
+local rDown = PP.Net.Apply.requestHandler({ uuids = uuids({ c.Shadowheart, c.Astarion }) }, M.hostPeer)
+check(rDown and not rDown.accepted and tostring(rDown.message):find("your character is downed", 1, true),
+    "37A: a downed host: says so (got " .. tostring(rDown and rDown.message) .. ")")
+M.db("DB_Downed"):Delete(M.host.id)
+M.db("DB_CantMove"):Delete(M.host.id)
+M.storyRules(M.host.id)
+M.runTimers()
+-- B. A restore that leaves someone out says so in the message window too.
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+M.setDead(c.Laezel, true)
+record(uuids({ M.host, c.Shadowheart, c.Astarion, c.Gale, c.Laezel }))
+M.broadcasts = {}
+M.fire("LongRestFinished", 0, "after")
+M.runTimers()
+local mB = M.messages()
+check(#mB == 1 and mB[1]:find("Nobody else could come back", 1, true), "37B: a skipped member: in the message window")
+M.setDead(c.Laezel, false)
+-- C. A camp member the game holds: the roster says so (Apply would refuse the whole change).
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+M.db("DB_CantMove")(c.Karlach.id)
+local jb = nil
+for _, e in ipairs(PP.Net.Roster.requestHandler({}, M.hostPeer).entries) do
+    if e.uuid == c.Karlach.uuid then jb = e.joinBlocked end
+end
+check(jb and jb:find("can't move right now", 1, true), "37C: a held camp member gets joinBlocked")
+M.db("DB_CantMove"):Delete(c.Karlach.id)
+-- F. The trim's record cannot be saved: nobody is sent to camp.
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
+Restrictions.ClearPending()
+M.fire("PROC_Camp_TryEnterNightModeFailed", 2, "after", M.host.id, "PartyPicker_PartyLargerThanFour")
+local realVars = Ext.Vars.GetModVariables
+local stored = realVars(ModuleUUID)
+Ext.Vars.GetModVariables = function()
+    return setmetatable({}, { __index = stored, __newindex = function() error("write failed") end })
+end
+local rF = PP.Net.Apply.requestHandler({ uuids = uuids({ c.Shadowheart, c.Astarion, c.Gale }), reason = "rest" }, M.hostPeer)
+Ext.Vars.GetModVariables = realVars
+M.runTimers()
+check(rF and not rF.accepted and tostring(rF.message):find("could not save its record", 1, true) and inParty(c.Laezel),
+    "37F: record not saved: refused, nobody sent to camp (got " .. tostring(rF and rF.message) .. ")")
+-- G. A save loaded with members waiting: the restore resumes, but not before the party has rested, not on a
+-- later level change, nor at night.
+Restrictions.ClearPending()
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+record(uuids({ M.host, c.Shadowheart, c.Astarion, c.Gale, c.Laezel }))
+pcall(Restrictions.ResumeAfterLoad)
+M.runTimers()
+check(not inParty(c.Laezel) and Restrictions.GetPending() ~= nil,
+    "37G: trimmed but not rested yet (saved before the second End the Day): the trim is kept")
+Ext.Vars.GetModVariables(ModuleUUID).Pending = { reason = "rest", party = uuids({ M.host, c.Shadowheart, c.Astarion,
+    c.Gale, c.Laezel }), trimmed = true, rested = true }
+M.fire("LevelGameplayStarted", 2, "after", "WLD_Main_A", 0)
+M.runTimers()
+check(not inParty(c.Laezel), "37G: a level change later in the session does not restore")
+M.db("DB_Camp_NightMode")(1)
+pcall(Restrictions.ResumeAfterLoad)
+M.runTimers()
+check(not inParty(c.Laezel), "37G: not at camp night")
+M.db("DB_Camp_NightMode"):Delete(1)
+pcall(Restrictions.ResumeAfterLoad)
+M.runTimers()
+check(inParty(c.Laezel) and Restrictions.GetPending() == nil, "37G: after a load: the waiting member comes back")
+-- A new night's hold drops an old `rested` mark (re-review 2026-11-01).
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
+Ext.Vars.GetModVariables(ModuleUUID).Pending = { reason = "rest", party = uuids({ M.host, c.Shadowheart, c.Astarion,
+    c.Gale, c.Laezel, c.Karlach }), trimmed = true, rested = true }
+M.fire("PROC_Camp_TryEnterNightModeFailed", 2, "after", M.host.id, "PartyPicker_PartyLargerThanFour")
+local pNight = Restrictions.GetPending()
+check(pNight and pNight.trimmed and pNight.rested == nil and #pNight.party == 6, "37G: a new night's hold: not rested yet")
+Restrictions.ClearPending()
+-- H. "Keep everyone this time" twice: the first press's expiry does not end the second.
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
+M.longTimers = {}
+Restrictions.BypassOnce("rest")
+Restrictions.BypassOnce("rest")
+table.remove(M.longTimers, 1)()
+M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason"):Delete(nil)
+M.fire("QRY_Camp_CheckPlayersReadyForNightModeStoryReasons", 0, "before")
+check(#M.db("DB_Camp_PlayerNotReadyForNightMode_CustomStoryReason"):Get(nil) == 0,
+    "37H: the second press still lets the rest go ahead")
+M.longTimers = {}
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
+Restrictions.ClearPending()
 M.broadcasts = {}
 
 print(string.format("%d passed, %d failed", passed, failed))

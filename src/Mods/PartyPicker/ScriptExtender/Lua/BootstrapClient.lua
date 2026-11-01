@@ -22,6 +22,7 @@ end)
 local tabSettings = {
     max_party_size = true,
     halsin_early = true, -- locks or unlocks Halsin on the tab
+    block_in_combat = true, -- decides who is held in a fight (final review 2026-11-01, finding 6)
 }
 pcall(function()
     Ext.ModEvents.BG3MCM["MCM_Setting_Saved"]:Subscribe(function(payload)
@@ -55,6 +56,8 @@ pcall(function()
 end)
 
 PP.Net.Notice:SetHandler(function(data)
+    -- About the host's own character (e.g. "Your character is dead"): not for other players.
+    if data and data.hostOnly and not Ext.Net.IsHost() then return end
     local text = data and data.text or ""
     PP.Log(text)
     PickFour.Notice(text)

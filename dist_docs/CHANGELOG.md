@@ -1,10 +1,30 @@
 # Changelog — Party Picker
 
-Party Picker's development history. **v1.1.0 is the first public release.** Everything below it was a test build that was never published; the list is here so the first public release carries an honest record of how it got here.
+Party Picker's development history. **v1.1.0 was the first public release; v1.1.4 is the second.** The builds in between, and everything below v1.1.0, were test builds that were never published; the list is here so each release carries an honest record of how it got here.
 
 Dates are the day each build was completed.
 
 ---
+
+## v1.1.4 — 2026-11-01
+
+Everything from the test builds v1.1.1 to v1.1.3 (none released), plus the fixes from a whole-mod review of v1.1.3. Several of these came from an outside review of v1.1.0 and from the author's own tests.
+
+**The Party tab keeps itself up to date.** It redraws by itself when the game changes someone on it: a death, a revival, someone going down or getting up, a fight ending, recruiting or dismissing in the game's own conversations, and switching the character you control; also when a change finishes, when the MCM window opens and when you switch MCM profile. Nothing runs between those events. Ticks you have not applied yet are kept through these redraws (Refresh and opening the Party page start from the party as it is). Tested in game (with v1.1.2): the list followed a death and a revival with MCM open.
+
+**Dead and held party members stay ticked.** A dead party member, or one the game is holding right now (downed, in a conversation, in combat with **No party changes in combat** on), stays ticked; clicking their box says why instead of unticking them. The label reads "(dead)" (it read "(dead, dead)"), and "downed" also shows for the character you control.
+
+**Camp companions the game is holding** (in a camp conversation, knocked out) can no longer be ticked; a click says why. Before, ticking one made the whole change fail.
+
+**While your own character is dead, the party can't be changed.** Every change, including the long-rest trim and the restore, is refused with "Your character (<name>) is dead ..." until they are revived, and the Party tab says so. Before, the refusal named a story table. A downed character gets "your character is downed".
+
+**The long rest.** The pick-four window counts dead party members, and anyone the game is holding, towards the four (with two dead it could not be confirmed before). Its two buttons work once per request. The record of who waited in camp is saved before anyone is sent there, and if it can't be saved nobody is sent. With **Bring everyone back after the rest** on, a party still waiting in camp is brought back when you load a save made after the rest. A restore that leaves someone out names who and why, in a message window when it happens on waking. With **Bring everyone back after the rest** off, the window now says to press Restore.
+
+**Following the game's own rules.** Party Picker now checks the game's fast-travel restrictions for everyone it moves (companions coming from camp too), and the game's dismiss lock for those leaving: someone who can't move or can't talk right now, an area where companions can't be dismissed, arrest, camp night. A refusal names the person and the reason, with the game's table where there is one.
+
+**Smaller fixes.** A profile switch redraws the tab and cancels a pending slider check; a list that still shows someone who has left gets a clear refusal; Restore says who could not come back; "Put Halsin's quest back on track" works with a dead party member; ticking **Let Halsin join early** in a game where it can't apply says so; changing **No party changes in combat** redraws the tab; the raft setting's description says that turning it off keeps spots already added.
+
+**Not yet tested in game:** everything above except the redraw on a death and a revival. A downed party member being refused with the reason was seen in game with v1.1.2.
 
 ## v1.1.0 — 2026-10-31 — first public release
 

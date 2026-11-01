@@ -250,13 +250,41 @@ end
 function Party.HostAvatar()
     local controlled = Party.HostCharacter()
     if not controlled then return nil end
-    if #Osi.DB_Avatars:Get(controlled) > 0 then return controlled end
+    local controlledAvatar = #Osi.DB_Avatars:Get(controlled) > 0
+    if controlledAvatar and not isTrue(Osi.IsDead, controlled) then return controlled end
     local hostUser = userOf(controlled)
     local players = uuidSet("DB_Players")
+    -- A host can own several avatars (_GLO_Shared_PartyMembers.txt L1866-1880): a living one first.
+    local firstDead = nil
     for _, id in ipairs(column1("DB_Avatars")) do
-        if userOf(id) == hostUser and players[PP.BareUuid(id)] then return id end
+        if userOf(id) == hostUser and players[PP.BareUuid(id)] then
+            if not isTrue(Osi.IsDead, id) then return id end
+            firstDead = firstDead or id
+        end
     end
-    return controlled
+    if controlledAvatar then return controlled end
+    return firstDead or controlled
+end
+
+-- The host's own character is dead (every host avatar in the party): nil otherwise. Party changes are
+-- blocked until one is revived (the author, 2026-11-01; docs/PLAN_1.1.4_final_review_fixes.md unit A). The
+-- story puts the dead in DB_CantMove (__AAA_FirstGoal.txt L2236-2242), so this used to be refused with a
+-- story-table message.
+function Party.HostDeadText()
+    local controlled = Party.HostCharacter()
+    if not controlled then return nil end
+    local hostUser = userOf(controlled)
+    local players = uuidSet("DB_Players")
+    local firstDead = nil
+    for _, id in ipairs(column1("DB_Avatars")) do
+        if userOf(id) == hostUser and players[PP.BareUuid(id)] then
+            if not isTrue(Osi.IsDead, id) then return nil end
+            firstDead = firstDead or id
+        end
+    end
+    if not firstDead then return nil end
+    return "Your character (" .. Party.DisplayName(firstDead) .. ") is dead. Party Picker can't change the party "
+        .. "until they are revived (a scroll, a spell, or Withers once he is at your camp)."
 end
 
 function Party.DisplayName(id)
@@ -761,7 +789,12 @@ function Party.Apply(wanted, opts, done)
         return false, "The party is already like that." .. skippedSuffix(), true, skipped
     end
 
+    local deadText = Party.HostDeadText()
+    if deadText then return refuse(deadText) end
     local why = Party.BlockedReason(avatar, checkCombat)
+    if why and inDb("DB_Downed", avatar) then
+        return refuse("Party changes are blocked: your character is downed. Get them back up first.")
+    end
     if why then return refuse("Party changes are blocked: your character " .. why .. ".") end
     -- Camp night is one global row (GLO_Camp.txt L2709-2734), read once per request. The host's own
     -- TRAVELBLOCK_CAMPNIGHTMODE status (above) normally says the same.
@@ -782,8 +815,14 @@ function Party.Apply(wanted, opts, done)
 
     PP.Log(string.format("request: join [%s]; send to camp [%s]", names(toAdd), names(toRemove)))
     if opts.beforeChange then
+        -- The trim's record must be saved before anyone moves (review 2026-10-31, point 1): if it was not,
+        -- nobody moves (final review 2026-11-01, finding 8). Nothing has changed yet at this point.
         local okHook, errHook = pcall(opts.beforeChange, toAdd, toRemove, activeBefore)
-        if not okHook then PP.Log("party change hook failed: " .. tostring(errHook)) end
+        if not okHook then
+            PP.Log("party change hook failed: " .. tostring(errHook))
+            return refuse("Party Picker could not save its record of who to bring back in the morning, so nobody "
+                .. "was sent to camp.")
+        end
     end
     busy = true
     -- Room for the new members before anyone is added: CheckAdd does nothing

@@ -267,6 +267,21 @@ end
 -- The game's own query (the story uses it: GLO_Camp.txt L1715, L2357).
 function Osi.IsOnStage(id) return (char(id) or {}).offStage and 0 or 1 end
 
+-- Death: Died adds DB_Dead (__AAA_FirstGoal.txt L1026-1031), which makes the character DB_CantMove
+-- (DB_CantMove_IgnoreDialog L2236-2242, then DB_CantMove), and a party member then gets the fast-travel block
+-- (_Waypoints.txt L187-194). Final review 2026-11-01: without this no test could see a dead host blocked.
+function M.setDead(ch, dead)
+    ch.dead = dead or nil
+    if dead then
+        M.db("DB_Dead")(ch.id)
+        M.db("DB_CantMove")(ch.id)
+    else
+        M.db("DB_Dead"):Delete(ch.id)
+        if not ch.offStage then M.db("DB_CantMove"):Delete(ch.id) end
+    end
+    M.storyRules(ch.id)
+end
+
 function M.setOnStage(ch, on)
     ch.offStage = not on or nil
     if on then
@@ -410,7 +425,14 @@ M.Ext = {
     },
     Osiris = {
         RegisterListener = function(name, arity, when, fn)
-            M.listeners[name .. "/" .. arity .. "/" .. when] = fn
+            -- The game keeps every listener of an event; so does the mock (final review 2026-11-01).
+            local key = name .. "/" .. arity .. "/" .. when
+            local prev = M.listeners[key]
+            if prev then
+                M.listeners[key] = function(...) prev(...); return fn(...) end
+            else
+                M.listeners[key] = fn
+            end
         end,
     },
     Loca = {

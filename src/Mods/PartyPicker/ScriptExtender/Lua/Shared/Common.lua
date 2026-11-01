@@ -6,7 +6,7 @@ PP = PP or {}
 PP.MOD = "PartyPicker"
 -- Keep in step with Version64 in meta.lsx; printed at load so logs show
 -- which build was running.
-PP.VERSION = "1.1.3"
+PP.VERSION = "1.1.4"
 -- The four-member situations are hard limits in the game's own scripts
 -- (four beds in camp, four raft seats), so this is not a setting.
 PP.RESTRICTED_SIZE = 4
@@ -57,24 +57,22 @@ PP.Net = PP.Net or {
 
 -- The trimmed party waiting to be restored; saved with the game, server-only.
 -- Registered in both contexts as bg3se Docs/API.md recommends.
-pcall(function()
-    Ext.Vars.RegisterModVariable(ModuleUUID, "Pending", {
-        Server = true, Client = false, SyncToClient = false,
-    })
-end)
+-- A failed registration makes every later write to that variable fail; say so once (final review
+-- 2026-11-01, finding 8).
+local function register(name)
+    local ok, err = pcall(function()
+        Ext.Vars.RegisterModVariable(ModuleUUID, name, {
+            Server = true, Client = false, SyncToClient = false,
+        })
+    end)
+    if not ok then PP.Log("could not register the saved record " .. name .. ": " .. tostring(err)) end
+end
+register("Pending")
 -- Everyone seen in the active party (uuid -> true), so companions added by
 -- other mods stay listed after going to camp; saved with the game, server-only.
-pcall(function()
-    Ext.Vars.RegisterModVariable(ModuleUUID, "Seen", {
-        Server = true, Client = false, SyncToClient = false,
-    })
-end)
+register("Seen")
 -- Halsin's quest was put back on track ({ reset = true }), so "Let Halsin join early" no longer
 -- unlocks him; saved with the game, server-only (Server/HalsinRepair.lua).
-pcall(function()
-    Ext.Vars.RegisterModVariable(ModuleUUID, "Halsin", {
-        Server = true, Client = false, SyncToClient = false,
-    })
-end)
+register("Halsin")
 
 return PP

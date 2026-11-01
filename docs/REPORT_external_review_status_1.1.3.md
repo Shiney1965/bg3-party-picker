@@ -61,7 +61,7 @@ at once").
   (Party.lua L566-570; the 1.1.1 plan review). (Corrected 2026-11-01 after the final review: an earlier draft of this
   report listed it as read.) Members leaving are also blocked by the game's own
   dismiss lock causes the review named: `DB_CantTalk_IgnoreCombat` (can't talk for any reason except combat) and
-  `DB_PartyDialogSuppressed` (`LEAVE_DBS` L579-582). Combat stays under the "Block party changes in combat" setting.
+  `DB_PartyDialogSuppressed` (`LEAVE_DBS` L579-582). Combat stays under the "No party changes in combat" setting.
   Refusals name the reason and the story table, e.g. "(DB_CantMove)".
 - 1.1.3: on the Party tab a party member the game holds right now (downed, in a conversation, in combat with that
   setting on) can no longer be unticked; a click says why (Client/RosterList.lua `HeldText`). "downed" shows even for

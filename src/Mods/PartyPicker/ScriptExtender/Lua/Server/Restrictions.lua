@@ -48,9 +48,12 @@ function Restrictions.GetPending()
     return nil
 end
 
+-- Whole-table assignment: writes to sub-fields are not saved (API.md). Returns whether the write worked
+-- (final review 2026-11-01, finding 8).
 local function setPending(p)
-    -- Whole-table assignment: writes to sub-fields are not saved (API.md).
-    pcall(function() vars().Pending = p end)
+    local ok, err = pcall(function() vars().Pending = p end)
+    if not ok then PP.Log("could not save the restore record: " .. tostring(err)) end
+    return ok
 end
 
 function Restrictions.ClearPending() setPending(nil) end
@@ -63,19 +66,29 @@ local reminded = false
 
 local BYPASS_EXPIRES_MS = 120000
 
+-- One counter per reason: an older press's expiry must not end a newer press early (finding 10).
+local bypassSeq = {}
 function Restrictions.BypassOnce(reason)
     bypassOnce[reason] = true
+    bypassSeq[reason] = (bypassSeq[reason] or 0) + 1
+    local mine = bypassSeq[reason]
     -- Only for the End the Day press that follows, not one much later.
-    Ext.Timer.WaitForRealtime(BYPASS_EXPIRES_MS, function() bypassOnce[reason] = nil end)
+    Ext.Timer.WaitForRealtime(BYPASS_EXPIRES_MS, function()
+        if bypassSeq[reason] == mine then bypassOnce[reason] = nil end
+    end)
     local p = Restrictions.GetPending()
     -- Only drop a record nobody was trimmed for; an earlier trim still
     -- waiting to be restored must survive.
     if p and not p.trimmed then setPending(nil) end
 end
 
-function Restrictions.Notice(text, kind)
+-- window: also in the message window (host only), for outcomes the player may not be looking at: the
+-- automatic restore's warnings come while the Party tab is closed (final review 2026-11-01, finding 2).
+-- hostOnly: about the host's own character; other players' clients do not show it.
+function Restrictions.Notice(text, kind, window, hostOnly)
     PP.Log(text)
-    pcall(function() PP.Net.Notice:Broadcast({ text = text, kind = kind or "info" }) end)
+    pcall(function() PP.Net.Notice:Broadcast({ text = text, kind = kind or "info", hostOnly = hostOnly or nil }) end)
+    if window then pcall(function() PP.Net.Message:Broadcast({ text = text }) end) end
 end
 
 local function overFour()
@@ -86,8 +99,9 @@ end
 local function ask(reason)
     local p = Restrictions.GetPending()
     if p and p.trimmed then
-        -- Already trimmed once and not yet restored: keep the original list.
-        p.reason = reason
+        -- Already trimmed once and not yet restored: keep the original list. A new table without `rested`:
+        -- this is a new night, not yet rested (re-review 2026-11-01).
+        p = { reason = reason, party = p.party, trimmed = true }
     else
         p = { reason = reason, party = Party.ActiveUuids(), trimmed = false }
     end
@@ -104,8 +118,11 @@ function Restrictions.MarkTrimming(reason, toRemove, activeBefore)
     reminded = false
     local p = Restrictions.GetPending()
     if p and p.trimmed then return end
-    -- A new table: writes to sub-fields are not saved (API.md).
-    setPending({ reason = reason, party = (p and p.party) or activeBefore or {}, trimmed = true })
+    -- A new table: writes to sub-fields are not saved (API.md). If it is not saved, the trim must not go ahead
+    -- (Party.Apply refuses when this raises; final review 2026-11-01, finding 8).
+    local ok = setPending({ reason = reason, party = (p and p.party) or activeBefore or {}, trimmed = true })
+    local back = Restrictions.GetPending()
+    if not ok or not back or not back.trimmed then error("the restore record was not saved") end
 end
 
 -- Called after the picker's choice was carried out (fully or partly).
@@ -151,8 +168,19 @@ local GIVE_UP_HINT = "Use Restore on the Party tab. Choosing the party by hand o
 
 -- Waking up fires two triggers (LongRestFinished and the end of camp night). Each call starts a new run;
 -- an older run stops scheduling attempts, but a success it reports is always shown.
+-- The party has rested since the trim (the wake-up triggers): from then on the record may be resumed after a
+-- load or a revive. A new table: writes to sub-fields are not saved (API.md).
+local function markRested()
+    local p = Restrictions.GetPending()
+    if not p or not p.trimmed or p.rested then return end
+    setPending({ reason = p.reason, party = p.party, trimmed = true, rested = true })
+end
+
 local autoRun = 0
-local function autoRestore()
+-- quiet: a run started by loading a save (ResumeAfterLoad) gives up in the status line only, as the player
+-- has just loaded and the Restore button is there (plan review 2026-11-01, point 5).
+local deadWarned = false
+local function autoRestore(quiet)
     local p = Restrictions.GetPending()
     if not p or not p.trimmed then return end
     autoRun = autoRun + 1
@@ -163,6 +191,17 @@ local function autoRestore()
         local current = Restrictions.GetPending()
         if not current or not current.trimmed then return end
         if run ~= autoRun then return end
+        -- Your own character dead: every change is refused, so no retries; one warning per death. The restore
+        -- starts again when they are revived (the Resurrected listener below).
+        local deadText = Party.HostDeadText()
+        if deadText then
+            if not deadWarned then
+                deadWarned = true
+                Restrictions.Notice("The rest of your party is waiting in camp. " .. deadText, "warning", not quiet, true)
+            end
+            return
+        end
+        deadWarned = false
         if PP.Setting("auto_restore", true) == false then
             -- Once per trim, however far apart the two wake-up triggers come (diff review 2026-10-31).
             if not reminded then
@@ -174,19 +213,24 @@ local function autoRestore()
         tries = tries + 1
         local accepted, message, nothingToDo, skipped = Restrictions.Restore(function(result)
             if result.ok then
-                Restrictions.Notice(result.message, "info")
+                -- Back, but someone could not come (the skipped list): a warning in the message window too.
+                local someone = result.skipped and #result.skipped > 0
+                Restrictions.Notice(result.message, someone and "warning" or "info", someone and not quiet)
             elseif run ~= autoRun then
                 PP.Log("restore incomplete (a newer attempt follows): " .. tostring(result.message))
             elseif tries < RESTORE_TRIES then
                 PP.Log("restore incomplete, trying again: " .. tostring(result.message))
                 Ext.Timer.WaitFor(RESTORE_RETRY_MS, attempt)
             else
-                Restrictions.Notice(tostring(result.message) .. " " .. GIVE_UP_HINT, "warning")
+                Restrictions.Notice(tostring(result.message) .. " " .. GIVE_UP_HINT, "warning", not quiet)
             end
         end)
         if accepted then
             -- Someone left out (the skipped list): a warning, not info.
-            if nothingToDo then Restrictions.Notice(message, (skipped and #skipped > 0) and "warning" or "info") end
+            if nothingToDo then
+                local someone = skipped and #skipped > 0
+                Restrictions.Notice(message, someone and "warning" or "info", someone and not quiet)
+            end
             return
         end
         if tries < RESTORE_TRIES then
@@ -194,11 +238,24 @@ local function autoRestore()
             Ext.Timer.WaitFor(RESTORE_RETRY_MS, attempt)
         else
             Restrictions.Notice("Could not bring the party back yet (" .. tostring(message) .. "). " .. GIVE_UP_HINT,
-                "warning")
+                "warning", not quiet)
         end
     end
     -- The delay also merges the two wake-up triggers into one run.
     Ext.Timer.WaitFor(RESTORE_DELAY_MS, attempt)
+end
+
+-- A save loaded with members still waiting in camp after a long rest (saved after the wake-up, or after the
+-- tries gave up): try again, unless it is camp night (the end of the night starts it). Called on the first
+-- LevelGameplayStarted of a Lua session only, i.e. after a load (final review 2026-11-01, finding 9).
+function Restrictions.ResumeAfterLoad()
+    local p = Restrictions.GetPending()
+    -- Only once the party has rested: a save between "Keep these 4" and the second End the Day must keep the
+    -- trim (diff review 2026-11-01).
+    if not p or not p.trimmed or not p.rested then return end
+    local ok, rows = pcall(function() return Osi.DB_Camp_NightMode:Get(1) end)
+    if ok and type(rows) == "table" and next(rows) ~= nil then return end
+    autoRestore(true)
 end
 
 -- Raft: add landing positions 5..N for every dock, cycling through the
@@ -258,12 +315,23 @@ function Restrictions.Register()
     end)
 
     Ext.Osiris.RegisterListener("LongRestFinished", 0, "after", function()
+        markRested()
         autoRestore()
+    end)
+
+    -- Your own character revived (plan 1.1.4 unit A): a restore that waited for it starts again, once the
+    -- party has rested.
+    Ext.Osiris.RegisterListener("Resurrected", 1, "after", function(id)
+        local p = Restrictions.GetPending()
+        if not p or not p.rested then return end
+        local okA, rows = pcall(function() return Osi.DB_Avatars:Get(id) end)
+        if okA and type(rows) == "table" and next(rows) ~= nil then autoRestore() end
     end)
 
     -- Party changes are blocked during camp night (CampNightMode); try again
     -- once the camp switches back to day (GLO_Camp.txt DB_Camp_NightMode).
     Ext.Osiris.RegisterListener("DB_Camp_NightMode", 1, "afterDelete", function()
+        markRested()
         autoRestore()
     end)
 

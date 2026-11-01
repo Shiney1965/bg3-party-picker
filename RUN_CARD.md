@@ -1,4 +1,21 @@
-# Party Picker: test run card (v1.1.3, TEST build)
+# Party Picker: test run card (v1.1.4, TEST build)
+
+**v1.1.4 (2026-11-01): the fixes recommended by the 1.1.3 whole-mod review** (`docs/REVIEW_final_1.1.3_2026-11-01.md`),
+plan `docs/PLAN_1.1.4_final_review_fixes.md` (plan review approve with changes; diff review DO NOT SHIP, its blocker fixed;
+re-review ship with notes, taken). What changes: with your own character dead every party change is refused with that
+reason (the author's decision; an override toggle is parked in `docs/IDEA_dead_pc_override.md`); camp companions the game
+holds can't be ticked; the automatic restore's warnings come in a message window; the tab's redraws keep unapplied
+ticks; the trim stops if its record can't be saved; a rested, waiting party is restored after a load; Keep everyone
+twice, a failed roster read and the auto-restore-off text in the long-rest window; the combat setting redraws the tab.
+The test mock now derives DB_CantMove from death and keeps every listener. Tests: 325 server + 103 client checks and
+the blueprint check pass; of the new checks 10 server and 12 client fail on 1.1.3. The pak contains no occurrence of the
+author's name. **Built; NOT installed; not released.** (1.1.2 22034D1A… is what is installed.)
+
+**Pak:** `PartyPicker.pak` (68,143 bytes), built from an LF export (0 CR bytes)
+SHA-256 `9e06b3f36268b64246128923483a2592d63e6d6f2d50996bfd0b995ac5a4d18e`. Checked by unpacking it with Divine.exe:
+PP.VERSION 1.1.4, Version64 36169543097253888 twice. Test card: `docs/TEST_CARD_1.1.4.md` (and the 1.1.3 one).
+
+# v1.1.3 (kept for the record)
 
 **v1.1.3 (2026-11-01): TEST build after the author's 1.1.2 tests.** Plan `docs/PLAN_1.1.3_dead_member_notice.md`
 (two plan reviews: approve with changes, blockers taken; two diff reviews: ship with notes). What changes: a dead
@@ -10,7 +27,7 @@ MoveCapabilityChanged; ticking "Let Halsin join early" where it cannot apply say
 and client both changed; no new saved data. Tests: 308 server + 83 client checks and the blueprint check pass; of
 the new checks for units A-H, 6 server and 17 client fail on 1.1.2. Report on the external review's points:
 `docs/REPORT_external_review_status_1.1.3.md`. The pak contains no occurrence of
-the author's name. **Built; NOT installed; not released.** (1.1.2 22034D1A… is what is installed.)
+the author's name. **Built; never installed (superseded by 1.1.4).**
 
 **Pak:** `PartyPicker.pak` (63,790 bytes), built from an LF export (0 CR bytes)
 SHA-256 `708cec618f6c05aead467c3a07de0de62954042669aef92db874d0b397bbb0c0` (replaces the first 1.1.3 build, 62,766 bytes /

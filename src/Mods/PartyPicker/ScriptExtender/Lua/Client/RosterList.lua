@@ -22,6 +22,8 @@ local function label(e)
     if e.active and e.offStage then tags[#tags + 1] = "off stage" end
     -- A party member the game holds right now (the server's check): it will refuse sending them to camp.
     if e.active and e.stuck and not e.locked then tags[#tags + 1] = "can't leave now" end
+    -- A camp member the game holds right now (the server's join check): Apply would refuse (1.1.4 unit C).
+    if not e.active and e.joinBlocked and not e.locked and not e.dead then tags[#tags + 1] = "can't join now" end
     -- The lock reason only when no tag says it already: a dead party member read "(dead, dead)" (2026-11-01).
     if e.locked and e.lockReason and not e.avatar then
         local repeated = false
@@ -39,10 +41,21 @@ function RosterList.DeadText(e)
         .. "first (a scroll, a spell, or Withers once he is at your camp), or ask Withers to dismiss them."
 end
 
+-- The story table in brackets means nothing in a message (the log keeps it).
+local function plainReason(why)
+    return (string.gsub(tostring(why), " %([%u_][%w_]*%)", ""))
+end
+
+-- A camp member the game holds right now (e.joinBlocked: the server's Party.JoinBlockedReason).
+function RosterList.JoinHeldText(e)
+    return tostring(e.name) .. " " .. plainReason(e.joinBlocked) .. ", so they can't join the party right now. "
+        .. "Press Refresh once that has changed."
+end
+
 -- A party member the game holds right now (e.stuck: the server's Party.LeaveBlockedReason, written to follow the
--- name). The story table in brackets means nothing in a message, so it is left out here (the log keeps it).
+-- name).
 function RosterList.HeldText(e)
-    local why = e.downed and "is downed" or string.gsub(tostring(e.stuck), " %([%u_][%w_]*%)", "")
+    local why = e.downed and "is downed" or plainReason(e.stuck)
     if e.offStage and not e.downed and string.find(why, "cannot travel", 1, true) then
         why = why .. ": they are off stage (not present in the world)"
     end
@@ -75,18 +88,22 @@ function RosterList.Draw(parent, entries, opts)
         -- docs/PLAN_1.1.3_dead_member_notice.md, units B and G). Dead: locked as "dead" only, so a dead player
         -- character (locked as "player character") stays as it was. Held: not locked, so it stays in
         -- Selected() and Apply keeps it in the party.
-        local fixedText = nil
+        -- A camp member the game holds (1.1.4 unit C) is fixed the same way, but unticked; not the dead, who
+        -- stay disabled (every dead character is in DB_CantMove).
+        local fixedText, fixedTick = nil, true
         if e.active and not opts.readOnly then
             if e.locked and e.lockReason == "dead" then
                 fixedText = RosterList.DeadText(e)
             elseif not e.locked and e.stuck then
                 fixedText = RosterList.HeldText(e)
             end
+        elseif not opts.readOnly and not e.locked and not e.dead and e.joinBlocked then
+            fixedText, fixedTick = RosterList.JoinHeldText(e), false
         end
         local initial
         if fixedText then
-            -- Always ticked: an untick kept from before they were held is dropped.
-            initial = true
+            -- Always as they are: an untick (or tick) kept from before they were held is dropped.
+            initial = fixedTick
         elseif e.locked then
             -- Locked members stay as they are: ticked if in the party.
             initial = e.active == true
@@ -110,8 +127,8 @@ function RosterList.Draw(parent, entries, opts)
             if fixedText then
                 -- Ticked again whatever the click did; pcall, as the list may have been redrawn before this
                 -- queued call runs.
-                pcall(function() cb.Checked = true end)
-                ticked[e.uuid] = true
+                pcall(function() cb.Checked = fixedTick end)
+                ticked[e.uuid] = fixedTick
                 if opts.onLocked then pcall(opts.onLocked, e, fixedText) end
                 return
             end

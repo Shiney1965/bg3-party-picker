@@ -3,7 +3,7 @@
 Read this first, then docs/DEVELOPMENT.md (the developer notes; README.md is now the user README,
 generated from dist_docs/README.md by tools/make_docs.ps1), RUN_CARD.md, docs/RESEARCH.md and docs/TESTING.md. They hold the
 design, the source for every game procedure used, and every in-game report so far (quoted exactly).
-Last updated 2026-11-01 (1.1.3 TEST build) by a session on the author's PC; first written 2026-10-12, continuing an
+Last updated 2026-11-01 (1.1.4 TEST build) by a session on the author's PC; first written 2026-10-12, continuing an
 earlier cloud session.
 
 ## What this is
@@ -113,6 +113,11 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
   reviews); test card docs/TEST_CARD_1.1.3.md. Sending the dead to camp is parked: docs/IDEA_dead_members_to_camp.md.
   Also unit I: ticking "Let Halsin join early" where it cannot apply says why (the tick stays: the author's choice).
   Report on the external review's points: docs/REPORT_external_review_status_1.1.3.md.
+  Built, NOT installed, not released.
+- v1.1.4 (2026-11-01): TEST build with the fixes recommended by the 1.1.3 whole-mod review
+  (docs/REVIEW_final_1.1.3_2026-11-01.md; plan docs/PLAN_1.1.4_final_review_fixes.md with its reviews; test card
+  docs/TEST_CARD_1.1.4.md). The author's decision: with their own character dead Party Picker blocks every change and
+  says why; an override toggle is for a later build (docs/IDEA_dead_pc_override.md). dist_docs updated for 1.1.4.
   Built, NOT installed, not released.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer

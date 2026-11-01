@@ -18,12 +18,19 @@ local function rosterReply()
             local ok, why = pcall(Party.LeaveBlockedReason, e.id, checkCombat)
             if ok then stuck = why end
         end
+        -- joinBlocked: a camp member the game holds right now; Apply would refuse the whole change with them
+        -- (final review 2026-11-01, finding 3). Not for the dead: they are drawn disabled, as before.
+        local joinBlocked = nil
+        if not e.active and not e.locked and not e.dead then
+            local ok, why = pcall(Party.JoinBlockedReason, e.id, checkCombat)
+            if ok then joinBlocked = why end
+        end
         entries[#entries + 1] = {
             uuid = e.uuid, name = e.name, active = e.active, inCamp = e.inCamp,
             avatar = e.avatar, hireling = e.hireling, dead = e.dead, downed = e.downed == true,
             offStage = e.offStage == true,
             locked = e.locked == true, lockReason = e.lockReason,
-            stuck = stuck,
+            stuck = stuck, joinBlocked = joinBlocked,
         }
     end
     -- Who the tab now shows, so a death that takes someone off the team still redraws it.
@@ -31,6 +38,13 @@ local function rosterReply()
     local pending = Restrictions.GetPending()
     return {
         entries = entries,
+        -- Your own character is dead: the tab says so (plan 1.1.4 unit A; the server refuses the change itself).
+        hostDead = (function()
+            local ok, text = pcall(Party.HostDeadText)
+            return ok and text or nil
+        end)(),
+        -- A party change is running (the tab keeps showing the ticks it sent until it is done, unit E).
+        busy = Party.IsBusy(),
         maxSize = Party.EffectiveMaxSize(),
         setting = Party.MaxSize(),
         pending = pending and { reason = pending.reason, trimmed = pending.trimmed == true } or nil,
@@ -80,6 +94,13 @@ PP.Net.Roster:SetRequestHandler(safeHandler(function()
     return rosterReply()
 end))
 
+-- A refusal because your own character is dead: the tab shows it in the message window (plan 1.1.4 unit A).
+local function refusedForDeath(accepted, message)
+    if accepted then return nil end
+    local ok, text = pcall(Party.HostDeadText)
+    return (ok and text ~= nil and message == text) or nil
+end
+
 -- data = { uuids = {...}, reason = nil | "rest", keepAll = bool }
 PP.Net.Apply:SetRequestHandler(safeHandler(function(data, user)
     if not isHostUser(user) then
@@ -112,7 +133,7 @@ PP.Net.Apply:SetRequestHandler(safeHandler(function(data, user)
             Restrictions.ClearPending()
         end
     end)
-    return { accepted = accepted, message = message }
+    return { accepted = accepted, message = message, hostDead = refusedForDeath(accepted, message) }
 end))
 
 PP.Net.Restore:SetRequestHandler(safeHandler(function(_, user)
@@ -122,7 +143,7 @@ PP.Net.Restore:SetRequestHandler(safeHandler(function(_, user)
     local accepted, message = Restrictions.Restore(function(result)
         Restrictions.Notice(result.message, result.ok and "info" or "warning")
     end)
-    return { accepted = accepted, message = message }
+    return { accepted = accepted, message = message, hostDead = refusedForDeath(accepted, message) }
 end))
 
 local function messageWindow(text)
@@ -159,10 +180,17 @@ end)
 -- Another party-limit mod in the load order: say so once a save has loaded.
 pcall(function() Ext.Events.SessionLoaded:Subscribe(function() pcall(LimitGuard.WarnOtherMods) end) end)
 
+-- The Lua restarts on every load, so the first LevelGameplayStarted of a Lua session is a load; later ones are
+-- level changes (Act transitions), where the story is busy with its own moves (plan review 2026-11-01, point 5).
+local gameplayStarted = false
 Ext.Osiris.RegisterListener("LevelGameplayStarted", 2, "after", function()
     pcall(Party.ApplyMaxSize)
     pcall(Restrictions.ExtendRaft)
     pcall(LimitGuard.CheckLoadedParty)
+    if not gameplayStarted then
+        gameplayStarted = true
+        pcall(Restrictions.ResumeAfterLoad)
+    end
 end)
 
 -- Remember everyone who joins the active party (see Party.Remember).

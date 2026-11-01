@@ -2,7 +2,7 @@
 
 **Why this Mod: To choose the number and identity of your party members without spells, dialogues or using hotbar space.**
 
-Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 30. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.
+Choose who is in your party from a menu. Open the Party tab in Mod Configuration Menu, tick the companions and hirelings you want with you, and press Apply. Raise the party limit to as many as 30. When the game can only handle four, at a long rest and on the Grymforge raft, Party Picker handles it for you: before a rest you start yourself it asks which four to keep tonight and brings the others back when you wake, and on the raft it makes sure the whole party lands.
 
 Recruiting and dismissing companions normally means walking to each one and talking to them, one at a time. With a bigger party, the four-member parts of the game get in the way too: the camp has four beds, and the Underdark raft has four landing spots. Party Picker puts the whole roster on one screen and takes care of those two places.
 
@@ -25,9 +25,11 @@ Once installed (see `INSTALL.md`):
 
 - **Set your party limit first.** Open MCM (the **INSERT** key, or from the ESC menu), find **Party Picker**, and on the **Settings** tab set **Maximum party size** (4 to 30, default 6). It counts your own character. It can't be set below the number already in your party: send members to camp first. If you try, the slider moves back and a message window explains.
 - **Pick your party on the Party tab.** Everyone you have recruited is listed with a checkbox. Tick who you want with you, untick who should go to camp, and press **Apply**. The line under the buttons says what happened, for example `Party updated. Joined: Karlach. Sent to camp: Gale.`
-- **Greyed-out names are locked, and the reason is shown next to them.** Your own character, the companion you are currently controlling, dead party members, and in multiplayer every character another player controls cannot be sent to camp. A character who is off stage (not present in the world at the moment) cannot be recruited. Halsin is locked until the story lets him join (after Thaniel is saved, as in the game), and so are Minthara and Minsc while the story keeps them from being recruited.
+- **Some names are locked, and the reason is shown next to them.** Your own character, the companion you are currently controlling, and in multiplayer every character another player controls cannot be sent to camp; a character who is off stage (not present in the world at the moment) cannot be recruited. Halsin is locked until the story lets him join (after Thaniel is saved, as in the game), and so are Minthara and Minsc while the story keeps them from being recruited.
+- **Dead and held party members stay ticked.** A dead companion or hireling in the party, and one the game is holding right now (downed, in a conversation, or in combat with **No party changes in combat** on), cannot be sent to camp. Their box stays ticked and greyed; clicking it says why. A companion in camp whom the game is holding (in a camp conversation, knocked out) cannot be ticked the same way. Tags in brackets show the state: `dead`, `downed`, `can't leave now`, `can't join now`.
+- **While your own character is dead, the party can't be changed.** The Party tab says so, and any change you try is refused with that reason, until your character is revived (a scroll, a spell, or Withers once he is at your camp).
 - **Send everyone to camp:** one button on the Party tab. It asks once, then sends everyone who can go. Your own character always stays.
-- **Long rest with more than four:** press End the Day as usual. Party Picker holds the rest and opens a small window: tick the four who stay with you tonight (your own character is always one of them) and press **Keep these 4**, then press End the Day again. The others wait in camp and rejoin a few seconds after you wake up. Or press **Keep everyone this time**, then End the Day again within two minutes: the game then rests as it does without the mod and puts only four to bed.
+- **Long rest with more than four:** press End the Day as usual. Party Picker holds the rest and opens a small window: tick the four who stay with you tonight (your own character is always one of them) and press **Keep these 4**, then press End the Day again. Dead party members and anyone the game is holding stay, and count towards the four. The others wait in camp and rejoin a few seconds after you wake up (with **Bring everyone back after the rest** on, also when you load a save made after the rest while they still wait). Or press **Keep everyone this time**, then End the Day again within two minutes: the game then rests as it does without the mod and puts only four to bed.
 - **The Grymforge raft:** nothing to do. Board with your whole party; everyone lands.
 - **The House of Hope:** nothing to do. When Hope hands out the Debtor's Attire, everyone in the party gets a set.
 
@@ -35,13 +37,13 @@ Once installed (see `INSTALL.md`):
 
 - **One list for your whole roster.** Player characters, origin companions, hirelings, and companions added by other mods. Withers, summons, familiars, followers and camp followers (Volo, Elminster, Scratch, Tara and the like) are never listed.
 - **Join and dismiss in one step.** Apply makes every change at once. New members are brought next to your character (switchable).
-- **Larger parties.** The limit goes from 4 to 30 and is re-applied each time a save loads. It is never set below the party you already have: a save whose party is larger than your setting keeps everyone, and Party Picker tells you once (your setting is not changed). Parties above 16 have not been tested by the author.
+- **Larger parties.** The limit goes from 4 to 30 and is re-applied each time a save loads. It is never set below the party you already have: a save whose party is larger than your setting keeps everyone, and Party Picker tells you when the save loads (your setting is not changed). Parties above 16 have not been tested by the author.
 - **Send everyone to camp in one click.** The Party tab asks once, then sends everyone except your own character (and anyone else who can't be moved). Tick them again and press Apply to bring them back.
 - **Halsin joins when the story says so.** As in the game, Halsin can't join in Act Two until Thaniel is saved; the Party tab locks him until then. An optional setting, **Let Halsin join early**, lifts that lock in Act Two, with a Party tab button that puts his quest back on track before Last Light (see the settings).
 - **Long rests with a large party.** The camp has four beds and the game only puts four party members to bed. Party Picker asks which four to keep tonight; the others wait in camp and rejoin when you wake, as far as the limit allows. **Nobody is ever sent away to make room for them.** The record of who waited is saved with the game, so a save and load in between should not lose it (not yet tested in game).
 - **The Grymforge raft (Ebonlake, Act 1 Underdark).** The raft takes everyone aboard but has only four landing spots per dock, so members five and up would be left on board, hidden and unable to move. Party Picker adds landing spots so the whole party arrives.
 - **The House of Hope's Debtor's Attire (Act 3).** The game has only four sets of the disguise Hope hands out, so members five and up would get none. When Hope hands them out, Party Picker gives a set to every other party member inside the House and puts it on. The game treats the extra sets exactly like its own, including destroying them when the alarm is raised.
-- **Every refusal says why.** A change that cannot be made (combat, someone who cannot travel right now, an off-stage character) is refused as a whole, the reason stays on the Party tab, and it is written to the Script Extender log.
+- **Every refusal says why.** A change that cannot be made is refused as a whole, the reason stays on the Party tab, and it is written to the Script Extender log. Party Picker follows the game's own rules for travel and dismissal: combat (with the setting on), someone who can't move or can't talk right now (a conversation, knocked out, downed, wild shape and the like), an area where companions can't be dismissed, arrest, camp night, an off-stage character, and your own character being dead or downed.
 - **Safe in combat.** By default no party changes are made while your character, or anyone joining or leaving, is in combat.
 
 ## Requirements
@@ -69,7 +71,7 @@ All on the **Settings** tab of Party Picker's MCM page. Every change applies str
 | Setting | Default | What it does |
 |---|---|---|
 | Ask before a long rest | On | If your party is larger than four, End the Day is held and you are asked which four to keep tonight. The others wait in camp. |
-| Bring everyone back after the rest | On | When you wake up, the members who waited in camp rejoin, as far as the party limit allows. Nobody is sent away to make room. Off: press **Restore** on the Party tab when you want them back. |
+| Bring everyone back after the rest | On | When you wake up, the members who waited in camp rejoin, as far as the party limit allows; also when you load a save made after the rest while they still wait. Nobody is sent away to make room. If someone can't come back when you wake, a message window says who and why (after loading a save, the line on the Party tab says it). Off: press **Restore** on the Party tab when you want them back. |
 | Let the whole party ride the Grymforge raft | On | Adds landing spots so members five and up arrive with everyone else. |
 | Debtor's Attire for the whole party (House of Hope) | On | When Hope hands out the disguise, every party member inside the House gets a set, not just four. |
 
@@ -79,15 +81,17 @@ All on the **Settings** tab of Party Picker's MCM page. Every change applies str
 |---|---|---|
 | Let Halsin join early | Off | In the base game Halsin can't join you in Act Two until Thaniel is saved, and the Party tab follows that. Ticked, Halsin can join earlier: in Act Two only, before his quest at Last Light begins. |
 
+If you tick it in a game where it can't apply (outside Act Two, or once his quest at Last Light is under way), a message and a line on the Party tab say so; the setting stays ticked for your other saves.
+
 **If you let Halsin join early, read this.** Once he has joined early, his quest at Last Light won't start by itself, even after you send him back to camp. Once your party has reached Last Light, and **before you talk to Art Cullagh**, press **Put Halsin's quest back on track** on the Party tab (a message window reminds you when you first arrive at Last Light). It sends him to camp and resets his quest; then talk to him in camp and let him go ahead to Last Light. After that he can't join again until Thaniel is saved. **Without Party Picker that button is gone, so don't remove the mod while Halsin is with you early.**
 
 ## The Party tab
 
-- **The list.** Everyone you have recruited, with a checkbox. The counter shows `Selected N of <limit>`. Characters who cannot be moved are greyed out with the reason.
+- **The list.** Everyone you have recruited, with a checkbox. The counter shows `Selected N of <limit>`. Characters who cannot be moved are greyed out with the reason; for dead and held members a click on the box says why.
 - **Apply** carries out every change on the list at once. If a check fails first (combat, someone who cannot travel right now, an off-stage character), nothing is changed and the reason is shown. If the game itself refuses one step, the line reads `Party partly updated. ...` and names who did not move. With more people ticked than the limit allows, Apply changes nothing and a message window says how many to untick.
-- **Refresh** reads the party again. The tab also refreshes itself each time you open Party Picker's MCM page, and when you change Maximum party size or Let Halsin join early.
-- **Send everyone to camp** asks "Send N party members to camp?" first. Everyone who can be moved goes; your own character, the character you control, the dead and anyone off stage stay. If your character is then alone, a message window explains that the game hides the party portraits for a party of one.
-- **Restore** appears only when some of your party are still waiting in camp after a long rest. It brings them back, as far as the limit allows, without sending anyone away.
+- **Refresh** reads the party again, and so does opening Party Picker's MCM page; both start from the party as it is. The tab also refreshes itself, keeping the ticks you have not applied yet: when you open the MCM window, when a change finishes, when you change a setting it shows or switch MCM profile, and when the game changes someone on it (a death, a revival, someone going down or getting up, a fight ending, recruiting or dismissing in the game's own conversations, switching the character you control). Someone the game is holding always shows as they are.
+- **Send everyone to camp** asks "Send N party members to camp?" first. Everyone who can be moved goes; your own character, the character you control, the dead, anyone off stage and anyone the game is holding stay. If your character is then alone, a message window explains that the game hides the party portraits for a party of one.
+- **Restore** appears only when some of your party are still waiting in camp after a long rest. It brings them back, as far as the limit allows, without sending anyone away, and names anyone who could not come back.
 - **Put Halsin's quest back on track** appears only for a Halsin who joined early (see **Let Halsin join early**). It is greyed out, with the reason, until your party has reached Last Light. It asks once, then sends him to camp if he is with you and resets his quest.
 
 ## How it works (brief technical overview)
@@ -124,14 +128,23 @@ What Party Picker keeps in your save: the record of who waited in camp during a 
 
 ## Known limitations
 
+- **Nights the story starts itself skip the long-rest window.** Some story scenes send the party to bed through the game's "force end the day", which skips the ready check Party Picker uses to hold the rest (for example the Act One celebration after the goblin hunt, and some other story nights; Larian's own camp script notes that this path has no ready check). On those nights Party Picker cannot ask which four to keep. What happens then to members five and up has not been tested.
+- **In a fight, party members in combat stay ticked** (with **No party changes in combat** on): the game holds them while they fight. An untick you make during the fight is not kept, and one made just before it can be dropped at the next redraw; untick again once the fight is over.
 - **Dialogue still seats the speaker plus three.** That is the game's cutscene system and is not changed.
 - **Debtor's Attire: only for those in the party at the moment Hope hands it out.** A member who joins the party later, or who is outside the House of Hope at that moment, gets none. The game itself hands its four sets to the first four party members wherever they are; Party Picker does not move those sets to someone else.
 - **On the raft's lake stop**, members five and up share the four standing spots on the raft. Not yet tested in game; if someone is left behind on the lake, reload or travel to them.
 - **Someone already in your party who is off stage cannot be sent to camp** by Party Picker. The Party tab says so.
-- **A companion the story is keeping in camp for a scene can still be ticked**, because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.
+- **A companion the story is keeping in camp for a scene can still be ticked** if the game does not mark them as unable to move (those it does mark show `can't join now`), because the game's join procedure does not repeat the checks its recruitment dialogues make. Leave companions in camp during their own story moments.
 - **A companion added by another mod that the game does not mark as a companion** is not listed until they have joined your party once the normal way. After that, Party Picker remembers them.
 - **Turning the raft setting off does not remove landing spots already added.** They are only used when more than four people ride the raft.
 - **After a rest you may see** `request refused: A party change is already in progress.` **in the log.** Party Picker listens for two end-of-rest signals; the second restore attempt is turned away while the first one runs. It is harmless.
+
+## Before removing Party Picker
+
+- If some of your party are waiting in camp after a long rest (the **Restore** button shows), press Restore first.
+- Then bring the party down to four on the Party tab and save. Without Party Picker the camp puts only four to bed again; what happens to a larger party once Party Picker is gone has not been tested.
+- If Halsin joined early, see **If you let Halsin join early** above.
+- What stays in the save is listed under **How it works**. The records of who waited, who was seen and Halsin's note are only read by Party Picker. The extra raft landing spots are rows in the game's own raft table, so the game keeps using them (they reuse each dock's own four spots).
 
 ## FAQ
 

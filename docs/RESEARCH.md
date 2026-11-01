@@ -147,7 +147,7 @@ Signatures are from [LaughingLeader's generated Osi.lua](https://github.com/Laug
     talk and the dialog-suppression zone. Leavers are checked against `DB_CantTalk_IgnoreCombat(char)` (can't
     talk for any reason except combat: conversations, statuses such as wild shape, the engine talk block, dead;
     `__AAA_FirstGoal.txt` L1658-~2000) and `DB_PartyDialogSuppressed(char, zone)`
-    (`GLO_PartyDialogSuppressionZones.txt` L13-35). Combat stays the "Block party changes in combat" setting.
+    (`GLO_PartyDialogSuppressionZones.txt` L13-35). Combat stays the "No party changes in combat" setting.
 
 ## 4. Script Extender and MCM
 

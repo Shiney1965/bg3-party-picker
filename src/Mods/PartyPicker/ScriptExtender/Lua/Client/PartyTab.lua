@@ -22,10 +22,33 @@ local function setStatus(text)
     end
 end
 
-local function render(slot, reply, keep)
+-- Roster requests are numbered, so a reply requested before a press cannot be taken for its outcome.
+local reqSeq = 0
+
+-- uuids -> true, for a list of uuids.
+local function set(uuids)
+    local s = {}
+    for _, u in ipairs(uuids or {}) do s[u] = true end
+    return s
+end
+
+-- An accepted change: what it sent is shown until a reply requested after it says the change is done
+-- (`busy` false), and only ticks changed after the press are kept (final review 2026-11-01, finding 7).
+-- Two sets, as "Send everyone to camp" sends fewer than are ticked on screen (diff review 2026-11-01):
+-- sentTicks = shown while the change runs; baseline = what the list on screen was drawn from (the ticks
+-- on screen at the press, then sentTicks once a busy reply drew them, then nothing: the party), so the
+-- ticks kept are only the player's own (re-review 2026-11-01).
+local function sent(slot, sentUuids, screenUuids)
+    slot.sentTicks, slot.baseline, slot.sentSeq = set(sentUuids), set(screenUuids or sentUuids), reqSeq
+end
+
+local function render(slot, reply, keep, seq)
     local root = slot.root
     RosterList.Clear(root)
     slot.status = nil
+    if slot.sentTicks and (seq or 0) > (slot.sentSeq or 0) and not reply.busy then slot.sentTicks = nil end
+    local sentTicks = slot.sentTicks
+    slot.baseline = sentTicks
 
     local isHost = Ext.Net.IsHost()
     local entries = reply.entries or {}
@@ -42,6 +65,11 @@ local function render(slot, reply, keep)
         root:AddText(string.format("Tick who should be in your party. Limit: %d (your setting %d, raised to fit the party).", limit, setting))
     else
         root:AddText(string.format("Tick who should be in your party. Limit: %d (change it in Settings).", limit))
+    end
+    -- Your own character is dead (plan 1.1.4 unit A): the server refuses every change until they are revived.
+    -- The host's character: not shown to other players (diff review 2026-11-01).
+    if reply.hostDead and isHost then
+        for _, line in ipairs(MessageWindow.Wrap(tostring(reply.hostDead), 100)) do root:AddText(line) end
     end
     -- "Let Halsin join early" ticked where it cannot apply (the server's HalsinRepair.EarlyIdleText).
     if reply.halsinEarlyIdle then
@@ -62,9 +90,10 @@ local function render(slot, reply, keep)
     -- After a settings change the ticks not yet applied are kept (PartyTab.SettingChanged); each reply
     -- draws with the copy made for its own request, so a Refresh already in flight cannot take them.
     local preselect = nil
-    if keep then
+    if keep or sentTicks then
         preselect = function(e)
-            if keep[e.uuid] ~= nil then return keep[e.uuid] end
+            if keep and keep[e.uuid] ~= nil then return keep[e.uuid] end
+            if sentTicks then return sentTicks[e.uuid] == true end
             return e.active == true
         end
     end
@@ -92,13 +121,16 @@ local function render(slot, reply, keep)
             return
         end
         setStatus("Changing the party...")
-        PP.Net.Apply:RequestToServer({ uuids = list:Selected() }, function(resp)
+        local uuids = list:Selected()
+        PP.Net.Apply:RequestToServer({ uuids = uuids }, function(resp)
             setStatus(resp and resp.message or "No reply.")
+            if resp and resp.hostDead then MessageWindow.Show(resp.message) end
             -- The change takes about a second; show the result afterwards.
             -- A refused request changed nothing: keep the ticks and the reason on screen, but redraw the
             -- list, so someone who has left the party meanwhile drops out of it (diff review 2026-10-31).
             if resp and resp.accepted then
-                Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+                sent(slot, uuids)
+                Ext.Timer.WaitForRealtime(1500, PartyTab.Redraw)
             else
                 pcall(PartyTab.SettingChanged)
             end
@@ -110,6 +142,7 @@ local function render(slot, reply, keep)
         setStatus("")
         slot.confirmCamp = false
         slot.confirmHalsin = false
+        slot.sentTicks, slot.baseline = nil, nil
         PartyTab.Refresh()
     end
 
@@ -150,9 +183,12 @@ local function render(slot, reply, keep)
             yes.Disabled = true -- one request per confirmation
             slot.confirmCamp = false
             setStatus("Changing the party...")
+            local onScreen = slot.list and slot.list:Selected() or {}
             PP.Net.Apply:RequestToServer({ uuids = keepOffStage }, function(resp)
                 setStatus(resp and resp.message or "No reply.")
+                if resp and resp.hostDead then MessageWindow.Show(resp.message) end
                 if resp and resp.accepted then
+                    sent(slot, keepOffStage, onScreen)
                     -- Alone afterwards: the game hides the party portraits for a party of
                     -- one (Game.pak PlayerPortraits.xaml L194-207), which looks as if the
                     -- character has gone (reported in game 2026-10-25). Say what happened.
@@ -174,9 +210,9 @@ local function render(slot, reply, keep)
                             end)
                         end)
                     end
-                    Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+                    Ext.Timer.WaitForRealtime(1500, PartyTab.Redraw)
                 else
-                    PartyTab.Refresh()
+                    PartyTab.Redraw()
                 end
             end)
         end
@@ -185,7 +221,7 @@ local function render(slot, reply, keep)
         cancel.SameLine = true
         cancel.OnClick = function()
             slot.confirmCamp = false
-            PartyTab.Refresh()
+            PartyTab.Redraw()
         end
     else
         local toCamp = root:AddButton("Send everyone to camp")
@@ -194,7 +230,7 @@ local function render(slot, reply, keep)
         toCamp.Disabled = (not isHost) or movable == 0
         toCamp.OnClick = function()
             slot.confirmCamp = true
-            PartyTab.Refresh()
+            PartyTab.Redraw()
         end
     end
 
@@ -207,7 +243,8 @@ local function render(slot, reply, keep)
             setStatus("Restoring...")
             PP.Net.Restore:RequestToServer({}, function(resp)
                 setStatus(resp and resp.message or "No reply.")
-                Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+                if resp and resp.hostDead then MessageWindow.Show(resp.message) end
+                Ext.Timer.WaitForRealtime(1500, PartyTab.Redraw)
             end)
         end
     end
@@ -237,9 +274,9 @@ local function render(slot, reply, keep)
                     setStatus(resp and resp.message or "No reply.")
                     -- Sending him to camp takes about a second; the outcome comes in a message window.
                     if resp and resp.accepted then
-                        Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+                        Ext.Timer.WaitForRealtime(1500, PartyTab.Redraw)
                     else
-                        PartyTab.Refresh()
+                        PartyTab.Redraw()
                     end
                 end)
             end
@@ -248,7 +285,7 @@ local function render(slot, reply, keep)
             cancel.SameLine = true
             cancel.OnClick = function()
                 slot.confirmHalsin = false
-                PartyTab.Refresh()
+                PartyTab.Redraw()
             end
         else
             local button = root:AddButton("Put Halsin's quest back on track")
@@ -256,7 +293,7 @@ local function render(slot, reply, keep)
             button.Disabled = (not isHost) or hal.why ~= nil
             button.OnClick = function()
                 slot.confirmHalsin = true
-                PartyTab.Refresh()
+                PartyTab.Redraw()
             end
         end
     end
@@ -270,9 +307,11 @@ end
 function PartyTab.Refresh(keepBySlot)
     if #roots == 0 then return end
     if type(keepBySlot) ~= "table" then keepBySlot = nil end
+    reqSeq = reqSeq + 1
+    local mySeq = reqSeq
     PP.Net.Roster:RequestToServer({}, function(reply)
         for _, slot in ipairs(roots) do
-            local ok, err = pcall(render, slot, reply or {}, keepBySlot and keepBySlot[slot] or nil)
+            local ok, err = pcall(render, slot, reply or {}, keepBySlot and keepBySlot[slot] or nil, mySeq)
             if not ok then PP.Log("could not draw the Party list: " .. tostring(err)) end
         end
     end)
@@ -285,29 +324,40 @@ function PartyTab.SetStatus(text) setStatus(text) end
 -- sends a change for every step, so only the last one in half a second redraws. Ticks not yet applied
 -- are kept. Also used when the party changed in the game (RosterChanged) and when the MCM window opens.
 local settingSeq = 0
+
+-- Redraw now, keeping the ticks the player has not applied yet (final review 2026-11-01, finding 7: the
+-- redraws after a change, a confirmation or a Cancel used to start fresh and drop them). Timers pass their
+-- own argument; it is ignored.
+function PartyTab.Redraw()
+    local keepBySlot = {}
+    for _, slot in ipairs(roots) do
+        if slot.list and slot.entries then
+            -- Only the ticks the player changed: anything else shows the party as it is now, so a
+            -- change the game made meanwhile is not undone by the next Apply. While a change runs, the
+            -- baseline is what the list was drawn from instead of the party.
+            local selected = {}
+            for _, uuid in ipairs(slot.list:Selected()) do selected[uuid] = true end
+            local keep = {}
+            for _, e in ipairs(slot.entries) do
+                local ticked = selected[e.uuid] == true
+                local was
+                if slot.baseline then was = slot.baseline[e.uuid] == true else was = e.active == true end
+                if not e.locked and not e.dead and ticked ~= was then keep[e.uuid] = ticked end
+            end
+            keepBySlot[slot] = keep
+        end
+    end
+    -- pcall: this may run when no game is loaded (MCM opened at the main menu).
+    local ok, err = pcall(PartyTab.Refresh, keepBySlot)
+    if not ok then PP.Log("could not redraw the Party tab: " .. tostring(err)) end
+end
+
 function PartyTab.SettingChanged()
     settingSeq = settingSeq + 1
     local mySeq = settingSeq
     Ext.Timer.WaitForRealtime(500, function()
         if mySeq ~= settingSeq then return end
-        local keepBySlot = {}
-        for _, slot in ipairs(roots) do
-            if slot.list and slot.entries then
-                -- Only the ticks the player changed: anything else shows the party as it is now, so a
-                -- change the game made meanwhile is not undone by the next Apply.
-                local selected = {}
-                for _, uuid in ipairs(slot.list:Selected()) do selected[uuid] = true end
-                local keep = {}
-                for _, e in ipairs(slot.entries) do
-                    local ticked = selected[e.uuid] == true
-                    if not e.locked and not e.dead and ticked ~= (e.active == true) then keep[e.uuid] = ticked end
-                end
-                keepBySlot[slot] = keep
-            end
-        end
-        -- pcall: this may run when no game is loaded (MCM opened at the main menu).
-        local ok, err = pcall(PartyTab.Refresh, keepBySlot)
-        if not ok then PP.Log("could not redraw the Party tab: " .. tostring(err)) end
+        PartyTab.Redraw()
     end)
 end
 
