@@ -20,7 +20,7 @@ local function rosterReply()
         end
         entries[#entries + 1] = {
             uuid = e.uuid, name = e.name, active = e.active, inCamp = e.inCamp,
-            avatar = e.avatar, hireling = e.hireling, dead = e.dead,
+            avatar = e.avatar, hireling = e.hireling, dead = e.dead, downed = e.downed == true,
             offStage = e.offStage == true,
             locked = e.locked == true, lockReason = e.lockReason,
             stuck = stuck,

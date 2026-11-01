@@ -633,3 +633,43 @@ the game's own "cannot be dismissed". Withers revives dead party members (GLO_Je
 companions on the team but outside the party (L578-599). Not a 1.1.2 regression; open for the author's decision.
 Then the author: "I was able to revive him with the console command" (that is the Resurrected event at Osiris log
 L7541827; the "Bring back:" error at L1943 was an earlier paste with the label).
+
+## 2026-11-01 (later): 1.1.2 in game, downed member, split party, dismissing and recruiting by conversation
+The author, in order:
+- "When downing a character, here Gale, the mod party list does not automatically mark him as downed or "can't
+  travel" unless all party members are in the same place. I separated members unintentionally by sending some to
+  camp and others not and the list seemed frozen for the downed member although it did not mark him as downed It
+  seemed stuck on marking him as "controlled" because my controlled character and the downed Gale were in different
+  places.  The mod then allowed me to take the downed character to camp, which would not have been normally
+  possible. Also, when I revived the charactr with healing not a console command, in the game world, the Party
+  Picker list did not reset him to normal. Please review the log"
+- "I repeated the experiment in camp and the Party Picker seemed to work as intended, although a refresh may have
+  been needed to reset the list" and "please check the later log"
+- "when gale is down the party picker let's me uncheck him although it says "cant travel right now" -- but when I
+  click apply or refresh it puts him back. That is a little confusing to the player it should not allow him to be
+  unchecked temporarily if he is stuck in the party, which is what is intended by the game I believe."
+- "Now death and resurrection when in camp seems to work correctly, when he dies he is marked dead, dead. Then with
+  the MCM closed I rezzed him with a spell. When I reopened MCM he was marked normally."
+- "I confirmed even with MCM open the list updates automatically when the character dies" and "and the same when
+  he is resurrected, so there seems to be no error there"
+- "when I dismiss someone from camp the list does not update until apply or refresh." and "check the log for when I
+  dismissed laezel"
+- "same for the reverse when I manually recruit the list does not update to show they are in the party"
+Log check (Osiris Runtime 2026-11-01 18-01-19.log, Extender Runtime 2026-11-01 17-58-39.log; verified):
+- The camp travel that split the party was the game's own: Karlach, Shadowheart and Gale TeleportedToCamp
+  (Osiris L9053471-9057862), Wyll, Minthara and Lae'zel later (L9338399-9341950). Gale was up then (his second downing
+  ended at L8998692, the engine move block at L9015041).
+- "Controlled": the author took control of Gale (GainedControl L9205973), Gale went down while controlled
+  (DownedChanged L9225646), control then went to Shadowheart (L9236137) and Lae'zel (L9312892). The tab locks the
+  controlled character and shows no "can't leave now" for a locked member, and nothing redraws on a control change.
+- Getting up: DownedChanged(Gale, 0) L9506482, then the engine blocks movement again for a moment
+  (MoveCapabilityChanged(Gale, 0) L9507659 -> DB_CantMove and TRAVELBLOCK_CANTMOVE again; (_, 1) at L9514334). A
+  redraw 1.5 s after getting up can fall in that window, with nothing redrawing afterwards (likely; the Osiris log
+  has no timestamps).
+- Every Party Picker request to send a downed Gale to camp was refused ("request refused: Gale cannot travel right
+  now (DB_FastTravelBlock_CantMove_StatusSet)", twice later in the Extender log); no CharacterLeftParty for Gale in
+  the session after the first test. The box could be unticked because held members are not locked on the Party tab.
+- Lae'zel dismissed by the camp conversation: PROC_GLO_PartyMembers_Remove(Laezel, Shadowheart, 0, 0) and
+  CharacterLeftParty, then recruited again: PROC_GLO_PartyMembers_CheckAdd and CharacterJoinedParty (last 450 MB of
+  the Osiris log). 1.1.2 does not listen for these. "(dead, dead)" is 1.1.2 (1.1.3 not installed yet).
+Fixes planned in 1.1.3: docs/PLAN_1.1.3_dead_member_notice.md units F-H.

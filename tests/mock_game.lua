@@ -75,7 +75,7 @@ end
 -- GLO_Camp.txt.
 local ARITY = {
     DB_CantMove = 1, DB_CantTalk_IgnoreCombat = 1, DB_PartyDialogSuppressed = 2, DB_IsArrested = 2,
-    DB_InBlockedWaypointZone = 2, DB_Camp_NightMode = 1, DB_InDangerZone = 2,
+    DB_InBlockedWaypointZone = 2, DB_Camp_NightMode = 1, DB_InDangerZone = 2, DB_Downed = 1,
 }
 
 function M.db(name)

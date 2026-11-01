@@ -3,7 +3,7 @@
 Read this first, then docs/DEVELOPMENT.md (the developer notes; README.md is now the user README,
 generated from dist_docs/README.md by tools/make_docs.ps1), RUN_CARD.md, docs/RESEARCH.md and docs/TESTING.md. They hold the
 design, the source for every game procedure used, and every in-game report so far (quoted exactly).
-Last updated 2026-11-01 (1.1.2 TEST build installed) by a session on the author's PC; first written 2026-10-12, continuing an
+Last updated 2026-11-01 (1.1.3 TEST build) by a session on the author's PC; first written 2026-10-12, continuing an
 earlier cloud session.
 
 ## What this is
@@ -105,6 +105,13 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
   members vanish; the vanishing itself comes from the Companion Permadeath mod (docs/TESTING.md 2026-10-31).
   INSTALLED 2026-11-01 at the author's word (game closed, hash 22034D1A checked; replaced 1.1.1 E5C0E1CA). Not
   released; test card pending. The inspiration branch now needs a version above 1.1.2.
+- v1.1.3 (2026-11-01): TEST build after the author's 1.1.2 tests. A dead party member stays locked (the game blocks
+  dismissing the dead) but its box answers a click with the reason; a member the game holds (downed, in a
+  conversation, in combat with the setting on) stays ticked the same way; "(dead)" not "(dead, dead)"; "downed" shown
+  even for the character you control; the tab also follows the game's own recruit/dismiss conversations,
+  GainedControl and MoveCapabilityChanged. Plan docs/PLAN_1.1.3_dead_member_notice.md (two plan reviews, two diff
+  reviews); test card docs/TEST_CARD_1.1.3.md. Sending the dead to camp is parked: docs/IDEA_dead_members_to_camp.md.
+  Built, NOT installed, not released.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).
@@ -162,6 +169,9 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
    log, so she has been through that procedure).
 7. `Osi.IsOnStage` as a second off-stage signal: confirmed working in game 2026-10-13
    (`IsOnStage=0` printed for two off-stage hirelings, no `IsOnStage?`).
+8. Dead party members stay in the party (the game blocks dismissing the dead; 1.1.3 explains it on a click). The
+   author parked sending them to camp for a later release (2026-11-01): docs/IDEA_dead_members_to_camp.md. Withers
+   already dismisses dead companions (GLO_Jergal.txt L1099-1185).
 
 ## Raft test helper (2026-10-14)
 A separate testing-only mod, not part of this repository: `C:\Claude Projects\BG3 Mods\PartyPicker_RaftTest\`

@@ -59,7 +59,9 @@ local function render(reason, size, reply)
         if e.active and not e.locked and e.stuck then
             local copy = {}
             for k, v in pairs(e) do copy[k] = v end
-            copy.locked, copy.lockReason = true, "can't leave now: " .. tostring(e.stuck)
+            -- The story table in brackets left out of the label, as in RosterList.HeldText (diff review 2026-11-01).
+            copy.locked, copy.lockReason = true,
+                "can't leave now: " .. (string.gsub(tostring(e.stuck), " %([%u_][%w_]*%)", ""))
             entries[i] = copy
             stuck[#stuck + 1] = e.uuid
         else
@@ -97,7 +99,7 @@ local function render(reason, size, reply)
     end
     local lockedCount = mandatory
 
-    local countText, confirm
+    local countText, confirm, status
     local requestRunning = false
     local function onChange(n)
         if countText then countText.Label = string.format("Selected %d of %d", n, need) end
@@ -107,11 +109,13 @@ local function render(reason, size, reply)
     local list = RosterList.Draw(w, entries, {
         preselect = function(e) return pre[e.uuid] == true end,
         onChange = onChange,
+        -- A click on a dead party member: the reason in this window's status line.
+        onLocked = function(_, text) if status then status.Label = text end end,
     })
 
     w:AddSeparator()
     countText = w:AddText("")
-    local status = w:AddText("")
+    status = w:AddText("")
 
     -- One request at a time: the first click on either button disables both until the server has
     -- answered; a refusal enables them again (review 2026-10-31, point 2).

@@ -1,4 +1,20 @@
-# Party Picker: test run card (v1.1.2, TEST build)
+# Party Picker: test run card (v1.1.3, TEST build)
+
+**v1.1.3 (2026-11-01): TEST build after the author's 1.1.2 tests.** Plan `docs/PLAN_1.1.3_dead_member_notice.md`
+(two plan reviews: approve with changes, blockers taken; two diff reviews: ship with notes). What changes: a dead
+party member, and a member the game holds right now (downed, in a conversation, in combat with the setting on),
+stays ticked; a click on their box explains why (status line and message window; the long-rest window's status
+line); "(dead)" instead of "(dead, dead)"; "downed" shows also for the character you control; the tab also redraws
+on the game's own CharacterJoinedParty, CharacterLeftParty (recruit and dismiss conversations), GainedControl and
+MoveCapabilityChanged. Server and client both changed; no new saved data. Tests: 302 server + 79 client checks and
+the blueprint check pass; of the new checks 6 server and 17 client fail on 1.1.2. The pak contains no occurrence of
+the author's name. **Built; NOT installed; not released.** (1.1.2 22034D1A… is what is installed.)
+
+**Pak:** `PartyPicker.pak` (62,766 bytes), built from an LF export (0 CR bytes)
+SHA-256 `b0e69817dfd7d0fe9545979bf3dd05f33cf2db9e390bf6983d994f0ca87951b8`. Checked by unpacking it with Divine.exe:
+PP.VERSION 1.1.3, Version64 36169540949770240 twice. Test card: `docs/TEST_CARD_1.1.3.md`.
+
+# v1.1.2 (kept for the record)
 
 **v1.1.2 (2026-10-31): TEST build: the Party tab follows deaths, revivals and downed members.** Plan
 `docs/PLAN_1.1.2_live_roster.md` (plan review: approve with changes, all taken; diff review: ship with notes, the

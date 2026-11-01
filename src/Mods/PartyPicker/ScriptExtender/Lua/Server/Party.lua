@@ -400,6 +400,9 @@ function Party.Roster()
             e.avatar = avatars[e.uuid] == true
             e.inCamp = inCamp[e.uuid] == true
             e.dead = isTrue(Osi.IsDead, e.id)
+            -- The story's own downed table (__AAA_FirstGoal.txt L1187-1216), shown even when the member is
+            -- locked (the character you control), plan 1.1.3 unit H.
+            e.downed = e.active == true and not e.dead and inDb("DB_Downed", e.id)
             e.name = Party.DisplayName(e.id)
             e.active = e.active == true
             e.hireling = e.hireling == true

@@ -11,6 +11,7 @@ local function container()
     local c = { Children = {} }
     local function add(kind, label, checked)
         local w = { kind = kind, Label = label, Checked = checked }
+        function w:SetColor(name, value) self.color = { name, value } end
         function w:Destroy()
             for i, k in ipairs(c.Children) do
                 if k == w then table.remove(c.Children, i) return end
@@ -380,6 +381,134 @@ local PartyTabM = Ext.Require("Client/PartyTab.lua")
 local okT = pcall(PartyTabM.Refresh, 4242)
 check(okT, "10: Refresh ignores a timer's argument")
 check(not table.concat(clientLog, "\n"):find("could not"), "10: no drawing errors")
+
+-- 11. 1.1.3 (docs/PLAN_1.1.3_dead_member_notice.md): a dead party member says why it cannot be unticked.
+local MW = Ext.Require("Client/MessageWindow.lua")
+local shown = {}
+local showOrig = MW.Show
+MW.Show = function(t) shown[#shown + 1] = t; return showOrig(t) end
+local DEAD_TEXT = "Gale is dead. Dead party members cannot be removed from the party here. Revive them first "
+    .. "(a scroll, a spell, or Withers once he is at your camp), or ask Withers to dismiss them."
+reply = {
+    maxSize = 6, setting = 6,
+    entries = {
+        { uuid = "a", name = "Tav", active = true, locked = true, avatar = true, lockReason = "player character" },
+        { uuid = "b", name = "Gale", active = true, dead = true, locked = true, lockReason = "dead" },
+        { uuid = "c", name = "Wyll", active = true },
+        { uuid = "d", name = "Karlach", inCamp = true, dead = true },
+    },
+}
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+local gale = find(tab, "checkbox", "Gale  (dead)")
+check(gale ~= nil, "11: a dead party member reads \"Gale  (dead)\", not \"(dead, dead)\"")
+check(gale and gale.Checked == true and gale.Disabled ~= true, "11: ... ticked and clickable")
+check(gale and gale.color and gale.color[1] == "Text", "11: ... its text drawn grey")
+check(find(tab, "text", "Selected 3 of 6") ~= nil, "11: count before the click")
+-- What ImGui does on a click: the box flips, then the queued OnChange runs.
+local nApply = #applyRequests
+if gale then gale.Checked = false; gale.OnChange(nil, false) end
+check(gale and gale.Checked == true, "11: clicking it ticks it again")
+check(find(tab, "text", DEAD_TEXT) ~= nil, "11: ... the reason is on the status line")
+check(shown[#shown] == DEAD_TEXT, "11: ... and in the message window")
+check(#applyRequests == nApply and find(tab, "text", "Selected 3 of 6") ~= nil, "11: ... no request, count unchanged")
+-- Guards (already so in 1.1.2): Apply never sends the dead member; the others stay disabled.
+find(tab, "button", "Apply").OnClick()
+local sentGale = false
+for _, u in ipairs((applyRequests[#applyRequests] or {}).uuids or {}) do if u == "b" then sentGale = true end end
+check(#applyRequests == nApply + 1 and not sentGale, "11: guard: Apply does not send the dead member")
+runTimers()
+local karlach = find(tab, "checkbox", "Karlach  (dead, in camp)")
+check(karlach and karlach.Disabled == true and karlach.Checked == false, "11: guard: a dead camp member stays disabled")
+check(find(tab, "checkbox", "Tav  (you)") and find(tab, "checkbox", "Tav  (you)").Disabled == true,
+    "11: guard: your own character stays disabled")
+-- A dead player character is locked as "player character": no notice, still disabled.
+reply.entries[1] = { uuid = "a", name = "Tav", active = true, locked = true, avatar = true, dead = true,
+    lockReason = "player character" }
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+local tavDead = find(tab, "checkbox", "Tav  (you, dead)")
+check(tavDead and tavDead.Disabled == true, "11: a dead player character stays disabled")
+-- Read-only (not the host): the dead member's box is disabled like every other.
+local isHostOrig = Ext.Net.IsHost
+Ext.Net.IsHost = function() return false end
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+check(find(tab, "checkbox", "Gale  (dead)") and find(tab, "checkbox", "Gale  (dead)").Disabled == true,
+    "11: guard: read-only, the dead member is disabled")
+local shownRO = #shown
+if find(tab, "checkbox", "Gale  (dead)") then find(tab, "checkbox", "Gale  (dead)").OnChange(nil, false) end
+check(#shown == shownRO, "11: guard: read-only, no message window")
+Ext.Net.IsHost = isHostOrig
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+-- Pick-four window: the click re-ticks and the reason goes to the window's own status line.
+w = picker({ TAV, dead("d1", "Gale"), { uuid = "x", name = "Karlach", active = true },
+    { uuid = "y", name = "Laezel", active = true }, { uuid = "z", name = "Wyll", active = true } })
+local pgale = find(w, "checkbox", "Gale  (dead)")
+check(pgale and pgale.Disabled ~= true, "11: pick-four: the dead member is clickable")
+local shownPF = #shown
+if pgale then pgale.Checked = false; pgale.OnChange(nil, false) end
+check(pgale and pgale.Checked == true and find(w, "text", DEAD_TEXT) ~= nil, "11: pick-four: re-ticked, reason shown")
+check(find(w, "text", "Selected 4 of 4") ~= nil, "11: pick-four: count unchanged")
+check(#shown == shownPF, "11: pick-four: no message window over the picker")
+check(not table.concat(clientLog, "\n"):find("could not"), "11: no drawing errors")
+
+-- 12. 1.1.3 units G and H: a member the game holds stays ticked and says why; downed shows even when locked.
+local HELD_TEXT = "Gale is downed, so they can't leave the party right now. Press Refresh once that has changed."
+reply = {
+    maxSize = 6, setting = 6,
+    entries = {
+        { uuid = "a", name = "Tav", active = true, locked = true, avatar = true, lockReason = "player character" },
+        { uuid = "b", name = "Gale", active = true, downed = true,
+          stuck = "cannot travel right now (DB_FastTravelBlock_CantMove_StatusSet)" },
+        { uuid = "c", name = "Wyll", active = true,
+          stuck = "can't talk right now (in a conversation, wild shape, or similar) (DB_CantTalk_IgnoreCombat)" },
+        { uuid = "e", name = "Laezel", active = true, downed = true, locked = true, lockReason = "you are controlling them" },
+        { uuid = "f", name = "Karlach", active = true },
+    },
+}
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+local hg = find(tab, "checkbox", "Gale  (downed, can't leave now)")
+check(hg and hg.Checked == true and hg.Disabled ~= true and hg.color, "12: a held member is ticked, clickable, grey")
+local lz = find(tab, "checkbox", "Laezel  (downed, you are controlling them)")
+check(lz and lz.Disabled == true, "12: downed shows for the character you control (still locked)")
+local beforeR = rosterRequests
+if hg then hg.Checked = false; hg.OnChange(nil, false) end
+check(hg and hg.Checked == true and find(tab, "text", HELD_TEXT) ~= nil and shown[#shown] == HELD_TEXT,
+    "12: clicking a held member ticks it again and says why")
+runTimers()
+check(rosterRequests == beforeR + 1, "12: ... and redraws, in case it has passed")
+local wy = find(tab, "checkbox", "Wyll  (can't leave now)")
+if wy then wy.Checked = false; wy.OnChange(nil, false) end
+check(shown[#shown] == "Wyll can't talk right now (in a conversation, wild shape, or similar), so they can't leave "
+    .. "the party right now. Press Refresh once that has changed.", "12: the reason without the story table name")
+-- Apply keeps a held member: their uuid is sent (the server would otherwise try to send them to camp).
+find(tab, "button", "Apply").OnClick()
+local sent12 = {}
+for _, u in ipairs((applyRequests[#applyRequests] or {}).uuids or {}) do sent12[u] = true end
+check(sent12.b and sent12.c and sent12.f, "12: Apply sends the held members as staying")
+runTimers()
+-- An untick kept from before the member was held is dropped when they become held.
+reply.entries[2] = { uuid = "b", name = "Gale", active = true }
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+local g2 = find(tab, "checkbox", "Gale")
+if g2 then g2.Checked = false; g2.OnChange(nil, false) end
+reply.entries[2] = { uuid = "b", name = "Gale", active = true, downed = true,
+    stuck = "cannot travel right now (DB_FastTravelBlock_CantMove_StatusSet)" }
+settingSaved("halsin_early")
+runTimers()
+local g3 = find(tab, "checkbox", "Gale  (downed, can't leave now)")
+check(g3 and g3.Checked == true, "12: an untick not yet applied is dropped once the member is held")
+find(tab, "button", "Apply").OnClick()
+local sent12b = false
+for _, u in ipairs((applyRequests[#applyRequests] or {}).uuids or {}) do if u == "b" then sent12b = true end end
+check(sent12b, "12: ... and Apply sends them as staying")
+runTimers()
+check(not table.concat(clientLog, "\n"):find("could not"), "12: no drawing errors")
+MW.Show = showOrig
 
 print(string.format("client: %d passed, %d failed", passed, failed))
 if failed > 0 then error("client tests failed") end

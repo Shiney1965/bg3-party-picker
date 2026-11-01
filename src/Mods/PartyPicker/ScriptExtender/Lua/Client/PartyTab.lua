@@ -64,7 +64,15 @@ local function render(slot, reply, keep)
             return e.active == true
         end
     end
-    local list = RosterList.Draw(root, entries, { readOnly = not isHost, onChange = onChange, preselect = preselect })
+    -- A click on a dead or held party member: the reason in the status line and in the message window, and a
+    -- redraw (ticks kept), in case what held them has already passed (plan review 2026-11-01, unit G).
+    local function onLocked(_, text)
+        setStatus(text)
+        MessageWindow.Show(text)
+        pcall(PartyTab.SettingChanged)
+    end
+    local list = RosterList.Draw(root, entries, { readOnly = not isHost, onChange = onChange, preselect = preselect,
+        onLocked = onLocked })
     slot.list, slot.entries = list, entries
     if #entries == 0 then root:AddText("Nobody recruited yet.") end
 

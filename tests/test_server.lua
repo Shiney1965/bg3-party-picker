@@ -1618,5 +1618,34 @@ check(rosterChanged() == 1, "35: a camp member counts through DB_PartOfTheTeam")
 setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
 M.broadcasts = {}
 
+-- 36. 1.1.3 (docs/PLAN_1.1.3_dead_member_notice.md, units F and H): more of the game's own events, and downed.
+PP.Net.Roster:RequestToServer({}, function() end)
+for _, ev in ipairs({ { "CharacterJoinedParty", 1, { c.Gale.id } }, { "CharacterLeftParty", 1, { c.Laezel.id } },
+    { "GainedControl", 1, { c.Astarion.id } }, { "MoveCapabilityChanged", 2, { c.Gale.id, 1 } } }) do
+    M.broadcasts = {}
+    fireIf(ev[1], ev[2], table.unpack(ev[3]))
+    M.runTimers()
+    check(rosterChanged() == 1, "36: " .. ev[1] .. " for a listed member redraws once")
+end
+M.broadcasts = {}
+fireIf("MoveCapabilityChanged", 2, "S_GOB_Goblin_11111111-2222-3333-4444-555555555555", 0)
+fireIf("CharacterLeftParty", 1, "S_GOB_Goblin_11111111-2222-3333-4444-555555555555")
+M.runTimers()
+check(rosterChanged() == 0, "36: an enemy's move or leave event sends nothing")
+-- Control moving to someone not on the tab (a summon) still redraws, so the old lock goes.
+M.broadcasts = {}
+fireIf("GainedControl", 1, "S_Summon_11111111-2222-3333-4444-555555555555")
+M.runTimers()
+check(rosterChanged() == 1, "36: control moving to anyone redraws")
+-- Downed in the roster reply (the story's DB_Downed), for party members only.
+M.db("DB_Downed")(c.Gale.id)
+local downedBy = {}
+PP.Net.Roster:RequestToServer({}, function(r)
+    for _, e in ipairs((r or {}).entries or {}) do downedBy[e.uuid] = e.downed end
+end)
+check(downedBy[c.Gale.uuid] == true and downedBy[c.Astarion.uuid] == false, "36: downed is sent for a downed member only")
+M.db("DB_Downed"):Delete(c.Gale.id)
+M.broadcasts = {}
+
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end

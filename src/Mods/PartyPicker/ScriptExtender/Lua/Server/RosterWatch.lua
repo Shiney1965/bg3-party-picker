@@ -42,9 +42,12 @@ local function changed()
     end)
 end
 
-local function watch(event, arity)
+-- always: redraw whoever it is (a change of control can move away from someone on the tab to someone who is
+-- not, e.g. a summon; a first recruit may not be in the party tables yet when the event runs).
+local function watch(event, arity, always)
     local ok, err = pcall(function()
         Ext.Osiris.RegisterListener(event, arity, "after", function(id)
+            if always then changed() return end
             local okC, yes = pcall(counts, id)
             if okC and yes then changed() end
         end)
@@ -53,12 +56,19 @@ local function watch(event, arity)
 end
 
 -- story_header.div: Died L312, Resurrected L313, DownedChanged L391, LeftCombat L1201 (a redraw during a
--- fight shows everyone "in combat"; this one puts the tab right when the fight ends).
+-- fight shows everyone "in combat"; this one puts the tab right when the fight ends). 1.1.3
+-- (docs/PLAN_1.1.3_dead_member_notice.md, unit F): CharacterJoinedParty L369 and CharacterLeftParty L370
+-- (recruiting and dismissing in the game's own conversations), GainedControl L380 (the "you are controlling
+-- them" lock follows), MoveCapabilityChanged L386 (the engine holds a member for a moment after they get up).
 function RosterWatch.Register()
     watch("Died", 1)
     watch("Resurrected", 1)
     watch("DownedChanged", 2)
     watch("LeftCombat", 2)
+    watch("CharacterJoinedParty", 1, true)
+    watch("CharacterLeftParty", 1)
+    watch("GainedControl", 1, true)
+    watch("MoveCapabilityChanged", 2)
 end
 
 return RosterWatch
