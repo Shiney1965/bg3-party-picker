@@ -55,8 +55,11 @@ at once").
 ### 3. Party changes bypass the game's own checks - Fixed for the gaps found (1.1.1 unit L; 1.1.3 units G, H)
 - 1.1.1: the game's fast-travel restrictions now apply to everyone Party Picker moves, joiners from camp included:
   besides the five TRAVELBLOCK status tables (which the game keeps only for party members), their source conditions
-  are read - `DB_CantMove`, `DB_IsArrested`, `DB_InBlockedWaypointZone`, and the camp night `DB_Camp_NightMode`
-  (Server/Party.lua `JOIN_DBS` L572-575, the night check in Apply). Members leaving are also blocked by the game's own
+  are read for joiners - `DB_CantMove` and `DB_IsArrested` - and the camp night `DB_Camp_NightMode` once per request
+  (Server/Party.lua `JOIN_DBS` L572-575, the night check in Apply). `DB_InBlockedWaypointZone` is deliberately not
+  read for camp members: the game keeps its rows up to date only for party members, so a camp row may be stale
+  (Party.lua L566-570; the 1.1.1 plan review). (Corrected 2026-11-01 after the final review: an earlier draft of this
+  report listed it as read.) Members leaving are also blocked by the game's own
   dismiss lock causes the review named: `DB_CantTalk_IgnoreCombat` (can't talk for any reason except combat) and
   `DB_PartyDialogSuppressed` (`LEAVE_DBS` L579-582). Combat stays under the "Block party changes in combat" setting.
   Refusals name the reason and the story table, e.g. "(DB_CantMove)".
