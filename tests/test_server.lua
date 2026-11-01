@@ -1085,8 +1085,21 @@ setGlobal(GOTOLAKE, false)
 M.db("DB_State_Current"):Delete(H32, "SCL_LiftingTheCurse", nil)
 M.db("DB_State_Current")(H32, "SCL_LiftingTheCurse", st("HalsinAtHaven"))
 check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "join early: locked once his quest is at Last Light")
+-- 1.1.3 unit I: the setting is ticked but cannot apply: the tab says so (the author, 2026-11-01).
+local idle = roster32().halsinEarlyIdle
+check(idle and idle:find("has no effect in this game: his quest at Last Light is under way", 1, true)
+    and idle:find("stays ticked for your other saves", 1, true), "join early idle: the tab says why (quest under way)")
+settings.halsin_early = nil
+check(roster32().halsinEarlyIdle == nil, "join early idle: nothing when the setting is off")
+settings.halsin_early = true
+M.db("DB_CurrentLevel"):Delete("SCL_Main_A")
+local idleAct = roster32().halsinEarlyIdle
+check(idleAct and idleAct:find("works only in Act Two", 1, true) and not idleAct:find("other saves", 1, true),
+    "join early idle: outside Act Two (it may apply later in this save)")
+M.db("DB_CurrentLevel")("SCL_Main_A")
 M.db("DB_State_Current"):Delete(H32, "SCL_LiftingTheCurse", nil)
 M.db("DB_State_Current")(H32, "SCL_LiftingTheCurse", st("HalsinInAct2"))
+check(roster32().halsinEarlyIdle == nil, "join early idle: nothing while the setting applies")
 -- He joins.
 local r32 = apply({ uuids = withHalsin() })
 check(r32 and r32.accepted and #M.db("DB_Players"):Get(H32) == 1, "join early: he joins")
@@ -1152,6 +1165,11 @@ deadOne.dead = false
 -- After the reset, join early no longer unlocks him; the section is gone.
 check(halsinEntry().locked and halsinEntry().lockReason:find("under way"), "after the reset: locked even with join early on")
 check(roster32().halsin == nil, "after the reset: no Halsin section")
+local idleReset = roster32().halsinEarlyIdle
+check(idleReset and idleReset:find("his quest was put back on track", 1, true), "join early idle: after the reset, says so")
+halsin.dead = true
+check(roster32().halsinEarlyIdle == nil, "join early idle: nothing while Halsin is dead")
+halsin.dead = nil
 rr = tabReset()
 check(rr and not rr.accepted and rr.message:find("nothing to undo"), "a second reset is refused")
 -- Thaniel saved: the story makes him recruitable and the lock goes.

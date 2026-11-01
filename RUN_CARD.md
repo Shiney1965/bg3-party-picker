@@ -6,12 +6,15 @@ party member, and a member the game holds right now (downed, in a conversation, 
 stays ticked; a click on their box explains why (status line and message window; the long-rest window's status
 line); "(dead)" instead of "(dead, dead)"; "downed" shows also for the character you control; the tab also redraws
 on the game's own CharacterJoinedParty, CharacterLeftParty (recruit and dismiss conversations), GainedControl and
-MoveCapabilityChanged. Server and client both changed; no new saved data. Tests: 302 server + 79 client checks and
-the blueprint check pass; of the new checks 6 server and 17 client fail on 1.1.2. The pak contains no occurrence of
+MoveCapabilityChanged; ticking "Let Halsin join early" where it cannot apply says why (unit I; the tick stays). Server
+and client both changed; no new saved data. Tests: 308 server + 83 client checks and the blueprint check pass; of
+the new checks for units A-H, 6 server and 17 client fail on 1.1.2. Report on the external review's points:
+`docs/REPORT_external_review_status_1.1.3.md`. The pak contains no occurrence of
 the author's name. **Built; NOT installed; not released.** (1.1.2 22034D1A… is what is installed.)
 
-**Pak:** `PartyPicker.pak` (62,766 bytes), built from an LF export (0 CR bytes)
-SHA-256 `b0e69817dfd7d0fe9545979bf3dd05f33cf2db9e390bf6983d994f0ca87951b8`. Checked by unpacking it with Divine.exe:
+**Pak:** `PartyPicker.pak` (63,790 bytes), built from an LF export (0 CR bytes)
+SHA-256 `708cec618f6c05aead467c3a07de0de62954042669aef92db874d0b397bbb0c0` (replaces the first 1.1.3 build, 62,766 bytes /
+b0e69817…, never installed, which lacked unit I). Checked by unpacking it with Divine.exe:
 PP.VERSION 1.1.3, Version64 36169540949770240 twice. Test card: `docs/TEST_CARD_1.1.3.md`.
 
 # v1.1.2 (kept for the record)

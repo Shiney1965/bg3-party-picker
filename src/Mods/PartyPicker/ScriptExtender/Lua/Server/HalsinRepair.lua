@@ -228,18 +228,45 @@ end
 -- Act2_GLO_LiftingTheCurse_SetUp.txt L130-142, and the Leave-for-Haven reaction does not check the party,
 -- Act2_CAMP_LiftingTheCurse.txt L56-63).
 local QUEST_UNDER_WAY = "his quest at Last Light is under way: he joins once Thaniel is saved"
+local NOT_ACT_TWO = "not recruitable yet: Let Halsin join early works in Act Two only (the Shadow-Cursed Lands)"
 function HalsinRepair.EarlyGate()
     if PP.Setting("halsin_early", false) ~= true then return Party.NOT_YET end
     if record().reset then return QUEST_UNDER_WAY end
-    if not inDb("DB_CurrentLevel", "SCL_Main_A") then
-        return "not recruitable yet: Let Halsin join early works in Act Two only (the Shadow-Cursed Lands)"
-    end
+    if not inDb("DB_CurrentLevel", "SCL_Main_A") then return NOT_ACT_TWO end
     if flag("artAwake") ~= false or flag("goToLake") ~= false then return QUEST_UNDER_WAY end
     local states = currentStates()
     if #states ~= 1 or not EARLY_STATES[states[1]] then return QUEST_UNDER_WAY end
     return nil
 end
 Party.HalsinEarlyGate = HalsinRepair.EarlyGate
+
+-- "Let Halsin join early" is ticked but cannot apply in this game (the author, 2026-11-01: it could be ticked
+-- after his quest had begun, with no word). MCM settings belong to the profile, not to one save, so the tick
+-- stays (the author's choice, 2026-11-01); the Party tab, and a message when it is ticked, say why. nil when
+-- the setting is off, applies now, or does not matter (Halsin not on the team, in the party, dead, or free to
+-- join).
+local IDLE_KEEP = " The setting stays ticked for your other saves."
+function HalsinRepair.EarlyIdleText()
+    if PP.Setting("halsin_early", false) ~= true then return nil end
+    if not inDb("DB_PartOfTheTeam", H) or inDb("DB_Players", H) then return nil end
+    if flag("recruitable") == true then return nil end
+    local okD, dead = pcall(Osi.IsDead, H)
+    if okD and dead == 1 then return nil end
+    local why = HalsinRepair.EarlyGate()
+    if why == QUEST_UNDER_WAY and record().reset then
+        -- After "Put Halsin's quest back on track" he is back in camp, not yet at Last Light (diff review).
+        return "\"Let Halsin join early\" has no effect in this game: his quest was put back on track, so he can "
+            .. "join once Thaniel is saved, as in the base game." .. IDLE_KEEP
+    elseif why == QUEST_UNDER_WAY then
+        return "\"Let Halsin join early\" has no effect in this game: his quest at Last Light is under way, so he "
+            .. "can join once Thaniel is saved, as in the base game." .. IDLE_KEEP
+    elseif why == NOT_ACT_TWO then
+        -- In Act One it will apply later in this same save, so no "other saves" here (diff review).
+        return "\"Let Halsin join early\" has no effect here yet: it works only in Act Two (the Shadow-Cursed "
+            .. "Lands), before his quest at Last Light begins."
+    end
+    return nil
+end
 
 -- Party.Apply keeps a party member it may not move (controlled by you or another player): then he
 -- cannot be sent to camp from the tab (review 2026-10-28).

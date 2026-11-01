@@ -28,6 +28,9 @@ pcall(function()
         if payload and payload.modUUID == ModuleUUID and tabSettings[payload.settingId] then
             pcall(PartyTab.SettingChanged)
         end
+        if payload and payload.modUUID == ModuleUUID and payload.settingId == "halsin_early" and payload.value == true then
+            pcall(PartyTab.HalsinEarlyTicked)
+        end
     end)
 end)
 -- Another MCM profile holds other settings and sends no MCM_Setting_Saved for them; MCM passes this

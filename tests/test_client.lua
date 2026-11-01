@@ -508,6 +508,27 @@ for _, u in ipairs((applyRequests[#applyRequests] or {}).uuids or {}) do if u ==
 check(sent12b, "12: ... and Apply sends them as staying")
 runTimers()
 check(not table.concat(clientLog, "\n"):find("could not"), "12: no drawing errors")
+
+-- 13. 1.1.3 unit I: "Let Halsin join early" ticked where it cannot apply.
+local IDLE = "\"Let Halsin join early\" has no effect in this game: his quest at Last Light is under way, so he can "
+    .. "join once Thaniel is saved, as in the base game. The setting stays ticked for your other saves."
+reply.halsinEarlyIdle = IDLE
+local shown13 = #shown
+subscribers["MCM_Setting_Saved"]({ modUUID = ModuleUUID, settingId = "halsin_early", value = true })
+runTimers()
+check(#shown == shown13 + 1 and shown[#shown] == IDLE, "13: ticking it says why at once")
+local tabText = {}
+for _, k in ipairs(tab.Children) do if k.kind == "text" then tabText[#tabText + 1] = tostring(k.Label) end end
+check(table.concat(tabText, " "):find("has no effect in this game", 1, true), "13: the Party tab says it too")
+shown13 = #shown
+subscribers["MCM_Setting_Saved"]({ modUUID = ModuleUUID, settingId = "halsin_early", value = false })
+runTimers()
+check(#shown == shown13, "13: unticking it says nothing")
+reply.halsinEarlyIdle = nil
+shown13 = #shown
+subscribers["MCM_Setting_Saved"]({ modUUID = ModuleUUID, settingId = "halsin_early", value = true })
+runTimers()
+check(#shown == shown13, "13: no message when it applies")
 MW.Show = showOrig
 
 print(string.format("client: %d passed, %d failed", passed, failed))

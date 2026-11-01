@@ -178,3 +178,29 @@ untick made during or just before the fight is not kept: on the test card (step 
 (minor 2) the pick-four label leaves out the story table name too. Left: a downed member who is not held (rare: being
 downed sets the travel block the leave check reads); redraws on clients whose tab is closed (bounded, few events);
 a steady burst of MoveCapabilityChanged only delays the redraw.
+
+## Added 2026-11-01 (evening): unit I - "Let Halsin join early" says when it cannot apply
+The author: "But it does allow you to click on recruit early even after the quest started without a warning. So
+that is a little confusing. It should block the recruit early option once the questions starts.  Only the checkbox
+for Halsin is blocked as it currently stands." MCM cannot disable a setting by game state: `VisibleIf` depends only on
+other settings' values and "controls visibility only" (BG3-MCM wiki.md L287-314, Client/Helpers/VisibilityManager).
+Asked, the author chose "Warn, keep the tick": MCM settings belong to the profile, not to one save, so unticking it
+would also switch it off in earlier saves where it applies.
+- Server/HalsinRepair.lua `EarlyIdleText()`: the setting is on, Halsin is on the team, not in the party and not
+  recruitable by the story, and EarlyGate gives "his quest at Last Light is under way" or "Act Two only": a sentence
+  saying the setting has no effect in this game and why, and that it stays ticked for other saves. Otherwise nil.
+- BootstrapServer.lua rosterReply sends it as `halsinEarlyIdle`; Client/PartyTab.lua shows it under the limit line.
+- BootstrapClient.lua: on MCM_Setting_Saved for halsin_early with value true, `PartyTab.HalsinEarlyTicked()` asks the
+  server and shows the text in the message window (also when the tab was never drawn).
+Tests: server (quest under way, setting off, outside Act Two, nothing while it applies); client section 13 (message
+on ticking, the tab line, nothing on unticking, nothing when it applies).
+
+## Diff review of unit I (adversarial subagent, 2026-11-01): SHIP WITH NOTES, no blocker
+Verified by the reviewer: the author's case (Act Two, Halsin at Last Light, on the team, not in the party) gives the
+text; silent when the setting is off, Halsin is in the party, recruitable, or in an early state; MCM sends `value` as
+a boolean for a checkbox (MCMServer.lua SetSettingValue L73-90), a reset to default (false) shows nothing, a profile
+switch shows no popup but the tab line updates; non-host and main menu safe. Taken: outside Act Two the text says
+"has no effect here yet" without "other saves" (in Act One it applies later in the same save); after "Put Halsin's
+quest back on track" it says the quest was put back on track (he is in camp, not at Last Light); nothing while Halsin
+is dead; the Act Two reason is a named constant, not a text match. Tests added for the reset and dead cases (308
+server + 83 client). Left: the tab line partly repeats Halsin's own lock reason (cosmetic).

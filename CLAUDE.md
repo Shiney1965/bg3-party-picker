@@ -111,6 +111,8 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
   even for the character you control; the tab also follows the game's own recruit/dismiss conversations,
   GainedControl and MoveCapabilityChanged. Plan docs/PLAN_1.1.3_dead_member_notice.md (two plan reviews, two diff
   reviews); test card docs/TEST_CARD_1.1.3.md. Sending the dead to camp is parked: docs/IDEA_dead_members_to_camp.md.
+  Also unit I: ticking "Let Halsin join early" where it cannot apply says why (the tick stays: the author's choice).
+  Report on the external review's points: docs/REPORT_external_review_status_1.1.3.md.
   Built, NOT installed, not released.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer

@@ -43,6 +43,10 @@ local function render(slot, reply, keep)
     else
         root:AddText(string.format("Tick who should be in your party. Limit: %d (change it in Settings).", limit))
     end
+    -- "Let Halsin join early" ticked where it cannot apply (the server's HalsinRepair.EarlyIdleText).
+    if reply.halsinEarlyIdle then
+        for _, line in ipairs(MessageWindow.Wrap(tostring(reply.halsinEarlyIdle), 100)) do root:AddText(line) end
+    end
     root:AddSeparator()
 
     local countText
@@ -317,6 +321,15 @@ function PartyTab.Activated()
         slot.confirmHalsin = false
     end
     PartyTab.Refresh()
+end
+
+-- "Let Halsin join early" was just ticked: if it cannot apply in this game, say why at once, whether or not
+-- the Party tab was ever drawn (the author, 2026-11-01).
+function PartyTab.HalsinEarlyTicked()
+    PP.Net.Roster:RequestToServer({}, function(reply)
+        local text = reply and reply.halsinEarlyIdle
+        if text then MessageWindow.Show(text) end
+    end)
 end
 
 -- Draw into any IMGUI container (the MCM tab, or a standalone window).

@@ -34,6 +34,11 @@ local function rosterReply()
         maxSize = Party.EffectiveMaxSize(),
         setting = Party.MaxSize(),
         pending = pending and { reason = pending.reason, trimmed = pending.trimmed == true } or nil,
+        -- "Let Halsin join early" ticked where it cannot apply (nil: it applies, or is off)
+        halsinEarlyIdle = (function()
+            local ok, text = pcall(HalsinRepair.EarlyIdleText)
+            return ok and text or nil
+        end)(),
         -- "Put Halsin's quest back on track" (nil: nothing to put back)
         halsin = (function()
             local ok, info = pcall(HalsinRepair.TabInfo)
