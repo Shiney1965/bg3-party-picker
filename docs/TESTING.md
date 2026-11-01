@@ -610,3 +610,26 @@ disappearance comes from that mod, not from Party Picker. Without it, a dead com
 listed tagged "dead" with the box greyed out (Party.lua L402-414, Client/RosterList.lua L17, L62; offline tests;
 not yet seen in game). The later "request refused: Unknown character c774d764-..." (Wyll) is the stale list: the
 tab still showed Wyll after he had left.
+
+## 2026-11-01: 1.1.2 in game, a dead party member (Gale), Companion Permadeath off
+1.1.2 installed 2026-11-01 (hash 22034d1a checked). Load lines: `[PartyPicker] client loaded (v1.1.2)` (Extender
+Runtime 2026-11-01 17-58-39.log L827) and `server loaded (v1.1.2)` (L1395). The author: "After Gale dies as a party
+member the party picker displays him as (dead, dead).  But then he cannot be unclicked to remove him from the
+party.  Even after clicking refresh nothing happens he remains a dead member of the party. The permadeath has been
+removed. This seems worse than before when the party member disappeared from the list when they died. please check
+the log" and then: "This remains true whether or not Gale is the selected (ie, "controlled'( character".
+Log check (verified): the console lines failed because the test card's labels were pasted with them
+(`[string "Kill: Osi.Die(..."]:1: function arguments expected near '.'`, L1930; `Bring back:` L1943); Gale died in
+a fight instead (Osiris Runtime 2026-11-01 18-01-19.log L7209312, event Died, killer rows S_GOB_GuardPolite /
+S_GOB_GuardVulgar) and was resurrected later (L7541827). No PROC_Origins_CompanionLeavePermanently follows the
+death, so Companion Permadeath did not act (its module is still named in the save's ModuleLoadedinSavegame list,
+L11293). No Party Picker request was logged for Gale after his death: the box was disabled, so nothing was sent.
+Cause: by design since before 1.1.1, a dead party member is locked with reason "dead" (Server/Party.lua L412-414,
+checked before "you are controlling them", hence the same with or without control), and the label shows both the
+"dead" tag and the lock reason (Client/RosterList.lua L17 and L23), hence "(dead, dead)". The lock follows the
+game: a dead character goes into DB_CantTalk_IgnoreStatuses (__AAA_FirstGoal.txt L2040-2045), then DB_CantTalk
+(L2068-2074), and a party member in DB_CantTalk gets DB_BlockDismissable (_GLO_Shared_PartyMembers.txt L241-249),
+the game's own "cannot be dismissed". Withers revives dead party members (GLO_Jergal.txt L537-539) and also dead
+companions on the team but outside the party (L578-599). Not a 1.1.2 regression; open for the author's decision.
+Then the author: "I was able to revive him with the console command" (that is the Resurrected event at Osiris log
+L7541827; the "Bring back:" error at L1943 was an earlier paste with the label).

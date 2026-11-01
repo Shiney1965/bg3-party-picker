@@ -30,14 +30,26 @@ The 1500 ms wait before the redraw (the game marks someone downed only half a se
 
 ## Console helpers
 In the Script Extender console press Enter, type `server` and press Enter (the prompt reads `S >>`), then paste one
-line at a time. Replace the ID with one from the list.
-- Kill: Osi.Die("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604")
-- Bring back: Osi.Resurrect("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604")
-- Down (worked in game 2026-10-31: the log shows Gale downed and Party Picker refusing to move him):
-  Osi.ApplyStatus("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604", "DOWNED", -1, 1)
-- Get up again:
-  Osi.RemoveStatusesWithType("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604", "DOWNED", "NULL_00000000-0000-0000-0000-000000000000")
-  Osi.SetHitpoints("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604", 1)
+line at a time. Copy only the line that starts with `Osi.` (a pasted label such as "Kill:" is a Lua error: that
+happened on 2026-11-01). Replace the ID with one from the list.
+
+Kill:
+
+Osi.Die("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604")
+
+Bring back:
+
+Osi.Resurrect("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604")
+
+Down (worked in game 2026-10-31: the log shows Gale downed and Party Picker refusing to move him):
+
+Osi.ApplyStatus("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604", "DOWNED", -1, 1)
+
+Get up again (two lines, one after the other):
+
+Osi.RemoveStatusesWithType("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604", "DOWNED", "NULL_00000000-0000-0000-0000-000000000000")
+
+Osi.SetHitpoints("S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604", 1)
 
 Companion IDs: Shadowheart `S_Player_ShadowHeart_3ed74f06-3c60-42dc-83f6-f034cb47c679`;
 Lae'zel `S_Player_Laezel_58a69333-40bf-8358-1d17-fff240d7fb12`; Gale `S_Player_Gale_ad9af97d-75da-406a-ae13-7071c563f604`;
