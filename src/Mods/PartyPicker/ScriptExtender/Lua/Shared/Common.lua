@@ -6,7 +6,7 @@ PP = PP or {}
 PP.MOD = "PartyPicker"
 -- Keep in step with Version64 in meta.lsx; printed at load so logs show
 -- which build was running.
-PP.VERSION = "1.1.1"
+PP.VERSION = "1.1.2"
 -- The four-member situations are hard limits in the game's own scripts
 -- (four beds in camp, four raft seats), so this is not a setting.
 PP.RESTRICTED_SIZE = 4
@@ -50,6 +50,9 @@ PP.Net = PP.Net or {
     Message = Ext.Net.CreateChannel(ModuleUUID, "Message"),
     -- client -> server request: put Halsin's quest back on track (docs/PLAN_halsin_early_option.md)
     HalsinReset = Ext.Net.CreateChannel(ModuleUUID, "HalsinReset"),
+    -- server -> clients message: someone on the Party tab died, came back, went down or left a fight
+    -- (Server/RosterWatch.lua); no data
+    RosterChanged = Ext.Net.CreateChannel(ModuleUUID, "RosterChanged"),
 }
 
 -- The trimmed party waiting to be restored; saved with the game, server-only.

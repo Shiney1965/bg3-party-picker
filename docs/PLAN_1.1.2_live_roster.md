@@ -57,7 +57,7 @@ below runs only when the game raises a one-off event or the player opens MCM.
 
 ### E. Server: a clearer refusal for someone no longer listed
 - Party.lua Apply (non-addOnly branch, `not e`): `refuse(Party.DisplayName(u) .. " is no longer with the party or
-  in camp. Press Refresh.")` instead of `"Unknown character " .. u .. "."`. `DisplayName` falls back to the id when
+  in camp (the list was out of date).")` (wording from plan review item 5) instead of `"Unknown character " .. u .. "."`. `DisplayName` falls back to the id when
   the name cannot be read (Party.lua L262-276). The addOnly branch already says "no longer with the party".
 
 ### F. Version 1.1.2
@@ -72,7 +72,7 @@ Server (tests/test_server.lua, new section):
 3. Two members die in the same combat: one broadcast.
 4. An enemy (not listed, in no party table) dies: no broadcast.
 5. `Resurrected` and `DownedChanged(_, 1)` / `(_, 0)` for a listed member: one broadcast each.
-6. `!pp_set`/Apply with a uuid no longer in the roster: the refusal names the character and says Press Refresh.
+6. Apply (the handler, not `!pp_set`) with a uuid no longer in the roster: the refusal names the character.
 Client (tests/test_client.lua, new section):
 7. A `RosterChanged` message with the tab drawn: one more roster request and a redraw; ticks not yet applied are
    kept.
@@ -89,3 +89,44 @@ firing the listener.
 Plan review (adversarial subagent) -> code -> tests, run against 1.1.1 too -> diff review (adversarial subagent)
 -> version bump -> pak from an LF export -> RUN_CARD + docs/TEST_CARD_1.1.2.md -> commit + push. Not installed,
 not released (those wait for the author).
+
+## Plan review (adversarial subagent, 2026-10-31): APPROVE WITH CHANGES, no blocker
+Verified by the reviewer: the event signatures; the downed chain runs in one rule pass after the story's 500 ms
+timer, so 1500 ms leaves about 1000 ms; Companion Permadeath's removal is immediate; MCM_Window_Opened is emitted
+only in IMGUIAPI:OpenMCMWindow (L167-169, payload {playSound}), not for MCM's open-on-start (MCMRendering.lua
+L260-267, harmless: the tab is drawn fresh then); Version64; the "Unknown character" text is relied on nowhere.
+Taken into the plan:
+1. (should-fix) A redraw during combat draws every member "can't leave now" ("is in combat") and nothing redraws
+   when the fight ends. Unit A also counts `LeftCombat((GUIDSTRING), (GUIDSTRING))` (story_header.div L1201) for
+   counted characters, in the same coalesced timer.
+2. (should-fix) Kept ticks live in `slot.keepTicks`, taken by whichever render runs first; a Refresh already in
+   flight steals them and the redraw's own reply resets the ticks (exists today, more frequent now). Unit C:
+   `PartyTab.Refresh(keepBySlot)` takes the kept ticks as an argument and each reply draws with the copy made for
+   it; `slot.keepTicks` goes. Client test with the Roster reply held back.
+3. (should-fix) Tests: test 6 calls the Apply handler (`!pp_set` matches names from the roster and never sends a
+   missing uuid); the client fake gets a held-back Roster reply; the 1500/500 ms ordering cannot be shown offline
+   (the mock runs timers in order, ignoring delays) and goes on the test card.
+4. (minor, not taken) A "before" listener could make `listed` unnecessary; "before" ordering for events is not
+   confirmed in the bg3se source, while `listed` works whatever the order. Kept.
+5. (minor) Unit E text without "Press Refresh" (the long-rest window has no Refresh button): "<Name> is no longer
+   with the party or in camp (the list was out of date)."
+6. (minor) The redraw timer's Refresh is wrapped in pcall (MCM_Window_Opened could come at the main menu with a
+   tab still known). Redrawing while the window is closed is kept: one roster build per batch.
+
+## Diff review (adversarial subagent, 2026-10-31): SHIP WITH NOTES, no blocker
+Verified by the reviewer: event signatures and LeftCombat argument order; BG3SE timer callbacks receive a
+TimerHandle (bg3se Timer.inl), so `WaitForRealtime(1500, PartyTab.Refresh)` hits the type guard; `slot.keepTicks`
+gone everywhere; nothing new logs per event, no Tick handler, no repeating timer, no new ModVars; MCM_Window_Opened
+also on the hotkey (ToggleMCMWindow -> OpenMCMWindow); version values; CRLF; no name; 8 + 6 new checks fail on 1.1.1.
+Fixed:
+1. (should-fix) A listener that fails to register now logs one line (Server/RosterWatch.lua `watch`).
+2. (should-fix) A refused Apply now redraws the list through `PartyTab.SettingChanged` (ticks and reason kept), so
+   someone who left without dying (nothing redraws for that) drops out instead of being refused again.
+3. (should-fix) Test card: a dead member stays listed, "dead" and greyed out, in an unmodded game (what the author
+   asked for on 2026-10-31); only Companion Permadeath removes them.
+4. (minor) Plan text: Unit E and test 6 now match review item 5.
+6. (minor) Test card: a fight that keeps starting and ending redraws once per end.
+8. (minor) Tests added: a camp member counted through DB_PartOfTheTeam; Refresh given a timer's argument; a
+   refused Apply redraws keeping ticks and reason. Totals 295 server + 51 client; 9 + 8 new checks fail on 1.1.1.
+Left: 5 (events closer than 1.5 s push the message back; harmless), 7 (window opening onto our page may make two
+roster requests; harmless), 9 (multiplayer: fine).

@@ -22,7 +22,7 @@ local function setStatus(text)
     end
 end
 
-local function render(slot, reply)
+local function render(slot, reply, keep)
     local root = slot.root
     RosterList.Clear(root)
     slot.status = nil
@@ -55,9 +55,8 @@ local function render(slot, reply)
         if applyButton then applyButton.Disabled = (not isHost) or n == 0 end
     end
 
-    -- After a settings change the ticks not yet applied are kept (PartyTab.SettingChanged).
-    local keep = slot.keepTicks
-    slot.keepTicks = nil
+    -- After a settings change the ticks not yet applied are kept (PartyTab.SettingChanged); each reply
+    -- draws with the copy made for its own request, so a Refresh already in flight cannot take them.
     local preselect = nil
     if keep then
         preselect = function(e)
@@ -84,10 +83,12 @@ local function render(slot, reply)
         PP.Net.Apply:RequestToServer({ uuids = list:Selected() }, function(resp)
             setStatus(resp and resp.message or "No reply.")
             -- The change takes about a second; show the result afterwards.
-            -- A refused request changed nothing: keep the ticks and the
-            -- reason on screen instead of redrawing over them.
+            -- A refused request changed nothing: keep the ticks and the reason on screen, but redraw the
+            -- list, so someone who has left the party meanwhile drops out of it (diff review 2026-10-31).
             if resp and resp.accepted then
                 Ext.Timer.WaitForRealtime(1500, PartyTab.Refresh)
+            else
+                pcall(PartyTab.SettingChanged)
             end
         end)
     end
@@ -252,11 +253,14 @@ local function render(slot, reply)
     onChange(list:Count())
 end
 
-function PartyTab.Refresh()
+-- keepBySlot (optional): slot -> { uuid = ticked } for ticks not yet applied, drawn with this reply only.
+-- Timers may pass their own argument, so anything but a table means none.
+function PartyTab.Refresh(keepBySlot)
     if #roots == 0 then return end
+    if type(keepBySlot) ~= "table" then keepBySlot = nil end
     PP.Net.Roster:RequestToServer({}, function(reply)
         for _, slot in ipairs(roots) do
-            local ok, err = pcall(render, slot, reply or {})
+            local ok, err = pcall(render, slot, reply or {}, keepBySlot and keepBySlot[slot] or nil)
             if not ok then PP.Log("could not draw the Party list: " .. tostring(err)) end
         end
     end)
@@ -267,13 +271,14 @@ function PartyTab.SetStatus(text) setStatus(text) end
 -- A setting the tab shows was changed in Settings (or written back by the limit guard): redraw, so
 -- the limit line and the locks follow without pressing Refresh (reported in game 2026-10-27). A slider
 -- sends a change for every step, so only the last one in half a second redraws. Ticks not yet applied
--- are kept.
+-- are kept. Also used when the party changed in the game (RosterChanged) and when the MCM window opens.
 local settingSeq = 0
 function PartyTab.SettingChanged()
     settingSeq = settingSeq + 1
     local mySeq = settingSeq
     Ext.Timer.WaitForRealtime(500, function()
         if mySeq ~= settingSeq then return end
+        local keepBySlot = {}
         for _, slot in ipairs(roots) do
             if slot.list and slot.entries then
                 -- Only the ticks the player changed: anything else shows the party as it is now, so a
@@ -285,10 +290,12 @@ function PartyTab.SettingChanged()
                     local ticked = selected[e.uuid] == true
                     if not e.locked and not e.dead and ticked ~= (e.active == true) then keep[e.uuid] = ticked end
                 end
-                slot.keepTicks = keep
+                keepBySlot[slot] = keep
             end
         end
-        PartyTab.Refresh()
+        -- pcall: this may run when no game is loaded (MCM opened at the main menu).
+        local ok, err = pcall(PartyTab.Refresh, keepBySlot)
+        if not ok then PP.Log("could not redraw the Party tab: " .. tostring(err)) end
     end)
 end
 
@@ -300,7 +307,6 @@ function PartyTab.Activated()
     for _, slot in ipairs(roots) do
         slot.confirmCamp = false
         slot.confirmHalsin = false
-        slot.keepTicks = nil
     end
     PartyTab.Refresh()
 end

@@ -27,6 +27,7 @@ local function container()
 end
 
 local timers, subscribers, channels, required = {}, {}, {}, {}
+local rosterHeld = nil
 local rosterRequests, halsinRequests = 0, 0
 local reply = {}
 -- Apply: requests are kept; the reply is `applyReply`, or held back while it is "pending".
@@ -44,7 +45,8 @@ Ext = {
             function ch:RequestToServer(data, cb)
                 if name == "Roster" then
                     rosterRequests = rosterRequests + 1
-                    cb(reply)
+                    -- rosterHeld: replies are kept back and released in order by the test.
+                    if rosterHeld then rosterHeld[#rosterHeld + 1] = cb else cb(reply) end
                 elseif name == "HalsinReset" then
                     halsinRequests = halsinRequests + 1
                     cb({ accepted = true, message = "Sending Halsin to camp..." })
@@ -319,6 +321,65 @@ check(find(w, "button", "Keep these 4").Disabled == false and find(w, "button", 
 applyReply = { accepted = true, message = "Changing the party..." }
 check(n9 >= 1, "D: the trim request was sent")
 check(not table.concat(clientLog, "\n"):find("could not draw"), "the picker drew without errors")
+
+-- 10. 1.1.2 (docs/PLAN_1.1.2_live_roster.md).
+reply = {
+    maxSize = 6, setting = 6,
+    entries = {
+        { uuid = "a", name = "Tav", active = true, locked = true, avatar = true },
+        { uuid = "b", name = "Gale", active = true },
+        { uuid = "c", name = "Wyll", active = false },
+    },
+}
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+-- The server says someone on the tab changed: redraw, keeping ticks not yet applied.
+check(channels.RosterChanged ~= nil and channels.RosterChanged.handler ~= nil, "10: RosterChanged handled")
+find(tab, "checkbox", "Wyll").OnChange(nil, true)
+before = rosterRequests
+if channels.RosterChanged and channels.RosterChanged.handler then channels.RosterChanged.handler({}) end
+runTimers()
+check(rosterRequests == before + 1, "10: RosterChanged redraws the tab")
+check(find(tab, "checkbox", "Wyll") and find(tab, "checkbox", "Wyll").Checked == true, "10: ... keeping the ticks")
+-- The MCM window opens: redraw, keeping the status line.
+check(subscribers["MCM_Window_Opened"] ~= nil, "10: MCM_Window_Opened subscribed")
+channels["Notice"].handler({ text = "Party updated. Joined: Wyll." })
+runTimers()
+before = rosterRequests
+if subscribers["MCM_Window_Opened"] then subscribers["MCM_Window_Opened"]({ playSound = true }) end
+runTimers()
+check(rosterRequests == before + 1, "10: opening the MCM window redraws the tab")
+check(find(tab, "text", "Party updated. Joined: Wyll.") ~= nil, "10: ... keeping the status line")
+-- A Refresh already in flight must not take the ticks kept for the redraw's own reply.
+find(tab, "button", "Refresh").OnClick()
+runTimers()
+find(tab, "checkbox", "Wyll").OnChange(nil, true)
+rosterHeld = {}
+find(tab, "button", "Refresh").OnClick()   -- in flight
+settingSaved("halsin_early")                -- the redraw that keeps Wyll ticked
+runTimers()
+local held = rosterHeld
+rosterHeld = nil
+for _, cb in ipairs(held) do cb(reply) end
+check(#held == 2, "10: two roster requests in flight (got " .. #held .. ")")
+check(find(tab, "checkbox", "Wyll") and find(tab, "checkbox", "Wyll").Checked == true,
+    "10: the ticks survive a Refresh that was already in flight")
+-- A refused Apply keeps the ticks and the reason, and redraws the list (someone may have left meanwhile).
+find(tab, "checkbox", "Wyll").OnChange(nil, true)
+applyReply = { accepted = false, message = "Gale is no longer with the party or in camp (the list was out of date)." }
+before = rosterRequests
+find(tab, "button", "Apply").OnClick()
+runTimers()
+applyReply = { accepted = true, message = "Changing the party..." }
+check(rosterRequests == before + 1, "10: a refused Apply redraws the list")
+check(find(tab, "checkbox", "Wyll") and find(tab, "checkbox", "Wyll").Checked == true, "10: ... keeping the ticks")
+check(find(tab, "text", "Gale is no longer with the party or in camp (the list was out of date).") ~= nil,
+    "10: ... and the reason")
+-- A timer passes its own handle to the callback: drawn without kept ticks, no error.
+local PartyTabM = Ext.Require("Client/PartyTab.lua")
+local okT = pcall(PartyTabM.Refresh, 4242)
+check(okT, "10: Refresh ignores a timer's argument")
+check(not table.concat(clientLog, "\n"):find("could not"), "10: no drawing errors")
 
 print(string.format("client: %d passed, %d failed", passed, failed))
 if failed > 0 then error("client tests failed") end

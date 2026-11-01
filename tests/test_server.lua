@@ -1543,5 +1543,80 @@ settings.max_party_size = savedMax
 Party.ApplyMaxSize()
 M.runTimers()
 
+-- 35. 1.1.2: the Party tab follows deaths, revivals, downed members and the end of a fight
+--     (docs/PLAN_1.1.2_live_roster.md).
+local function rosterChanged()
+    local n = 0
+    for _, b in ipairs(M.broadcasts) do
+        if b.channel == "RosterChanged" then n = n + 1 end
+    end
+    return n
+end
+-- Fire a listener if this build has one (1.1.1 has none: those checks then fail on the count).
+local function fireIf(name, arity, ...)
+    local fn = M.listeners[name .. "/" .. arity .. "/after"]
+    if fn then fn(...) end
+end
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+PP.Net.Roster:RequestToServer({}, function() end) -- the tab is drawn: Gale is listed
+M.broadcasts = {}
+fireIf("Died", 1, c.Gale.id)
+M.runTimers()
+check(rosterChanged() == 1, "35: a party member's death redraws the tab once (got " .. rosterChanged() .. ")")
+-- Companion Permadeath has already taken him off the team when the listener runs (ZZZ_Permadeath.txt L60-67).
+M.broadcasts = {}
+M.db("DB_Players"):Delete(c.Gale.id)
+M.db("DB_PartyMembers"):Delete(c.Gale.id)
+M.db("DB_PartOfTheTeam"):Delete(c.Gale.id)
+fireIf("Died", 1, c.Gale.id)
+M.runTimers()
+check(rosterChanged() == 1, "35: a death that removed him from the team still redraws (listed)")
+-- The tab still shows him: ticking him is refused by name, not as an unknown id.
+local r35 = apply({ uuids = { M.host.uuid, c.Shadowheart.uuid, c.Astarion.uuid, c.Gale.uuid } })
+check(r35 and r35.accepted == false and tostring(r35.message):find("^Gale is no longer with the party or in camp"),
+    "35: the refusal names the character (got " .. tostring(r35 and r35.message) .. ")")
+M.db("DB_PartOfTheTeam")(c.Gale.id)
+setParty({ c.Shadowheart, c.Astarion, c.Gale })
+PP.Net.Roster:RequestToServer({}, function() end)
+-- Several deaths in one fight: one message.
+M.broadcasts = {}
+fireIf("Died", 1, c.Gale.id)
+fireIf("Died", 1, c.Astarion.id)
+fireIf("DownedChanged", 2, c.Shadowheart.id, 1)
+M.runTimers()
+check(rosterChanged() == 1, "35: a burst of events sends one message (got " .. rosterChanged() .. ")")
+-- An enemy: nothing.
+M.broadcasts = {}
+fireIf("Died", 1, "S_GOB_Goblin_11111111-2222-3333-4444-555555555555")
+fireIf("DownedChanged", 2, "S_GOB_Goblin_11111111-2222-3333-4444-555555555555", 1)
+fireIf("LeftCombat", 2, "S_GOB_Goblin_11111111-2222-3333-4444-555555555555", "combat")
+M.runTimers()
+check(rosterChanged() == 0, "35: an enemy's death sends nothing")
+-- Revival, getting up, the end of a fight: one message each.
+for _, ev in ipairs({ { "Resurrected", 1, { c.Gale.id } }, { "DownedChanged", 2, { c.Shadowheart.id, 0 } },
+    { "LeftCombat", 2, { c.Astarion.id, "combat" } } }) do
+    M.broadcasts = {}
+    fireIf(ev[1], ev[2], table.unpack(ev[3]))
+    M.runTimers()
+    check(rosterChanged() == 1, "35: " .. ev[1] .. " for a listed member redraws once")
+end
+-- Nothing listed (no tab drawn since the load), someone in the party: counted from the party table.
+M.broadcasts = {}
+local okW, RW = pcall(Ext.Require, "Server/RosterWatch.lua")
+if okW and type(RW) == "table" then RW.Listed({}) end
+fireIf("DownedChanged", 2, c.Gale.id, 1)
+M.runTimers()
+check(rosterChanged() == 1, "35: a party member counts through DB_Players too")
+-- ... and a camp member through DB_PartOfTheTeam (in camp: not in DB_Players).
+M.broadcasts = {}
+if okW and type(RW) == "table" then RW.Listed({}) end
+setParty({ c.Shadowheart, c.Astarion })
+check(#M.db("DB_Players"):Get(c.Gale.id) == 0 and #M.db("DB_PartOfTheTeam"):Get(c.Gale.id) > 0, "35: Gale is in camp")
+fireIf("Died", 1, c.Gale.id)
+M.runTimers()
+check(rosterChanged() == 1, "35: a camp member counts through DB_PartOfTheTeam")
+setParty({ c.Shadowheart, c.Astarion, c.Gale, c.Laezel })
+M.broadcasts = {}
+
 print(string.format("%d passed, %d failed", passed, failed))
 if failed > 0 then error("tests failed") end

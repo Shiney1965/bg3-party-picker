@@ -5,6 +5,7 @@ local Restrictions = Ext.Require("Server/Restrictions.lua")
 local HouseOfHope = Ext.Require("Server/HouseOfHope.lua")
 local LimitGuard = Ext.Require("Server/LimitGuard.lua")
 local HalsinRepair = Ext.Require("Server/HalsinRepair.lua")
+local RosterWatch = Ext.Require("Server/RosterWatch.lua")
 
 local function rosterReply()
     local entries = {}
@@ -25,6 +26,8 @@ local function rosterReply()
             stuck = stuck,
         }
     end
+    -- Who the tab now shows, so a death that takes someone off the team still redraws it.
+    pcall(RosterWatch.Listed, entries)
     local pending = Restrictions.GetPending()
     return {
         entries = entries,
@@ -132,6 +135,7 @@ end))
 
 Restrictions.Register()
 HouseOfHope.Register()
+RosterWatch.Register()
 
 -- First arrival at Last Light: if Halsin joined early, say how to put his quest back on track.
 -- FlagSet fires for every flag, so the check is a string compare first.

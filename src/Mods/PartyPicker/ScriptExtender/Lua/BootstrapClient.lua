@@ -38,6 +38,19 @@ pcall(function()
     end)
 end)
 
+-- Someone on the tab died, came back, went down or left a fight (Server/RosterWatch.lua): redraw,
+-- keeping ticks not yet applied (docs/PLAN_1.1.2_live_roster.md).
+PP.Net.RosterChanged:SetHandler(function()
+    pcall(PartyTab.SettingChanged)
+end)
+-- The MCM window was opened: whatever changed while it was closed shows (BG3-MCM IMGUIAPI.lua,
+-- OpenMCMWindow). Unlike opening our page, this keeps the status line and the ticks.
+pcall(function()
+    Ext.ModEvents.BG3MCM["MCM_Window_Opened"]:Subscribe(function()
+        pcall(PartyTab.SettingChanged)
+    end)
+end)
+
 PP.Net.Notice:SetHandler(function(data)
     local text = data and data.text or ""
     PP.Log(text)

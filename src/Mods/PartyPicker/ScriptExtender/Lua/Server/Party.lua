@@ -719,7 +719,9 @@ function Party.Apply(wanted, opts, done)
                 keep[u] = true; count = count + 1
             end
         elseif not e then
-            return refuse("Unknown character " .. tostring(u) .. ".")
+            -- A list drawn before the game took them off the team (e.g. a permadeath mod, docs/TESTING.md
+            -- 2026-10-31).
+            return refuse(Party.DisplayName(u) .. " is no longer with the party or in camp (the list was out of date).")
         elseif e.dead then
             return refuse(e.name .. " is dead.")
         elseif e.locked and not e.active then
