@@ -7,8 +7,9 @@ LeftCombat events for anyone on the tab (or in the party or team) and, 1.5 s aft
 clients to redraw; the tab also redraws when the MCM window opens and after a refused change; ticks not yet applied
 are kept for each redraw's own reply; a refusal for someone no longer listed names them. Nothing runs between
 events. Tests: 295 server + 51 client checks and the blueprint check pass; 9 server and 8 client new checks fail on
-1.1.1. The pak contains no occurrence of the author's name. **Built; NOT installed; not released.** (1.1.1
-E5C0E1CA… is what is installed.)
+1.1.1. The pak contains no occurrence of the author's name. **INSTALLED 2026-11-01** at the author's word
+("install 1.1.2, the game is closed"; no game process running; replaced 1.1.1 E5C0E1CA…, 57,747 bytes; hash
+22034D1A… checked after the copy). Not released; load check and docs/TEST_CARD_1.1.2.md pending.
 
 **Pak:** `PartyPicker.pak` (60,398 bytes), built from an LF export (0 CR bytes)
 SHA256 `22034d1a4a6326e6bb42ad89400a386a1877900e541d06a71b6259d02494526b`

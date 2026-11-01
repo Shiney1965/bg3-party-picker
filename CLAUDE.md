@@ -3,7 +3,7 @@
 Read this first, then docs/DEVELOPMENT.md (the developer notes; README.md is now the user README,
 generated from dist_docs/README.md by tools/make_docs.ps1), RUN_CARD.md, docs/RESEARCH.md and docs/TESTING.md. They hold the
 design, the source for every game procedure used, and every in-game report so far (quoted exactly).
-Last updated 2026-10-31 (1.1.2 TEST build) by a session on the author's PC; first written 2026-10-12, continuing an
+Last updated 2026-11-01 (1.1.2 TEST build installed) by a session on the author's PC; first written 2026-10-12, continuing an
 earlier cloud session.
 
 ## What this is
@@ -103,7 +103,8 @@ everyone; Halsin locked until the story allows (optional early join in Act Two).
   applied are kept per request; a refusal names someone no longer listed. Plan docs/PLAN_1.1.2_live_roster.md
   (plan review and diff review inside); test card docs/TEST_CARD_1.1.2.md. Asked for after the author saw dead
   members vanish; the vanishing itself comes from the Companion Permadeath mod (docs/TESTING.md 2026-10-31).
-  Built, NOT installed, not released. The inspiration branch now needs a version above 1.1.2.
+  INSTALLED 2026-11-01 at the author's word (game closed, hash 22034D1A checked; replaced 1.1.1 E5C0E1CA). Not
+  released; test card pending. The inspiration branch now needs a version above 1.1.2.
 - 2026-10-27: the GitHub repository was deleted and recreated at the author's request, starting from the
   1.0.7 files as a single commit; the earlier history was not carried over (commit IDs named above refer
   to it).
