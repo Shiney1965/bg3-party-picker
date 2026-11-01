@@ -593,3 +593,20 @@ game". Cause (verified in code): the tab redraws only when it is drawn, when our
 (MCM_Mod_Tab_Activated), on a setting or profile change, on a notice, or on Refresh (Client/PartyTab.lua,
 BootstrapClient.lua); nothing listens for a death. The game raises one-off events for this (story_header.div
 L311-313 Dying/Died/Resurrected, L391 DownedChanged) and MCM emits MCM_Window_Opened (BG3-MCM EventChannels.lua).
+Correction and log check, 2026-10-31. The author: "Actually Refresh eliminates dead party members from the list
+completely.  It would be better if they were listed as dead and greyed out, since the player may want to resurrect
+them. I have a mod that permadeaths all deaths so that may be interfering with the status after refresh. Please
+check the log on that." Log check (Extender Runtime 2026-11-01 02-54-16.log and Osiris Runtime 2026-11-01
+02-56-44.log, verified): Gale was downed with the console line (Skynet: "marked (incapacitated via DOWNED)"; Party
+Picker then refused him: "Gale cannot travel right now (DB_FastTravelBlock_CantMove_StatusSet)"), got up, and was
+killed by Lae'zel's attack (event Died, Osiris log L1178823). The "Companion Permadeath" mod (Necrotic Flame, UUID
+a5dddc84-e8a6-3401-3491-ff5fb6217501, active in modsettings.lsx) then ran its rule ZZZ_Permadeath.txt L60-67:
+Died + DB_Origins + recruited -> PROC_Origins_CompanionLeavePermanently(_, "Killed") (Osiris log L1179085), which
+deletes DB_Players and removes him from the team (PROC_Origins_RemoveFromTeam, PROC_GLO_PartyMembers_MakeNPC). Wyll
+went the same way (L1505200). Its L74-86 do the same for hirelings; L49-56 and L29-35 block resurrection for
+unrecruited origins and for Gale. Party Picker lists only DB_PartOfTheTeam, DB_Hirelings_Hired and DB_Players
+(Server/Party.lua Party.Roster), so a companion the game has removed from the team is no longer listed: the
+disappearance comes from that mod, not from Party Picker. Without it, a dead companion stays in the party and is
+listed tagged "dead" with the box greyed out (Party.lua L402-414, Client/RosterList.lua L17, L62; offline tests;
+not yet seen in game). The later "request refused: Unknown character c774d764-..." (Wyll) is the stale list: the
+tab still showed Wyll after he had left.
