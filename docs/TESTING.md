@@ -673,3 +673,21 @@ Log check (Osiris Runtime 2026-11-01 18-01-19.log, Extender Runtime 2026-11-01 1
   CharacterLeftParty, then recruited again: PROC_GLO_PartyMembers_CheckAdd and CharacterJoinedParty (last 450 MB of
   the Osiris log). 1.1.2 does not listen for these. "(dead, dead)" is 1.1.2 (1.1.3 not installed yet).
 Fixes planned in 1.1.3: docs/PLAN_1.1.3_dead_member_notice.md units F-H.
+
+## 2026-11-04: revival blocked by two other mods (Companion Permadeath off)
+The author: "i removed permadeath but I still cannot revive a character due to another mod that prevents
+resurrection with Whiters and prevents resurrection after 10 turns dead.  What is the name of that mod?" and later:
+"The Honour Mode mod does not affect resurrection with scrolls or spells." Checked (verified from each mod's own files
+and the author's modsettings.lsx, where all three named mods are active and Companion Permadeath no longer is):
+- Withers: the mod "Honour Mode-" (Panzerfaustina, UUID 65974613-147f-14b6-bda6-c48a0538bc88), story goal
+  DisableWithersServices.txt L7-19: on every DialogStartRequested with Withers it clears
+  CAMP_Jergal_State_PartyMemberDead and the hireling flags Hirelings_State_ShowIntro / FeatureAvailable. It has no
+  spell or stat changes for scrolls or spells (its Character.txt changes only Withers' own stats).
+- 10 turns: 5eSpells (Celes/DiZ, UUID fb5f528d-4d48-4bf2-a668-2274d3cfba96), MCM tab "RAW (Rules as Written)
+  Adjustments", option "Raise Dead" (default off), ON in the author's game: Extender Runtime 2026-11-04 20-08-34.log
+  L997 "5eSpells: Modifying the Revivify spell and the scroll." S5E_BootstrapShared.lua L591-626 add
+  NotDeadLongerThanAMinute() to Revivify and its scroll; the death timer's passive is granted only when the module
+  "Expansion" (a2c4b0fc-e745-41df-81b7-fa53950d86a0, active) is loaded (L617-636). Its Target_RaiseDead has no time
+  condition.
+Release docs (README, Nexus BBCode) got compatibility notes for "Honour Mode-" (the author: "we should note in our
+documentation that our mod is not compatible with the Honour Mode"), Companion Permadeath and 5eSpells.
