@@ -14,7 +14,7 @@ running; replaced 1.1.2 22034D1A…, 60,398 bytes; hash 9E06B3F3… checked afte
 the test cards pending.
 
 **Pak:** `PartyPicker.pak` (68,143 bytes), built from an LF export (0 CR bytes)
-SHA-256 `9e06b3f36268b64246128923483a2592d63e6d6f2d50996bfd0b995ac5a4d18e`. Checked by unpacking it with Divine.exe:
+SHA256 `9e06b3f36268b64246128923483a2592d63e6d6f2d50996bfd0b995ac5a4d18e`. Checked by unpacking it with Divine.exe:
 PP.VERSION 1.1.4, Version64 36169543097253888 twice. Test card: `docs/TEST_CARD_1.1.4.md` (and the 1.1.3 one).
 
 # v1.1.3 (kept for the record)
